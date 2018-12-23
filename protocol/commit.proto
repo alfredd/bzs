@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+service Transaction {
+    rpc Commit(TransactionRequest) returns (TransactionResponse);
+    rpc Read (TransactionRequest) returns (TransactionResponse);
+}
+
+message TransactionRequest {
+    int32 id =1;
+    string key =2;
+    string value =3;
+    string version=4;
+}
+
+message TransactionResponse {
+    int32 id =1;
+    string key =2;
+    string value =3;
+    string version=4;
+}
