@@ -2,21 +2,76 @@ syntax = "proto3";
 
 package protocol;
 
+/*
+    TransactionService is accessible to clients only.
+*/
 service Transaction {
     rpc Commit(TransactionRequest) returns (TransactionResponse);
-    rpc Read (TransactionRequest) returns (TransactionResponse);
+//    rpc Read (TransactionRequest) returns (TransactionResponse);
 }
 
+/*
+    BZStore is a service used by cluster members to commit transactions.
+*/
+service BZStore {
+
+}
+
+/*
+    The TransactionResponseHandler service is implemented by the clients to receive
+    responses for a particular commit operation from the BZStore replicas.
+    Clients wait for F+1 responses from replicas for a commit to be considered
+    successful.
+*/
+service TransactionResponseHandler {
+    rpc OnResponseForCommit(CommitResponse ) returns (uint64);
+}
+
+/*
+    A commit response contains the commitAckID which was returned to it when a commit
+     was submitted to a BZStore replica along with version number of the committed
+     transaction operation.
+*/
+message CommitResponse {
+    uint64 commitAckID = 1;
+    repeated CommittedOperation committedOperation = 2;
+}
+
+message CommittedOperation {
+    TransactionOperation operation = 1;
+    uint32 commitVersion = 2;
+}
+
+/*
+   Request sent by client to execute a transaction.
+*/
 message TransactionRequest {
-    int32 id =1;
-    string key =2;
-    string value =3;
-    int32 version=4;
+    uint64 id = 1;
+    repeated TransactionOperation operations = 2;
 }
 
+/*
+    Response received by the client. Response consists of the transaction commit ID
+    which is a unique number that the BZStore cluster leader assigns to the transaction.
+    'viewId' corresponds to the Cluster member currently acting as leader.
+*/
 message TransactionResponse {
-    int32 id =1;
-    string key =2;
-    string value =3;
-    int32 version=4;
+    uint64 commitAckID = 1;
+    uint32 numberOfNodes = 2;
+    string viewId = 3;
+}
+
+/*
+    A Transaction contains only read or write operations.
+*/
+enum Type {
+    READ = 0;
+    WRITE = 1;
+}
+
+message TransactionOperation {
+    Type type = 1;
+    string key = 2;
+    string value = 3;
+    uint32 version = 4;
 }
