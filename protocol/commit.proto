@@ -13,8 +13,9 @@ service Transaction {
 /*
     BZStore is a service used by cluster members to commit transactions.
 */
-service BZStore {
-
+service BZStore { // TODO: Create input/output data structures for these services.
+    rpc EpochLogAdd(uint64) returns (uint64);
+    rpc ExecutionLogCommit(uint64) returns (uint64);
 }
 
 /*
