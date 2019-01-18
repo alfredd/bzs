@@ -4,7 +4,7 @@ package edu.ucsc.edgelab.database;
  * Hello world!
  *
  */
-public class App 
+public class BZStoreServer
 {
     public static void main( String[] args )
     {
