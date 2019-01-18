@@ -25,6 +25,14 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>bft-smart</groupId>
+      <artifactId>bft-smart</artifactId>
+      <scope>system</scope>
+      <version>1.0</version>
+      <systemPath>${basedir}\..\..\library/bin/BFT-SMaRt.jar</systemPath>
+    </dependency>
   </dependencies>
 
   <build>
