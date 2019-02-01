@@ -1,19 +1,21 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
+
 import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Hello world!
  */
 public class BZStoreServer {
     public static void main(String[] args) throws IOException {
-        System.out.println("Hello World!");
-
+        BZStoreProperties properties = new BZStoreProperties();
+        try {
+            properties.getProperty(BZStoreProperties.Configuration.server_port);
+        } catch (UnknownConfiguration unknownConfiguration) {
+            unknownConfiguration.printStackTrace();
+        }
     }
 }
 
