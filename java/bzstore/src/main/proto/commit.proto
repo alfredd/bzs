@@ -10,6 +10,20 @@ service BZStore {
     rpc ReadOperation (Read) returns (ReadResponse);
 }
 
+service Replica {
+    rpc Commit(TransactionBatch) returns (TransactionBatchResponse);
+}
+
+message TransactionBatch {
+    repeated Transaction transactions = 1;
+    repeated ROTransaction rotransaction = 2;
+}
+
+message TransactionBatchResponse {
+    repeated TransactionResponse responses = 1;
+    repeated ROTransactionResponse readresponses = 2;
+}
+
 enum TransactionStatus {
     COMMITTED = 0;
     ABORTED = 1;
