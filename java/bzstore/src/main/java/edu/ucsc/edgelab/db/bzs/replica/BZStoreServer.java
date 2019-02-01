@@ -1,4 +1,4 @@
-package edu.ucsc.edgelab.database;
+package edu.ucsc.edgelab.db.bzs.replica;
 
 /**
  * Hello world!
