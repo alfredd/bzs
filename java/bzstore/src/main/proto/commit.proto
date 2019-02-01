@@ -4,7 +4,7 @@ package protocol;
 
 option java_package = "edu.ucsc.edgelab.db.bzs";
 
-service BZS {
+service BZStore {
     rpc Commit (Transaction) returns (TransactionResponse);
     rpc ROCommit (ROTransaction) returns (ROTransactionResponse);
     rpc ReadOperation (Read) returns (ReadResponse);
