@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package protocol;
+
+option java_package = "edu.ucsc.edgelab.db.bzs";
+
+service BZS {
+    rpc Commit (Transaction) returns (TransactionResponse);
+    rpc ROCommit (ROTransaction) returns (ROTransactionResponse);
+    rpc ReadOperation (Read) returns (ReadResponse);
+}
+
+enum TransactionStatus {
+    COMMITTED = 0;
+    ABORTED = 1;
+}
+
+
+message Write {
+    string key = 1;
+    string value = 2;
+}
+
+message WriteResponse {
+    string key = 1;
+    string value = 2;
+    int64 version = 3;
+    string responseDigest = 4;
+}
+
+message Read {
+    string key = 1;
+}
+
+message ReadResponse {
+    string key = 1;
+    string value = 2;
+    int64 version = 3;
+    string responseDigest = 4;
+}
+
+message ReadHistory {
+    string key = 1;
+    string value = 2;
+    int64 version = 3;
+}
+
+message ROTransaction {
+    repeated Read readOperations = 1;
+}
+
+message ROTransactionResponse {
+    TransactionStatus status = 1;
+    repeated ReadResponse readResponses = 2;
+}
+
+message Transaction {
+    repeated ReadHistory readHistory = 1;
+    repeated Write writeOperations = 2;
+}
+
+
+message TransactionResponse {
+    TransactionStatus status = 1;
+    repeated WriteResponse writeResponses = 2;
+}

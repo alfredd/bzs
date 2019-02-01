@@ -1,0 +1,13 @@
+syntax = "proto3";
+package foo.bar;
+
+option java_package = "edu.ucsc.edgelab.db.bzs";
+option java_multiple_files = true;
+
+service Echo {
+    rpc EchoThis (EchoMessage) returns (EchoMessage);
+}
+
+message EchoMessage {
+    string Message = 1;
+}
