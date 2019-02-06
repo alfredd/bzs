@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public class MyEchoServer {
 
-    public static final int PORT = 45002;
+    static final int PORT = 45002;
 
     private Server server;
     private static final Logger logger = Logger.getLogger(MyEchoServer.class.getName());
@@ -24,22 +24,19 @@ public class MyEchoServer {
 
     private void blockUntilShutdown() throws InterruptedException {
         if (server != null) {
+            logger.info("Awaiting termination.");
             server.awaitTermination();
         }
     }
 
 
     private void start() throws IOException {
-        int port = PORT;
-        server = ServerBuilder.forPort(port).addService(new EchoImpl()).build().start();
+        server = ServerBuilder.forPort(PORT).addService(new EchoImpl()).build().start();
         logger.info("Server started.");
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
+        Runtime.getRuntime().addShutdownHook(new Thread(()-> {
                 logger.info("Shutting down.");
                 MyEchoServer.this.stop();
-            }
-        });
+        }));
     }
 
     private void stop() {
