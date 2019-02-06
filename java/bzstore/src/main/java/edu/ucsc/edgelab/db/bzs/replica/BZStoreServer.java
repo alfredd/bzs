@@ -43,7 +43,10 @@ public class BZStoreServer {
     }
 
     private void start() throws IOException {
-        server = ServerBuilder.forPort(this.serverPort).addService(new BZStoreService()).build().start();
+        server = ServerBuilder.forPort(this.serverPort)
+                .addService(new BZStoreService())
+                .addService(new BZStoreReplica())
+                .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(()-> {
             logger.info("Shutting down.");
