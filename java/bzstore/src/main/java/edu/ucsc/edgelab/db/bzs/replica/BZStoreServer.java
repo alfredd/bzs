@@ -12,7 +12,7 @@ public class BZStoreServer {
     public static void main(String[] args) throws IOException {
         BZStoreProperties properties = new BZStoreProperties();
         try {
-            properties.getProperty(BZStoreProperties.Configuration.server_port);
+            String serverPort = properties.getProperty(BZStoreProperties.Configuration.server_port);
         } catch (UnknownConfiguration unknownConfiguration) {
             unknownConfiguration.printStackTrace();
         }
