@@ -1,5 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
+import edu.ucsc.edgelab.db.bzs.BpTree;
 import edu.ucsc.edgelab.db.bzs.Commit;
 
 import java.util.LinkedList;
@@ -13,7 +14,7 @@ public class Serializer {
         epochList.clear();
     }
 
-    public boolean serialize(Commit.Transaction t) {
+    public boolean serialize(Commit.Transaction t, BpTree datastore) {
         boolean status = false;
 
         return status;
