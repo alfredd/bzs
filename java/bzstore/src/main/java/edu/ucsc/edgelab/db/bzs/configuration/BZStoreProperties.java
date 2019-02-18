@@ -12,7 +12,7 @@ public class BZStoreProperties {
     public static final String CONFIG_PROPERTIES = "config.properties";
 
     public enum Configuration {
-        port, host
+        port, host, leader,
     }
 
     private Properties bzsProperties;
@@ -37,6 +37,14 @@ public class BZStoreProperties {
         return property_value;
     }
 
+
+    public String getProperty(Configuration property) throws UnknownConfiguration {
+        String property_value = bzsProperties.getProperty(property.name());
+        if (property_value == null) {
+            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
+        }
+        return property_value;
+    }
 
 }
 
