@@ -31,11 +31,13 @@ public class BZClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public Commit.TransactionResponse commitTransaction (Commit.Transaction transaction) {
+    public Bzs.TransactionResponse commitTransaction (Bzs.Transaction transaction) {
         log.log(Level.FINE, "Beginning transaction commit for : "+transaction.toString());
 
-        Commit.TransactionResponse response = blockingStub.commit(transaction);
+        Bzs.TransactionResponse response = blockingStub.commit(transaction);
         log.log(Level.FINE, "Transaction completed with status: "+ response.getStatus().name());
         return response;
     }
+
+//    public Commit.ROTransactionResponse
 }
