@@ -7,18 +7,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Configuration {
-    List<ServerInfo> serverConnectionInfo() {
-        List<ServerInfo> servers = new LinkedList<>();
-
-        return servers;
-    }
 
     ServerInfo getLeaderInfo() throws IOException, UnknownConfiguration {
         ServerInfo info = new ServerInfo();
         BZStoreProperties properties = new BZStoreProperties();
 
         String leaderID = properties.getProperty(BZStoreProperties.Configuration.leader);
-
+        info.id=leaderID;
         info.host=properties.getProperty(leaderID, BZStoreProperties.Configuration.host);
         info.port=properties.getProperty(leaderID, BZStoreProperties.Configuration.port);
 
