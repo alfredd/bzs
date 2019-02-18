@@ -31,7 +31,7 @@ public class BZClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public Bzs.TransactionResponse commitTransaction(Bzs.Transaction transaction) {
+    public Bzs.TransactionResponse commit(Bzs.Transaction transaction) {
         log.log(Level.FINE, "Beginning transaction commit for : " + transaction.toString());
 
         Bzs.TransactionResponse response = blockingStub.commit(transaction);
@@ -46,7 +46,7 @@ public class BZClient {
         return response;
     }
 
-    public Bzs.ROTransactionResponse readOnlyCommit(Bzs.ROTransaction transaction) {
+    public Bzs.ROTransactionResponse readOnly(Bzs.ROTransaction transaction) {
         log.log(Level.FINE, "Beginning RO-transaction commit for : " + transaction.toString());
         Bzs.ROTransactionResponse response = blockingStub.rOCommit(transaction);
         log.log(Level.FINE, "RO-transaction completed with status: " + response.getStatus().name());
