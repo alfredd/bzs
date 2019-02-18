@@ -4,7 +4,17 @@ import edu.ucsc.edgelab.db.bzs.BZStoreGrpc;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import io.grpc.stub.StreamObserver;
 
+import java.util.logging.Logger;
+
 class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
+
+    private static final Logger log = Logger.getLogger(BZStoreService.class.getName());
+    private final String id;
+
+    public BZStoreService(String id) {
+        log.info("BZStore service started. Replica ID: " + id);
+        this.id=id;
+    }
 
     @Override
     public void commit(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {

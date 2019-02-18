@@ -17,8 +17,10 @@ public class BZStoreServer {
     private static final Logger logger = Logger.getLogger(BZStoreServer.class.getName());
 
     private int serverPort;
-    private Server server;
 
+    private String id;
+
+    private Server server;
 
     public static void main(String[] args) throws IOException {
 
@@ -36,7 +38,7 @@ public class BZStoreServer {
                     properties.getProperty(
                             id, BZStoreProperties.Configuration.port));
             logger.info(String.format("Server port configured at %d", port));
-            BZStoreServer bzStoreServer = new BZStoreServer();
+            BZStoreServer bzStoreServer = new BZStoreServer(id);
             bzStoreServer.setServerPort(port);
             bzStoreServer.start();
             try {
@@ -49,14 +51,18 @@ public class BZStoreServer {
         }
     }
 
+    public BZStoreServer(String id) {
+        this.id = id;
+    }
+
     private void setServerPort(int serverPort) {
         this.serverPort = serverPort;
     }
 
     private void start() throws IOException {
         server = ServerBuilder.forPort(this.serverPort)
-                .addService(new BZStoreService())
-                .addService(new BZStoreReplica())
+                .addService(new BZStoreService(id))
+                .addService(new BZStoreReplica(id))
                 .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
