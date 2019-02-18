@@ -21,17 +21,28 @@ public class BZStoreServer {
 
 
     public static void main(String[] args) throws IOException {
+
+        if (args.length != 1) {
+            System.err.println(String.format("Usage: "));
+            System.err.println(String.format("      program ID ; where ID=z{1..8}"));
+            System.exit(1);
+        }
+
+        String id = args[0];
+
         BZStoreProperties properties = new BZStoreProperties();
         try {
-            Integer serverPort = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.server_port));
-            logger.info(String.format("Server port configured at %d", serverPort));
+            Integer port = Integer.decode(
+                    properties.getProperty(
+                            id, BZStoreProperties.Configuration.port));
+            logger.info(String.format("Server port configured at %d", port));
             BZStoreServer bzStoreServer = new BZStoreServer();
-            bzStoreServer.setServerPort(serverPort);
+            bzStoreServer.setServerPort(port);
             bzStoreServer.start();
             try {
                 bzStoreServer.blockUntilShutdown();
             } catch (InterruptedException e) {
-                logger.log(Level.SEVERE, e.getLocalizedMessage(),e);
+                logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
             }
         } catch (UnknownConfiguration unknownConfiguration) {
             unknownConfiguration.printStackTrace();
@@ -39,7 +50,7 @@ public class BZStoreServer {
     }
 
     private void setServerPort(int serverPort) {
-        this.serverPort=serverPort;
+        this.serverPort = serverPort;
     }
 
     private void start() throws IOException {
@@ -48,7 +59,7 @@ public class BZStoreServer {
                 .addService(new BZStoreReplica())
                 .build().start();
         logger.info("Server started.");
-        Runtime.getRuntime().addShutdownHook(new Thread(()-> {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutting down.");
             BZStoreServer.this.stop();
         }));

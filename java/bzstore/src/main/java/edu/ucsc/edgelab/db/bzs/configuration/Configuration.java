@@ -10,4 +10,11 @@ public class Configuration {
         return servers;
     }
 
+    ServerInfo getLeaderInfo() {
+        ServerInfo info = new ServerInfo();
+
+
+        return info;
+    }
+
 }
