@@ -23,8 +23,8 @@ public class BZStoreServer {
     public static void main(String[] args) throws IOException {
 
         if (args.length != 1) {
-            System.err.println(String.format("Usage: "));
-            System.err.println(String.format("      program ID ; where ID=z{1..8}"));
+            System.err.println("Usage: ");
+            System.err.println("      bzserver ID ; where ID=z{1..8}");
             System.exit(1);
         }
 
