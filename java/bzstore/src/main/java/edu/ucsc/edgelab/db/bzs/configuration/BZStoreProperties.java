@@ -15,7 +15,7 @@ public class BZStoreProperties {
         server_port,
     }
 
-    Properties bzsProperties;
+    private Properties bzsProperties;
 
     public BZStoreProperties() throws IOException {
 
@@ -31,7 +31,7 @@ public class BZStoreProperties {
 
     public String getProperty(Configuration property) throws UnknownConfiguration {
         String property_value = bzsProperties.getProperty(property.name());
-        if (property_value==null) {
+        if (property_value == null) {
             throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
         }
         return property_value;
