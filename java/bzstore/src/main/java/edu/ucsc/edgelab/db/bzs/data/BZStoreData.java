@@ -1,4 +1,4 @@
-package edu.ucsc.edgelab.db.bzs;
+package edu.ucsc.edgelab.db.bzs.data;
 
 public class BZStoreData {
     public String value;

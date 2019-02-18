@@ -1,6 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import edu.ucsc.edgelab.db.bzs.BpTree;
+import edu.ucsc.edgelab.db.bzs.data.BpTree;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
 import java.util.LinkedList;

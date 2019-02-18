@@ -1,4 +1,4 @@
-package edu.ucsc.edgelab.db.bzs;
+package edu.ucsc.edgelab.db.bzs.data;
 
 import java.util.List;
 import java.util.TreeMap;
