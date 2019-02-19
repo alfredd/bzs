@@ -33,7 +33,7 @@
         </dependency>
 
         <dependency>
-            <groupId>bft-smart</groupId>
+            <groupId>bft-smmvart</groupId>
             <artifactId>bft-smart</artifactId>
             <scope>system</scope>
             <version>1.0</version>
