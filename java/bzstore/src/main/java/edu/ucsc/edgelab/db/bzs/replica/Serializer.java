@@ -21,7 +21,7 @@ public class Serializer {
     public boolean readConflicts(Bzs.ReadHistory c, BpTree datastore){
         //Needs to be changes where the version is fetched from the datastore and not the first key.
         if(!readMap.containsKey(c.getKey())){
-            readMap.put(c.getKey(), c.getVersion());
+            readMap.put(c.getKey(), Long.valueOf(datastore.get(c.getKey()).get(0).version));
         }
         // Handling case 2 and 3 from the table in the google doc
         if(readMap.get(c.getKey()) > c.getVersion()){
