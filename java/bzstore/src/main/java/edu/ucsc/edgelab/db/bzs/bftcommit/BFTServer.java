@@ -3,35 +3,56 @@ package edu.ucsc.edgelab.db.bzs.bftcommit;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
-import com.google.j2objc.annotations.ObjectiveCName;
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.data.BpTree;
-import sun.rmi.runtime.Log;
 
 import java.io.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class bftServer extends DefaultSingleRecoverable {
+public class BFTServer extends DefaultSingleRecoverable {
     private BpTree db;
     private Logger logger;
 
-    public bftServer(int id, BpTree db){
+    public BFTServer(int id, BpTree db){
         this.db = db;
-        logger = Logger.getLogger(bftServer.class.getName());
+        logger = Logger.getLogger(BFTServer.class.getName());
         new ServiceReplica(id, this, this);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public byte[] appExecuteOrdered(byte[] command, MessageContext msgCtx){
+    public byte[] appExecuteOrdered(byte[] transactions, MessageContext msgCtx){
         byte[] reply = null;
+        try (ByteArrayInputStream byteIn = new ByteArrayInputStream(transactions);
+             ObjectInput objIn = new ObjectInputStream(byteIn);
+             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+            List<Bzs.Transaction> batch = (List<Bzs.Transaction>) objIn.readObject();
+            for(Bzs.Transaction t : batch){
+                for(Bzs.Write operation : t.getWriteOperationsList()){
+                    BZStoreData newVersion = new BZStoreData();
+                    newVersion.value = operation.getValue();
+                    newVersion.version = db.get(operation.getKey()).get(0).version + 1;
+                    db.get(operation.getKey()).add(0, newVersion);
+                }
+            }
+            objOut.writeObject(true);
+            objOut.flush();
+            byteOut.flush();
+            reply = byteOut.toByteArray();
+        }
+        catch (IOException | ClassNotFoundException e){
+            logger.log(Level.SEVERE, "Occured during db operations executions", e);
+        }
         return reply;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public byte[] appExecuteUnordered(byte[] command, MessageContext msgCtx){
+    public byte[] appExecuteUnordered(byte[] transactions, MessageContext msgCtx){
         byte[] reply = null;
         return  reply;
     }
