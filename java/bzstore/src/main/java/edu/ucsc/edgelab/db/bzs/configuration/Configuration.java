@@ -11,9 +11,9 @@ public class Configuration {
         BZStoreProperties properties = new BZStoreProperties();
 
         String leaderID = properties.getProperty(BZStoreProperties.Configuration.leader);
-        info.id=leaderID;
-        info.host=properties.getProperty(leaderID, BZStoreProperties.Configuration.host);
-        info.port=properties.getProperty(leaderID, BZStoreProperties.Configuration.port);
+        info.id = leaderID;
+        info.host = properties.getProperty(leaderID, BZStoreProperties.Configuration.host);
+        info.port = properties.getProperty(leaderID, BZStoreProperties.Configuration.port);
 
         return info;
     }

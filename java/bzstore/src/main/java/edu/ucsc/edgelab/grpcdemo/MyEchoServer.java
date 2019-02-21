@@ -33,9 +33,9 @@ public class MyEchoServer {
     private void start() throws IOException {
         server = ServerBuilder.forPort(PORT).addService(new EchoImpl()).build().start();
         logger.info("Server started.");
-        Runtime.getRuntime().addShutdownHook(new Thread(()-> {
-                logger.info("Shutting down.");
-                MyEchoServer.this.stop();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutting down.");
+            MyEchoServer.this.stop();
         }));
     }
 

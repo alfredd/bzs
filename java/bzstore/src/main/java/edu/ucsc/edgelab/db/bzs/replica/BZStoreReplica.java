@@ -8,12 +8,12 @@ import java.util.logging.Logger;
 
 public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
 
-    private  static  final Logger log = Logger.getLogger(BZStoreReplica.class.getName());
+    private static final Logger log = Logger.getLogger(BZStoreReplica.class.getName());
     private final String id;
 
     public BZStoreReplica(String id) {
-        log.info("Forwarding service created. Replica id: "+id);
-        this.id=id;
+        log.info("Forwarding service created. Replica id: " + id);
+        this.id = id;
     }
 
     @Override

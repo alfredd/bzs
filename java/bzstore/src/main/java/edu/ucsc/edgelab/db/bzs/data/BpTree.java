@@ -15,12 +15,13 @@ public class BpTree extends TreeMap<String, List<BZStoreData>> {
             not sure if this is the best way to do this.
          */
         synchronized (this) {
-            List<BZStoreData> list = this.get(key);
-            if (list==null) {
+            List<BZStoreData> list;
+            if (!this.containsKey(key)) {
                 list = new LinkedList<>();
-                this.put(key,list);
+                this.put(key, list);
             }
-            list.add(0,data);
+            list = this.get(key);
+            list.add(0, data);
         }
     }
 }

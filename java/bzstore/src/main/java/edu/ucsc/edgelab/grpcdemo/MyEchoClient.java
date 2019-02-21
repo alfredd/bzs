@@ -15,11 +15,11 @@ public class MyEchoClient {
     private final ManagedChannel channel;
     private final EchoGrpc.EchoBlockingStub blockingStub;
 
-    public MyEchoClient (String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host,port).usePlaintext().build());
+    public MyEchoClient(String host, int port) {
+        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
     }
 
-    MyEchoClient (ManagedChannel channel) {
+    MyEchoClient(ManagedChannel channel) {
         this.channel = channel;
         blockingStub = EchoGrpc.newBlockingStub(channel);
     }
@@ -28,12 +28,12 @@ public class MyEchoClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public void sendMessage( String message) {
+    public void sendMessage(String message) {
         logger.info("Sending message to server...");
         EchoMessage request = EchoMessage.newBuilder().setMessage(message).build();
         EchoMessage response;
         response = blockingStub.echoThis(request);
-        logger.info("Response message from server: ("+response.getMessage()+")");
+        logger.info("Response message from server: (" + response.getMessage() + ")");
     }
 
     public static void main(String[] args) throws InterruptedException {
