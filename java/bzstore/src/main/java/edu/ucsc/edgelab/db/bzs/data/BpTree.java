@@ -10,18 +10,24 @@ import java.util.TreeMap;
 public class BpTree extends TreeMap<String, List<BZStoreData>> {
 
 
-    public void commit(String key, BZStoreData data) {
+    public void commit(String key, String value) {
         /*
             not sure if this is the best way to do this.
          */
         synchronized (this) {
-            List<BZStoreData> list;
+
+            BZStoreData newVersion = new BZStoreData();
+            newVersion.value = value;
+            newVersion.version = "0";
             if (!this.containsKey(key)) {
-                list = new LinkedList<>();
+                List<BZStoreData> list = new LinkedList<>();
+                list.add(newVersion);
                 this.put(key, list);
             }
-            list = this.get(key);
-            list.add(0, data);
+            else {
+                newVersion.version = String.valueOf(Long.parseLong(this.get(key).get(0).version) + 1);
+                this.get(key).add(0, newVersion);
+            }
         }
     }
 }

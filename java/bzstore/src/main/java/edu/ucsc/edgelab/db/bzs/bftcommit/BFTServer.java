@@ -33,10 +33,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             List<Bzs.Transaction> batch = (List<Bzs.Transaction>) objIn.readObject();
             for(Bzs.Transaction t : batch){
                 for(Bzs.Write operation : t.getWriteOperationsList()){
-                    BZStoreData newVersion = new BZStoreData();
-                    newVersion.value = operation.getValue();
-                    newVersion.version = db.get(operation.getKey()).get(0).version + 1;
-                    db.get(operation.getKey()).add(0, newVersion);
+                    db.commit(operation.getKey(), operation.getValue());
                 }
             }
             objOut.writeObject(true);
