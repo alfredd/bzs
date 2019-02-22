@@ -4,6 +4,8 @@ import bftsmart.tom.ServiceProxy;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
 import java.io.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class BFTClient {
@@ -14,7 +16,7 @@ public class BFTClient {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
-    public boolean performCommit(Bzs.Transaction t){
+    public boolean performCommit(List<Bzs.Transaction> t){
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)){
             objOut.writeObject(t);
