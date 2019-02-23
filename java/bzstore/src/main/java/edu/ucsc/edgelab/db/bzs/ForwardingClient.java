@@ -2,7 +2,9 @@ package edu.ucsc.edgelab.db.bzs;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +38,16 @@ public class ForwardingClient {
 
     public Bzs.TransactionBatchResponse forward(Bzs.TransactionBatch batch) {
         Bzs.TransactionBatchResponse response = blockingStub.forward(batch);
-
         return response;
+    }
+
+    public void forward(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+        Bzs.TransactionBatch batchRequest = Bzs.TransactionBatch.newBuilder().addTransactions(request).build();
+        Bzs.TransactionBatchResponse batchResponse = forward(batchRequest);
+        List<Bzs.TransactionResponse> responsesList = batchResponse.getResponsesList();
+        for (Bzs.TransactionResponse tr : responsesList) {
+            responseObserver.onNext(tr);
+        }
+        responseObserver.onCompleted();
     }
 }
