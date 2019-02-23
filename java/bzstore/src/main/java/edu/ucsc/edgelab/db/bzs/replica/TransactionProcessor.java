@@ -5,7 +5,13 @@ import io.grpc.stub.StreamObserver;
 
 public class TransactionProcessor {
 
-    void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+    private Serializer serializer;
 
+    public TransactionProcessor() {
+        serializer = new Serializer();
+    }
+
+    void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+//        serializer.serialize(request);
     }
 }
