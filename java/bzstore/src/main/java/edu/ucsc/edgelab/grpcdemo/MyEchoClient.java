@@ -7,6 +7,7 @@ import io.grpc.ManagedChannelBuilder;
 
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MyEchoClient {
@@ -44,6 +45,9 @@ public class MyEchoClient {
                 String message = scanner.nextLine();
                 client.sendMessage(message);
             }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Exception occurred during client execution: "
+                    + e.getLocalizedMessage(), e);
         } finally {
             client.shutdown();
             scanner.close();
