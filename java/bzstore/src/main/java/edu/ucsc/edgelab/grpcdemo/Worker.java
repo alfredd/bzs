@@ -12,7 +12,7 @@ public class Worker {
         logger.info("Entering doThis");
         new Thread(() -> {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(7000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
