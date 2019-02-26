@@ -6,8 +6,10 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.data.BpTree;
+import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 
 import java.io.*;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,11 +17,14 @@ import java.util.logging.Logger;
 public class BFTServer extends DefaultSingleRecoverable {
     private BpTree db;
     private Logger logger;
+    private long hashCode;
 
     public BFTServer(int id, BpTree db){
         this.db = db;
         logger = Logger.getLogger(BFTServer.class.getName());
+        hashCode = 0;
         new ServiceReplica(id, this, this);
+
     }
 
     @SuppressWarnings("unchecked")
@@ -30,13 +35,24 @@ public class BFTServer extends DefaultSingleRecoverable {
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-            List<Bzs.Transaction> batch = (List<Bzs.Transaction>) objIn.readObject();
-            for(Bzs.Transaction t : batch){
-                for(Bzs.Write operation : t.getWriteOperationsList()){
-                    db.commit(operation.getKey(), operation.getValue());
+            LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
+            List<Long> hashes = new LinkedList<>();
+            for(byte[] b : batch){
+                Bzs.Transaction t = Bzs.Transaction.newBuilder().mergeFrom(b).build();
+                hashCode += t.toByteString().hashCode();
+                hashes.add(hashCode);
+                for(Bzs.Write i : t.getWriteOperationsList()){
+                    try {
+                        db.commit(i.getKey(), i.getValue(),"");
+                    }
+                    catch (InvalidCommitException e){
+                        System.out.println("Commit did not happen");
+                    }
                 }
             }
-            objOut.writeObject(true);
+            System.out.println("HASHES :::::"+ hashes.toString());
+            boolean bReply = Math.random() < 0.5;
+            objOut.writeObject(hashes);
             objOut.flush();
             byteOut.flush();
             reply = byteOut.toByteArray();
