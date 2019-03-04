@@ -15,7 +15,7 @@ public class BFTClient {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
-    public List performCommit(List<Bzs.Transaction> transactions) {
+    public List<Long> performCommit(List<Bzs.Transaction> transactions) {
         LinkedList<Long> result = new LinkedList<>();
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
