@@ -15,22 +15,41 @@ public class BFTCommitClient {
             clients[i] = new BFTClient(clientIds[i]);
         }
 
-        Bzs.Transaction transaction = Bzs.Transaction.newBuilder().build();
-        Bzs.Write operation = Bzs.Write.newBuilder().setKey("test_key").setValue("test_value").build();
-        System.out.println("Key "+ operation.getKey() + " Val "+ operation.getValue());
-        transaction = transaction.toBuilder().addWriteOperations(operation).build();
+//        Bzs.Transaction transaction = Bzs.Transaction.newBuilder().build();
+//        Bzs.Write operation = Bzs.Write.newBuilder().setKey("test_key").setValue("test_value").build();
+//        System.out.println("Key "+ operation.getKey() + " Val "+ operation.getValue());
+//        transaction = transaction.toBuilder().addWriteOperations(operation).build();
+//
+//        System.out.println("Performing write"+transaction.toString());
+//        List<Bzs.Transaction> list = new LinkedList<>();
+//        list.add(transaction);
+//        list.add(transaction);
+//        for(Bzs.Transaction t : list){
+//            for(Bzs.Write op : t.getWriteOperationsList()){
+//                System.out.println("Key ::"+ operation.getKey() + " Value: "+operation.getValue());
+//            }
+//        }
+//        System.out.println(clients[0].performCommit(list));
+//        System.out.println("Write Performed");
+
+        Bzs.ROTransaction transaction = Bzs.ROTransaction.newBuilder().build();
+        Bzs.Read operation = Bzs.Read.newBuilder().setKey("test_key").build();
+        System.out.println("Key "+ operation.getKey());
+        transaction = transaction.toBuilder().addReadOperations(operation).build();
 
         System.out.println("Performing write"+transaction.toString());
-        List<Bzs.Transaction> list = new LinkedList<>();
+        List<Bzs.ROTransaction> list = new LinkedList<>();
         list.add(transaction);
         list.add(transaction);
-        for(Bzs.Transaction t : list){
-            for(Bzs.Write op : t.getWriteOperationsList()){
-                System.out.println("Key ::"+ operation.getKey() + " Value: "+operation.getValue());
+        for(Bzs.ROTransaction t : list){
+            for(Bzs.Read op : t.getReadOperationsList()){
+                System.out.println("Key ::"+ operation.getKey());
             }
         }
-        System.out.println(clients[0].performCommit(list));
-        System.out.println("Write Performed");
+        System.out.println(clients[0].performRead(list));
+        System.out.println("Read Performed");
+
+
 
     }
 }
