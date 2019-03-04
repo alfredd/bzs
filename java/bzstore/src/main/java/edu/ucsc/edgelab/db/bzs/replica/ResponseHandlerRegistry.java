@@ -10,6 +10,11 @@ public class ResponseHandlerRegistry {
     private Map<Integer, Map<Integer, StreamObserver<Bzs.TransactionResponse>>> requestHandlerRegistry;
     private Map<Integer, Map<Integer, Bzs.Transaction>> requestRegistry;
 
+    public ResponseHandlerRegistry() {
+        requestHandlerRegistry = new LinkedHashMap<>();
+        requestRegistry = new LinkedHashMap<>();
+    }
+
     public void addToRegistry(int epochNumber, int sequenceNumber, Bzs.Transaction transaction,
                               StreamObserver<Bzs.TransactionResponse> responseObserver) {
 
