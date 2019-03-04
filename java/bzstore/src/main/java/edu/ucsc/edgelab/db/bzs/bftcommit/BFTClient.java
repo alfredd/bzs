@@ -15,12 +15,12 @@ public class BFTClient {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
-    public List performCommit(List<Bzs.Transaction> rotransactions) {
+    public List performCommit(List<Bzs.Transaction> transactions) {
         LinkedList<Long> result = new LinkedList<>();
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
             List<byte[]> transactionInBytes = new LinkedList<>();
-            for (Bzs.Transaction i : rotransactions) {
+            for (Bzs.Transaction i : transactions) {
                 transactionInBytes.add(i.toByteArray());
             }
             objOut.writeObject(0);
@@ -48,16 +48,16 @@ public class BFTClient {
         return result;
     }
 
-    public boolean performRead(List<Bzs.ROTransaction> t) {
+    public boolean performRead(List<Bzs.ROTransaction> roTransactions) {
         boolean status;
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-            List<byte[]> b = new LinkedList<>();
-            for (Bzs.ROTransaction i : t) {
-                b.add(i.toByteArray());
+            List<byte[]> transactionInBytes = new LinkedList<>();
+            for (Bzs.ROTransaction i : roTransactions) {
+                transactionInBytes.add(i.toByteArray());
             }
             objOut.writeObject(1);
-            objOut.writeObject(b);
+            objOut.writeObject(transactionInBytes);
             objOut.flush();
             byteOut.flush();
             byte[] reply;
