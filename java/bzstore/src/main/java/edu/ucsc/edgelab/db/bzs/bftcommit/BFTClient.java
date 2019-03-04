@@ -6,16 +6,20 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BFTClient {
     private ServiceProxy serviceProxy;
 
+    private static final Logger LOGGER = Logger.getLogger(BFTClient.class.getName());
 
     public BFTClient(int ClientId) {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
     public List<Long> performCommit(List<Bzs.Transaction> transactions) {
+        LOGGER.info("Received transaction batch to perform commit consensus.");
         LinkedList<Long> result = new LinkedList<>();
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
@@ -34,17 +38,18 @@ public class BFTClient {
                 if (reply.length == 0)
                     throw new IOException();
             } catch (RuntimeException e) {
-                System.out.println("Commit Failed: " + e.getMessage());
+                LOGGER.log(Level.SEVERE, "Commit Failed: " + e.getLocalizedMessage(),e);
                 return result;
             }
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
                 result = (LinkedList<Long>) objIn.readObject();
-                System.out.println(result.toString());
+                LOGGER.info("Result response: "+result.toString());
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.out.print("Exception generated while committing transaction" + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(),e);
         }
+        LOGGER.info("Commit consensus completed for transaction.");
         return result;
     }
 
