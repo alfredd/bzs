@@ -38,16 +38,16 @@ public class BFTClient {
                 if (reply.length == 0)
                     throw new IOException();
             } catch (RuntimeException e) {
-                LOGGER.log(Level.SEVERE, "Commit Failed: " + e.getLocalizedMessage(),e);
+                LOGGER.log(Level.SEVERE, "Commit Failed: " + e.getLocalizedMessage(), e);
                 return result;
             }
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
                 result = (LinkedList<Long>) objIn.readObject();
-                LOGGER.info("Result response: "+result.toString());
+                LOGGER.info("Result response: " + result.toString());
             }
         } catch (IOException | ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(),e);
+            LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
         }
         LOGGER.info("Commit consensus completed for transaction.");
         return result;
@@ -72,12 +72,12 @@ public class BFTClient {
                     throw new IOException();
                 status = true;
             } catch (RuntimeException e) {
-                System.out.println("Commit Failed" + e.getMessage());
+                LOGGER.log(Level.SEVERE, "Commit Failed: " + e.getLocalizedMessage(), e);
                 status = false;
                 return status;
             }
         } catch (IOException e) {
-            System.out.print("Exception generated while committing transaction" + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
             status = false;
         }
         return status;
