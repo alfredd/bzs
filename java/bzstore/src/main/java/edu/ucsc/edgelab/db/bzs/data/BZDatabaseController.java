@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class BZDatabaseController {
+public final class BZDatabaseController {
     private BpTree db;
     private static final BZDatabaseController BZ_DATABASE_CONTROLLER = new BZDatabaseController();
     private static final Logger LOGGER = Logger.getLogger(BZDatabaseController.class.getName());
@@ -16,13 +16,13 @@ public class BZDatabaseController {
         db = new BpTree();
     }
 
-    public static final void commit (String key, BZStoreData data) throws InvalidCommitException {
+    public static void commit (String key, BZStoreData data) throws InvalidCommitException {
         LOGGER.info("Committing data with key: {"+key+"}");
         BZ_DATABASE_CONTROLLER.db.commit(key,data.value,data.digest);
         LOGGER.info("Committed data with key: {"+key+"}");
     }
 
-    public static final BZStoreData getlatest(String key) throws InvalidDataAccessException {
+    public static BZStoreData getlatest(String key) throws InvalidDataAccessException {
         List<BZStoreData> dataHistory = BZ_DATABASE_CONTROLLER.db.get(key);
         if (dataHistory == null) {
             String message = String.format("No data available for key=%s.", key);
@@ -30,5 +30,9 @@ public class BZDatabaseController {
             throw new InvalidDataAccessException(message);
         }
         return dataHistory.get(0);
+    }
+
+    public static void initializeDb(BpTree db) {
+        BZ_DATABASE_CONTROLLER.db=db;
     }
 }

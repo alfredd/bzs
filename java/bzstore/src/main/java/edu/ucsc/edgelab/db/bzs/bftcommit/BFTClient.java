@@ -54,6 +54,7 @@ public class BFTClient {
     }
 
     public boolean performRead(List<Bzs.ROTransaction> roTransactions) {
+        LOGGER.info("Received RO transaction batch to perform commit consensus.");
         boolean status;
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
