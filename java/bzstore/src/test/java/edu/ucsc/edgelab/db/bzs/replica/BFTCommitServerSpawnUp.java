@@ -1,9 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTServer;
-import edu.ucsc.edgelab.db.bzs.data.BpTree;
 
 public class BFTCommitServerSpawnUp {
     public static void main(String args[]){
@@ -21,6 +18,6 @@ public class BFTCommitServerSpawnUp {
 //            }
 //        }
         //new BFTServer(Integer.parseInt(args[0]), new BpTree());
-        new BFTServer( 3, new BpTree());
+        new BFTServer( 3);
     }
 }

@@ -9,7 +9,7 @@ import java.util.TreeMap;
 /**
  * Implementation Pending.
  */
-public class BpTree extends TreeMap<String, List<BZStoreData>> {
+class BpTree extends TreeMap<String, List<BZStoreData>> {
 
 
     public void commit(String key, String value, String digest) throws InvalidCommitException {
