@@ -3,12 +3,18 @@ package edu.ucsc.edgelab.db.bzs.bftcommit;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import com.google.protobuf.ByteString;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.data.BpTree;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
+import org.apache.commons.codec.digest.DigestUtils;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -17,12 +23,12 @@ import java.util.logging.Logger;
 public class BFTServer extends DefaultSingleRecoverable {
     private BpTree db;
     private Logger logger;
-    private long hashCode;
+    private String transaction_hash;
 
     public BFTServer(int id, BpTree db){
         this.db = db;
         logger = Logger.getLogger(BFTServer.class.getName());
-        hashCode = 0;
+        transaction_hash = "";
         new ServiceReplica(id, this, this);
 
     }
@@ -35,27 +41,59 @@ public class BFTServer extends DefaultSingleRecoverable {
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-            LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
-            List<Long> hashes = new LinkedList<>();
-            for(byte[] b : batch){
-                Bzs.Transaction t = Bzs.Transaction.newBuilder().mergeFrom(b).build();
-                hashCode += t.toByteString().hashCode();
-                hashes.add(hashCode);
-                for(Bzs.Write i : t.getWriteOperationsList()){
-                    try {
-                        db.commit(i.getKey(), i.getValue(),"");
-                    }
-                    catch (InvalidCommitException e){
-                        System.out.println("Commit did not happen");
+
+            Integer type = (Integer)objIn.readObject();
+            if(type == 0){//Performing BFT commit
+                System.out.println("=========Performing BFT Transactions=========");
+                LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
+                List<String> hashes = new LinkedList<>();
+                for(byte[] b : batch){
+                    Bzs.Transaction t = Bzs.Transaction.newBuilder().mergeFrom(b).build();
+                    transaction_hash = generateHash( transaction_hash + t.toString());
+                    hashes.add(transaction_hash);
+                    for(Bzs.Write i : t.getWriteOperationsList()){
+                        try {
+                            db.commit(i.getKey(), i.getValue(),"");
+                        }
+                        catch (InvalidCommitException e){
+                            System.out.println("Commit did not happen");
+                        }
                     }
                 }
+                System.out.println("HASHES :::::"+ hashes.toString());
+                boolean bReply = Math.random() < 0.5;
+                objOut.writeObject(hashes);
+                objOut.flush();
+                byteOut.flush();
+                reply = byteOut.toByteArray();
             }
-            System.out.println("HASHES :::::"+ hashes.toString());
-            boolean bReply = Math.random() < 0.5;
-            objOut.writeObject(hashes);
-            objOut.flush();
-            byteOut.flush();
-            reply = byteOut.toByteArray();
+            else{
+                LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
+                List<String> hashes = new LinkedList<>();
+                for(byte[] b : batch){
+                    String b_hash = "";
+                    Bzs.ROTransaction t = Bzs.ROTransaction.newBuilder().mergeFrom(b).build();
+                    for(Bzs.Read i : t.getReadOperationsList()){
+                        String value, version;
+                        if(i.getKey() == null){
+                            value = version = "";
+                        }
+                        else{
+                            value = db.get(i.getKey()).get(0).value;
+                            version =  db.get(i.getKey()).get(0).version;
+                        }
+                        b_hash = generateHash(b_hash + value + version);
+                    }
+                    hashes.add(b_hash);
+                }
+                System.out.println("HASHES :::::"+ hashes.toString());
+                boolean bReply = Math.random() < 0.5;
+                objOut.writeObject(hashes);
+                objOut.flush();
+                byteOut.flush();
+                reply = byteOut.toByteArray();
+            }
+
         }
         catch (IOException | ClassNotFoundException e){
             logger.log(Level.SEVERE, "Occured during db operations executions", e);
@@ -94,6 +132,10 @@ public class BFTServer extends DefaultSingleRecoverable {
         }
     }
 
-
+    private static String generateHash(String  input)
+    {
+        String hash = DigestUtils.md5Hex(input).toUpperCase();
+        return hash;
+    }
 
 }
