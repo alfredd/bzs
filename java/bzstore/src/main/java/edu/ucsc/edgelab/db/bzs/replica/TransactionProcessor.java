@@ -54,12 +54,12 @@ public class TransactionProcessor {
     }
 
     void resetEpoch() {
-        // Increment Epoch number
+        // Increment Epoch number and reset sequence number.
         synchronized (this) {
             epochNumber+=1;
             sequenceNumber=0;
         }
-        // Process transaction in the current epoch.
+        // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
 
     }
 }
