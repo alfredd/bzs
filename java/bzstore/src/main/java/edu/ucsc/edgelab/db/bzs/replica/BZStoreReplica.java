@@ -22,4 +22,16 @@ public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
     public void forward(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
 //        transactionProcessor.processTransaction(request,responseObserver);
     }*/
+
+
+    @Override
+    public void forward(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+        log.info("Received forwarded message from a replica. Adding transaction to processing queue.");
+        transactionProcessor.processTransaction(request,responseObserver);
+    }
+
+    @Override
+    public void forwardROT(Bzs.ROTransaction request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
+        super.forwardROT(request, responseObserver);
+    }
 }
