@@ -40,4 +40,12 @@ public class ResponseHandlerRegistry {
         requestHandlerRegistry.remove(epochNumber);
     }
 
+    public Map<Integer, Bzs.Transaction> getTransactions(int epochNumber) {
+        return requestRegistry.get(epochNumber);
+    }
+
+    public Map<Integer, StreamObserver<Bzs.TransactionResponse>> getTransactionObservers(int epochNumber) {
+        return requestHandlerRegistry.get(epochNumber);
+    }
+
 }
