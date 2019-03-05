@@ -1,10 +1,13 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
+import com.google.common.collect.Lists;
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Map;
 import java.util.Timer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,6 +21,7 @@ public class TransactionProcessor {
     private ResponseHandlerRegistry responseHandlerRegistry;
 
     private static final Logger LOGGER = Logger.getLogger(TransactionProcessor.class.getName());
+    private Integer id;
 
     public TransactionProcessor() {
         serializer = new Serializer();
@@ -60,6 +64,12 @@ public class TransactionProcessor {
             sequenceNumber=0;
         }
         // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
+        Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epochNumber - 1);
+        BFTClient bftClient = new BFTClient(id);
+        bftClient.performCommit(transactions.values());
+    }
 
+    public void setId(Integer id) {
+        this.id=id;
     }
 }

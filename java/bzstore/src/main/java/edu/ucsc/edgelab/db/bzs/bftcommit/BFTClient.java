@@ -4,6 +4,7 @@ import bftsmart.tom.ServiceProxy;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -18,7 +19,7 @@ public class BFTClient {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
-    public List<Long> performCommit(List<Bzs.Transaction> transactions) {
+    public List<Long> performCommit(Collection<Bzs.Transaction> transactions) {
         LOGGER.info("Received transaction batch to perform commit consensus.");
         LinkedList<Long> result = new LinkedList<>();
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -53,7 +54,7 @@ public class BFTClient {
         return result;
     }
 
-    public boolean performRead(List<Bzs.ROTransaction> roTransactions) {
+    public boolean performRead(Collection<Bzs.ROTransaction> roTransactions) {
         LOGGER.info("Received RO transaction batch to perform commit consensus.");
         boolean status;
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();

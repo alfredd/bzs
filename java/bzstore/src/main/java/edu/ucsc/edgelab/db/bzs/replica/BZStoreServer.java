@@ -56,6 +56,7 @@ public class BZStoreServer {
 
         this.id = id;
         transactionProcessor = new TransactionProcessor();
+        transactionProcessor.setId(Integer.decode(id));
     }
 
     private void setServerPort(int serverPort) {
