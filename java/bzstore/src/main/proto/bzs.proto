@@ -11,7 +11,8 @@ service BZStore {
 }
 
 service Replica {
-    rpc Forward (TransactionBatch) returns (TransactionBatchResponse);
+    rpc Forward (Transaction) returns (TransactionResponse);
+    rpc ForwardROT (ROTransaction) returns (ROTransactionResponse);
 }
 
 message TransactionBatch {

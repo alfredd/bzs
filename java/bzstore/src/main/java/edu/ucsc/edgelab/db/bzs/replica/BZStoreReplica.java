@@ -18,8 +18,8 @@ public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
         this.transactionProcessor = transactionProcessor;
     }
 
-    @Override
+/*    @Override
     public void forward(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        super.forward(request, responseObserver);
-    }
+//        transactionProcessor.processTransaction(request,responseObserver);
+    }*/
 }

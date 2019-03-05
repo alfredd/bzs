@@ -49,7 +49,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 transactionProcessor.processTransaction(request,responseObserver);
             } else {
                 // If this instance is not the leader forward transaction to the leader.
-                forwardingClient.forward(request,responseObserver);
+//                forwardingClient.forward(request,responseObserver);
             }
         } catch (IOException e) {
             log.log(Level.SEVERE, "Could not connect to leader. Aborting transaction.", e);

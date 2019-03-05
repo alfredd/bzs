@@ -36,18 +36,12 @@ public class ForwardingClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public Bzs.TransactionBatchResponse forward(Bzs.TransactionBatch batch) {
-        Bzs.TransactionBatchResponse response = blockingStub.forward(batch);
-        return response;
+    public Bzs.TransactionResponse forward(Bzs.Transaction batch) {
+        return blockingStub.forward(batch);
     }
 
-    public void forward(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
-        Bzs.TransactionBatch batchRequest = Bzs.TransactionBatch.newBuilder().addTransactions(request).build();
-        Bzs.TransactionBatchResponse batchResponse = forward(batchRequest);
-        List<Bzs.TransactionResponse> responsesList = batchResponse.getResponsesList();
-        for (Bzs.TransactionResponse tr : responsesList) {
-            responseObserver.onNext(tr);
-        }
-        responseObserver.onCompleted();
+
+    public Bzs.ROTransactionResponse forwardROTranaction (Bzs.ROTransaction roTransaction) {
+        return blockingStub.forwardROT(roTransaction);
     }
 }
