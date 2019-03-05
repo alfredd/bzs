@@ -7,6 +7,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import io.grpc.stub.StreamObserver;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.logging.Level;
@@ -65,8 +66,15 @@ public class TransactionProcessor {
         }
         // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
         Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epochNumber - 1);
+        Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
+                responseHandlerRegistry.getTransactionObservers(epochNumber - 1);
         BFTClient bftClient = new BFTClient(id);
-        bftClient.performCommit(transactions.values());
+        //TODO: Change the return typ to boolean
+        List<Long> success = bftClient.performCommit(transactions.values());
+        if (success==null) {
+
+        }
+
     }
 
     public void setId(Integer id) {
