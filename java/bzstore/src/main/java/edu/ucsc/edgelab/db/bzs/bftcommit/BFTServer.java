@@ -72,11 +72,11 @@ public class BFTServer extends DefaultSingleRecoverable {
                     String b_hash = "";
                     Bzs.ROTransaction t = Bzs.ROTransaction.newBuilder().mergeFrom(b).build();
                     for (Bzs.Read i : t.getReadOperationsList()) {
-                        String value, version;
-                        value = version = "";
-                        if (i.getKey() == null) {
-                            value = version = "";
-                        } else {
+                        String value;
+                        long version;
+                        value = "";
+                        version = 0;
+                        if (i.getKey() != null) {
                             try {
                                 BZStoreData storeData = BZDatabaseController.getlatest(i.getKey());
                                 value = storeData.value;

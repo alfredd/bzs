@@ -27,14 +27,14 @@ class BpTree extends TreeMap<String, List<BZStoreData>> {
 
             BZStoreData newVersion = new BZStoreData();
             newVersion.value = value;
-            newVersion.version = "0";
+            newVersion.version = 0;
             if (!this.containsKey(key)) {
                 List<BZStoreData> list = new LinkedList<>();
                 list.add(newVersion);
                 this.put(key, list);
             }
             else {
-                newVersion.version = String.valueOf(Long.parseLong(this.get(key).get(0).version) + 1);
+                newVersion.version = this.get(key).get(0).version + 1;
                 newVersion.digest = digest;
                 this.get(key).add(0, newVersion);
             }

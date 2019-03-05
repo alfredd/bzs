@@ -30,6 +30,11 @@ enum TransactionStatus {
     ABORTED = 1;
 }
 
+enum OperationStatus {
+    FAILED = 0;
+    SUCCESS = 1;
+    INVALID = 2;
+}
 
 message Write {
     string key = 1;
@@ -41,6 +46,7 @@ message WriteResponse {
     string value = 2;
     int64 version = 3;
     string responseDigest = 4;
+    OperationStatus status = 5;
 }
 
 message Read {
@@ -52,6 +58,7 @@ message ReadResponse {
     string value = 2;
     int64 version = 3;
     string responseDigest = 4;
+    OperationStatus status = 5;
 }
 
 message ReadHistory {

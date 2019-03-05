@@ -5,6 +5,9 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ForwardingClient;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
+import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
 import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
 import io.grpc.stub.StreamObserver;
 
@@ -76,6 +79,17 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     @Override
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
-        super.readOperation(request, responseObserver);
+        String key = request.getKey();
+        try {
+            BZStoreData data = BZDatabaseController.getlatest(key);
+            Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
+                    .setKey(key)
+                    .setResponseDigest(data.digest)
+                    .setValue(data.value)
+                    .setVersion(data.version)
+                    .build();
+        } catch (InvalidDataAccessException e) {
+            log.log(Level.SEVERE, "Could not retrieve data for key: "+key);
+        }
     }
 }
