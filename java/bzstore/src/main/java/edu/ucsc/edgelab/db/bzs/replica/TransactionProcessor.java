@@ -49,13 +49,17 @@ public class TransactionProcessor {
         }
         synchronized (this) {
             sequenceNumber+=1;
+            responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
         }
-        responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
     }
 
     void resetEpoch() {
         // Increment Epoch number
-        epochNumber+=1;
+        synchronized (this) {
+            epochNumber+=1;
+            sequenceNumber=0;
+        }
         // Process transaction in the current epoch.
+
     }
 }
