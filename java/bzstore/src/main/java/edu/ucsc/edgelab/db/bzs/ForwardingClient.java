@@ -36,8 +36,8 @@ public class ForwardingClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public Bzs.TransactionResponse forward(Bzs.Transaction batch) {
-        return blockingStub.forward(batch);
+    public Bzs.TransactionResponse forward(Bzs.Transaction transaction) {
+        return blockingStub.forward(transaction);
     }
 
 
