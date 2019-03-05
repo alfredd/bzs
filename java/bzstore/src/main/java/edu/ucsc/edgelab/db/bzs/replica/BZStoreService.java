@@ -50,8 +50,6 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 // If this instance is the leader process the transaction.
                 transactionProcessor.processTransaction(request, responseObserver);
             } else {
-                // If this instance is not the leader forward transaction to the leader.
-//                forwardingClient.forward(request,responseObserver);
                 response = forwardingClient.forward(request);
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
