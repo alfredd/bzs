@@ -42,6 +42,6 @@ public final class BZDatabaseController {
     }
 
     public static void getDBSnapshot() {
-
+        //TODO: add code from BFTServer to this method.
     }
 }
