@@ -20,11 +20,11 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     private TransactionProcessor transactionProcessor;
     private ForwardingClient forwardingClient =null;
 
-    public BZStoreService(String id) {
+    public BZStoreService(String id, TransactionProcessor tp) {
         log.info("BZStore service started. Replica ID: " + id);
         this.id = id;
         configuration = new Configuration();
-        transactionProcessor = new TransactionProcessor();
+        transactionProcessor = tp;
         ServerInfo leaderInfo = null;
         try {
             leaderInfo = configuration.getLeaderInfo();

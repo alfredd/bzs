@@ -21,6 +21,7 @@ public class BZStoreServer {
     private String id;
 
     private Server server;
+    private TransactionProcessor transactionProcessor;
 
     public static void main(String[] args) throws IOException {
 
@@ -52,7 +53,9 @@ public class BZStoreServer {
     }
 
     public BZStoreServer(String id) {
+
         this.id = id;
+        transactionProcessor = new TransactionProcessor();
     }
 
     private void setServerPort(int serverPort) {
@@ -61,8 +64,8 @@ public class BZStoreServer {
 
     private void start() throws IOException {
         server = ServerBuilder.forPort(this.serverPort)
-                .addService(new BZStoreService(id))
-                .addService(new BZStoreReplica(id))
+                .addService(new BZStoreService(id, this.transactionProcessor))
+                .addService(new BZStoreReplica(id, this.transactionProcessor))
                 .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

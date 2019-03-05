@@ -10,10 +10,12 @@ public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
 
     private static final Logger log = Logger.getLogger(BZStoreReplica.class.getName());
     private final String id;
+    private TransactionProcessor transactionProcessor;
 
-    public BZStoreReplica(String id) {
+    public BZStoreReplica(String id, TransactionProcessor transactionProcessor) {
         log.info("Forwarding service created. Replica id: " + id);
         this.id = id;
+        this.transactionProcessor = transactionProcessor;
     }
 
     @Override
