@@ -18,12 +18,6 @@ public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
         this.transactionProcessor = transactionProcessor;
     }
 
-/*    @Override
-    public void forward(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-//        transactionProcessor.processTransaction(request,responseObserver);
-    }*/
-
-
     @Override
     public void forward(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         log.info("Received forwarded message from a replica. Adding transaction to processing queue.");
