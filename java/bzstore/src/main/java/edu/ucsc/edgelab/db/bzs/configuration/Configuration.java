@@ -6,7 +6,9 @@ import java.io.IOException;
 
 public class Configuration {
 
-    public ServerInfo getLeaderInfo() throws IOException, UnknownConfiguration {
+    private static final int DEFAULT_EPOCH_TIME_IN_MS = 50;
+
+    public static ServerInfo getLeaderInfo() throws IOException, UnknownConfiguration {
         ServerInfo info = new ServerInfo();
         BZStoreProperties properties = new BZStoreProperties();
 
@@ -16,6 +18,10 @@ public class Configuration {
         info.port = Integer.getInteger(properties.getProperty(leaderID, BZStoreProperties.Configuration.port));
 
         return info;
+    }
+
+    public static Integer getDefaultEpochTimeInMS() {
+        return DEFAULT_EPOCH_TIME_IN_MS;
     }
 
 }

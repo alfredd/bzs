@@ -19,25 +19,24 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     private static final Logger log = Logger.getLogger(BZStoreService.class.getName());
     private final String id;
-    private Configuration configuration;
     private TransactionProcessor transactionProcessor;
-    private ForwardingClient forwardingClient =null;
+    private ForwardingClient forwardingClient = null;
 
     public BZStoreService(String id, TransactionProcessor tp) {
         log.info("BZStore service started. Replica ID: " + id);
         this.id = id;
-        configuration = new Configuration();
+
         transactionProcessor = tp;
-        ServerInfo leaderInfo = null;
+        ServerInfo leaderInfo;
         try {
-            leaderInfo = configuration.getLeaderInfo();
+            leaderInfo = Configuration.getLeaderInfo();
         } catch (Exception e) {
             String msg = "Cannot create connection to leader.";
             log.log(Level.SEVERE, msg);
-            throw new UnknownConfiguration(msg,e);
+            throw new UnknownConfiguration(msg, e);
         }
-        if (!this.id.equals(leaderInfo.id)) {
-            forwardingClient = new ForwardingClient(leaderInfo.host,leaderInfo.port);
+        if (leaderInfo!=null && !this.id.equals(leaderInfo.id)) {
+            forwardingClient = new ForwardingClient(leaderInfo.host, leaderInfo.port);
         }
     }
 
@@ -46,10 +45,10 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
         Bzs.TransactionResponse response;
         try {
-            ServerInfo leader = configuration.getLeaderInfo();
+            ServerInfo leader = Configuration.getLeaderInfo();
             if (leader.id.equals(id)) {
                 // If this instance is the leader process the transaction.
-                transactionProcessor.processTransaction(request,responseObserver);
+                transactionProcessor.processTransaction(request, responseObserver);
             } else {
                 // If this instance is not the leader forward transaction to the leader.
 //                forwardingClient.forward(request,responseObserver);
@@ -89,7 +88,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                     .setVersion(data.version)
                     .build();
         } catch (InvalidDataAccessException e) {
-            log.log(Level.SEVERE, "Could not retrieve data for key: "+key);
+            log.log(Level.SEVERE, "Could not retrieve data for key: " + key);
         }
     }
 }

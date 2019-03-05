@@ -12,7 +12,7 @@ public class BZStoreProperties {
     public static final String CONFIG_PROPERTIES = "config.properties";
 
     public enum Configuration {
-        port, host, leader,
+        port, host, leader, epoch_time_ms
     }
 
     private Properties bzsProperties;
