@@ -27,16 +27,16 @@ public class Serializer {
         try {
             data = BZDatabaseController.getlatest(c.getKey());
         } catch (InvalidDataAccessException e) {
-            return false;
+            return true;
         }
         if (!readMap.containsKey(c.getKey())) {
             readMap.put(c.getKey(), Long.valueOf(data.version));
         }
         // Handling case 2 and 3 from the table in the google doc
         if (readMap.get(c.getKey()) > c.getVersion()) {
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     public boolean serialize(Bzs.Transaction t) {
