@@ -72,7 +72,17 @@ public class TransactionProcessor {
         //TODO: Change the return typ to boolean
         List<Long> success = bftClient.performCommit(transactions.values());
         if (success==null) {
-
+            for (int keys :
+                    transactions.keySet()) {
+                Bzs.Transaction transaction = transactions.get(keys);
+                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(keys);
+                Bzs.TransactionResponse tResponse =
+                        Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
+                responseObserver.onNext(tResponse);
+                responseObserver.onCompleted();
+            }
+        } else {
+            
         }
 
     }
