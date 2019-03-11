@@ -85,8 +85,13 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                     .setValue(data.value)
                     .setVersion(data.version)
                     .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (InvalidDataAccessException e) {
             log.log(Level.SEVERE, "Could not retrieve data for key: " + key);
+            Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder().setStatus(Bzs.OperationStatus.FAILED).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         }
     }
 }
