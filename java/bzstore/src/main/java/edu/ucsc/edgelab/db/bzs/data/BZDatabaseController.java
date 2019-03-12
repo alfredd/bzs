@@ -3,10 +3,7 @@ package edu.ucsc.edgelab.db.bzs.data;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,7 +38,16 @@ public final class BZDatabaseController {
         BZ_DATABASE_CONTROLLER.db = (BpTree) objIn.readObject();
     }
 
-    public static void getDBSnapshot() {
-        //TODO: add code from BFTServer to this method.
+    public static byte[] getDBSnapshot() {
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+            objOut.writeObject(BZ_DATABASE_CONTROLLER.db);
+            return byteOut.toByteArray();
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error while taking snapshot", e);
+        }
+
+        //Need to check this. Can this be replaced by a runtime exception.
+        return new byte[0];
     }
 }

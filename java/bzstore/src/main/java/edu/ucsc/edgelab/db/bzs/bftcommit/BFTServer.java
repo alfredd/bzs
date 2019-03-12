@@ -144,15 +144,7 @@ public class BFTServer extends DefaultSingleRecoverable {
     @SuppressWarnings("unchecked")
     @Override
     public byte[] getSnapshot() {
-        // TODO: Needs explanation.
-/*        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-            objOut.writeObject(db);
-            return byteOut.toByteArray();
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Error while taking snapshot", e);
-        }*/
-        return new byte[0];
+        return BZDatabaseController.getDBSnapshot();
     }
 
     @SuppressWarnings("unchecked")
