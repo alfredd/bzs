@@ -59,7 +59,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 .setKey(key)
                                 .setValue(writeOp.getValue())
                                 .setVersion(bzStoreData.version + 1)
-                                .setResponseDigest(generateHash(bzStoreData.value + bzStoreData.digest)).build();
+                                .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
                         responseBuilder.setWriteResponses(i, writeResponse);
 
                     }
