@@ -5,6 +5,9 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
+import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import io.grpc.stub.StreamObserver;
 
 import java.util.List;
@@ -40,11 +43,11 @@ public class TransactionProcessor {
         EpochMaintainer epochMaintainer = new EpochMaintainer();
         epochMaintainer.setProcessor(this);
         Timer epochTimer = new Timer("EpochMaintainer", true);
-        epochTimer.scheduleAtFixedRate(epochMaintainer,epochTimeInMS,epochTimeInMS);
+        epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
     }
 
     void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
-        if (serializer.serialize(request) == false) {
+        if (!serializer.serialize(request)) {
 
             Bzs.TransactionResponse response =
                     Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
@@ -53,41 +56,63 @@ public class TransactionProcessor {
             return;
         }
         synchronized (this) {
-            sequenceNumber+=1;
+            sequenceNumber += 1;
             responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
         }
     }
 
     void resetEpoch() {
         // Increment Epoch number and reset sequence number.
+        int epoch = epochNumber;
         synchronized (this) {
-            epochNumber+=1;
-            sequenceNumber=0;
+            epochNumber += 1;
+            sequenceNumber = 0;
+            serializer.resetEpoch();
         }
         // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
-        Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epochNumber - 1);
+        Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
-                responseHandlerRegistry.getTransactionObservers(epochNumber - 1);
+                responseHandlerRegistry.getTransactionObservers(epoch);
         BFTClient bftClient = new BFTClient(id);
-        //TODO: Change the return typ to boolean
-        List<Long> success = bftClient.performCommit(transactions.values());
-        if (success==null) {
-            for (int keys :
-                    transactions.keySet()) {
-                Bzs.Transaction transaction = transactions.get(keys);
-                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(keys);
+
+        List<Bzs.TransactionResponse> transactionResponses = bftClient.performCommit(transactions.values());
+        if (transactionResponses == null) {
+            for (int transactionIndex : transactions.keySet()) {
+                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(transactionIndex);
                 Bzs.TransactionResponse tResponse =
                         Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
                 responseObserver.onNext(tResponse);
                 responseObserver.onCompleted();
             }
         } else {
-            
+            for (int i = 0; i < transactions.size(); i++) {
+                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i);
+                Bzs.TransactionResponse transactionResponse = transactionResponses.get(i);
+
+                for (Bzs.WriteResponse writeResponse : transactionResponse.getWriteResponsesList()) {
+                    BZStoreData data = new BZStoreData(
+                            writeResponse.getValue(),
+                            writeResponse.getVersion(),
+                            writeResponse.getResponseDigest());
+                    try {
+                        BZDatabaseController.commit(writeResponse.getKey(), data);
+                        responseObserver.onNext(transactionResponse);
+                    } catch (InvalidCommitException e) {
+                        responseObserver.onNext(
+                                Bzs.TransactionResponse.newBuilder(transactionResponse)
+                                        .setStatus(Bzs.TransactionStatus.ABORTED)
+                                        .build());
+                    }
+                }
+                responseObserver.onCompleted();
+            }
         }
+
+        responseHandlerRegistry.clearEpochHistory(epoch);
 
     }
 
-    public void setId(Integer id) {
-        this.id=id;
+    void setId(Integer id) {
+        this.id = id;
     }
 }

@@ -18,19 +18,13 @@ public class ResponseHandlerRegistry {
     public void addToRegistry(int epochNumber, int sequenceNumber, Bzs.Transaction transaction,
                               StreamObserver<Bzs.TransactionResponse> responseObserver) {
 
-        Map<Integer, StreamObserver<Bzs.TransactionResponse>> epochHistory = requestHandlerRegistry.get(epochNumber);
-        if (epochHistory==null) {
-            epochHistory = new LinkedHashMap<>();
-            requestHandlerRegistry.put(epochNumber,epochHistory);
-        }
-        epochHistory.put(sequenceNumber,responseObserver);
+        Map<Integer, StreamObserver<Bzs.TransactionResponse>> epochHistory =
+                requestHandlerRegistry.computeIfAbsent(epochNumber, k -> new LinkedHashMap<>());
+        epochHistory.put(sequenceNumber, responseObserver);
 
-        Map<Integer, Bzs.Transaction> epochTransactionHistory = requestRegistry.get(epochNumber);
-        if (epochTransactionHistory==null) {
-            epochTransactionHistory = new LinkedHashMap<>();
-            requestRegistry.put(epochNumber,epochTransactionHistory);
-        }
-        epochTransactionHistory.put(sequenceNumber,transaction);
+        Map<Integer, Bzs.Transaction> epochTransactionHistory = requestRegistry.computeIfAbsent(epochNumber,
+                k -> new LinkedHashMap<>());
+        epochTransactionHistory.put(sequenceNumber, transaction);
 
     }
 

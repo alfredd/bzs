@@ -19,7 +19,7 @@ public class BFTClient {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
-    public List<Long> performCommit(Collection<Bzs.Transaction> transactions) {
+    public List<Bzs.TransactionResponse> performCommit(Collection<Bzs.Transaction> transactions) {
         LOGGER.info("Received transaction batch to perform commit consensus.");
         LinkedList<Long> result = new LinkedList<>();
 
@@ -30,38 +30,24 @@ public class BFTClient {
         }
         Bzs.TransactionBatch batch = batchBuilder.build();
 
+        List<Bzs.TransactionResponse> transactionResponses = new LinkedList<>();
 
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-//            List<byte[]> transactionInBytes = new LinkedList<>();
-//            for (Bzs.Transaction i : transactions) {
-//                transactionInBytes.add(i.toByteArray());
-//            }
-//            objOut.writeObject(0);
-//            objOut.writeObject(transactionInBytes);
+
             objOut.write(batch.toByteArray());
             objOut.flush();
             byteOut.flush();
 
             byte[] reply;
-            try {
-                reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
-                if (reply.length == 0)
-                    throw new IOException();
-            } catch (RuntimeException e) {
-                LOGGER.log(Level.SEVERE, "Commit Failed: " + e.getLocalizedMessage(), e);
-                return result;
-            }
-            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-                result = (LinkedList<Long>) objIn.readObject();
-                LOGGER.info("Result response: " + result.toString());
-            }
-        } catch (IOException | ClassNotFoundException e) {
+            reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+            Bzs.TransactionBatchResponse response = Bzs.TransactionBatchResponse.parseFrom(reply);
+            return response.getResponsesList();
+        } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
         }
         LOGGER.info("Commit consensus completed for transaction.");
-        return result;
+        return null;
     }
 
     public boolean performRead(Collection<Bzs.ROTransaction> roTransactions) {
