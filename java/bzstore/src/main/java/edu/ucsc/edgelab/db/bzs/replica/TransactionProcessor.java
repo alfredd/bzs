@@ -1,6 +1,5 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import com.google.common.collect.Lists;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;

@@ -1,14 +1,11 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import static org.junit.Assert.assertTrue;
-
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.util.logging.Logger;
+import static org.junit.Assert.assertTrue;
 
 public class SerializerTest {
     @Test

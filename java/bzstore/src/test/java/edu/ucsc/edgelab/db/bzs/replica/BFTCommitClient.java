@@ -5,7 +5,6 @@ import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 public class BFTCommitClient {
     public static void main(String args[]){

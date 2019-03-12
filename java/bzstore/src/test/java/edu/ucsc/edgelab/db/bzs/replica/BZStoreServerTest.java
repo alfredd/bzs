@@ -1,8 +1,8 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for simple BZStoreServer.
