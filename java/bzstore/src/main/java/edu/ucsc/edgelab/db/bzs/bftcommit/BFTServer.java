@@ -7,21 +7,20 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
+import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.*;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BFTServer extends DefaultSingleRecoverable {
 
-    private Logger logger;
+    private Logger logger = Logger.getLogger(BFTServer.class.getName());
     private String transaction_hash;
 
     public BFTServer(int id) {
-        logger = Logger.getLogger(BFTServer.class.getName());
         transaction_hash = "";
         new ServiceReplica(id, this, this);
 
@@ -30,84 +29,116 @@ public class BFTServer extends DefaultSingleRecoverable {
     @SuppressWarnings("unchecked")
     @Override
     public byte[] appExecuteOrdered(byte[] transactions, MessageContext msgCtx) {
-        // TODO: Needs explanation.
-        byte[] reply = null;
-        try (ByteArrayInputStream byteIn = new ByteArrayInputStream(transactions);
-             ObjectInput objIn = new ObjectInputStream(byteIn);
-             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        // TODO: Need to re-factor.
+        byte[] reply;
+        Serializer serializer = new Serializer();
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
 
-            Integer type = (Integer) objIn.readObject();
-            if (type == 0) {//Performing BFT commit
-                System.out.println("=========Performing BFT Transactions=========");
-                LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
-                List<String> hashes = new LinkedList<>();
-                for (byte[] b : batch) {
-                    Bzs.Transaction t = Bzs.Transaction.newBuilder().mergeFrom(b).build();
-                    transaction_hash = generateHash(transaction_hash + t.toString());
-                    hashes.add(transaction_hash);
+            Bzs.TransactionBatch transactionBatch =
+                    Bzs.TransactionBatch.newBuilder().mergeFrom(byteOut.toByteArray()).build();
 
-                    // COMMIT IS NOT REQUIRED HERE
-/*                    for (Bzs.Write i : t.getWriteOperationsList()) {
-                        try {
-                            BZStoreData data = new BZStoreData();
-                            data.
-                                    BZDatabaseController.commit(data);
-                            db.commit(i.getKey(), i.getValue(), "");
-                        } catch (InvalidCommitException e) {
-                            System.out.println("Commit did not happen");
-                        }
-                    }*/
+            Bzs.TransactionBatchResponse batchResponse;
+            Bzs.TransactionBatchResponse.Builder batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
+            if (transactionBatch.getTransactionsCount() > 0) {
+
+                for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
+                    Bzs.Transaction transaction = transactionBatch.getTransactions(transactionIndex);
+
+                    if (!serializer.serialize(transaction)) {
+                        return getRandomBytes();
+                    }
+                    Bzs.TransactionResponse response;
+                    Bzs.TransactionResponse.Builder responseBuilder = Bzs.TransactionResponse.newBuilder();
+                    for (int i = 0; i < transaction.getWriteOperationsCount(); i++) {
+                        Bzs.Write writeOp = transaction.getWriteOperations(i);
+                        BZStoreData bzStoreData;
+                        String key = writeOp.getKey();
+                        bzStoreData = getBzStoreData(key);
+                        Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
+                                .setKey(key)
+                                .setValue(writeOp.getValue())
+                                .setVersion(bzStoreData.version + 1)
+                                .setResponseDigest(generateHash(bzStoreData.value + bzStoreData.digest)).build();
+                        responseBuilder.setWriteResponses(i, writeResponse);
+
+                    }
+                    responseBuilder.setStatus(Bzs.TransactionStatus.COMMITTED);
+                    response = responseBuilder.build();
+                    batchResponseBuilder.addResponses(response);
                 }
-                System.out.println("HASHES :::::" + hashes.toString());
-                boolean bReply = Math.random() < 0.5;
-                objOut.writeObject(hashes);
+
+                batchResponse = batchResponseBuilder.build();
+
+                logger.info("Completed generating response for transaction batch.");
+                objOut.writeObject(batchResponse.toByteArray());
                 objOut.flush();
                 byteOut.flush();
                 reply = byteOut.toByteArray();
             } else {
-                LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
-                List<String> hashes = new LinkedList<>();
-                for (byte[] b : batch) {
-                    String b_hash = "";
-                    Bzs.ROTransaction t = Bzs.ROTransaction.newBuilder().mergeFrom(b).build();
-                    for (Bzs.Read i : t.getReadOperationsList()) {
-                        String value;
-                        long version;
-                        value = "";
-                        version = 0;
-                        if (i.getKey() != null) {
-                            try {
-                                BZStoreData storeData = BZDatabaseController.getlatest(i.getKey());
-                                value = storeData.value;
-                                version = storeData.version;
-                            } catch (InvalidDataAccessException e) {
-                                e.printStackTrace();
-                            }
+                if (transactionBatch.getRotransactionCount() > 0) {
+
+                    for (int i = 0; i < transactionBatch.getRotransactionCount(); i++) {
+                        Bzs.ROTransaction roTransaction = transactionBatch.getRotransaction(i);
+
+                        Bzs.ROTransactionResponse.Builder roTransactionResponseBuilder =
+                                Bzs.ROTransactionResponse.newBuilder();
+
+                        for (Bzs.Read readOp : roTransaction.getReadOperationsList()) {
+                            BZStoreData storeData = getBzStoreData(readOp.getKey());
+                            Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
+                                    .setKey(readOp.getKey())
+                                    .setValue(storeData.value)
+                                    .setVersion(storeData.version)
+                                    .setStatus(
+                                            readOp.getKey() == null ? Bzs.OperationStatus.INVALID :
+                                                    Bzs.OperationStatus.SUCCESS
+                                    )
+                                    .setResponseDigest(storeData.digest).buildPartial();
+                            roTransactionResponseBuilder.addReadResponses(response);
                         }
-                        b_hash = generateHash(b_hash + value + version);
+                        batchResponseBuilder.addReadresponses(roTransactionResponseBuilder.build());
                     }
-                    hashes.add(b_hash);
+                    batchResponse = batchResponseBuilder.build();
+
+                    logger.info("Completed generating response for transaction batch.");
+                    objOut.writeObject(batchResponse.toByteArray());
+                    objOut.flush();
+                    byteOut.flush();
+                    reply = byteOut.toByteArray();
+
+                } else {
+                    reply = getRandomBytes();
                 }
-                System.out.println("HASHES :::::" + hashes.toString());
-                boolean bReply = Math.random() < 0.5;
-                objOut.writeObject(hashes);
-                objOut.flush();
-                byteOut.flush();
-                reply = byteOut.toByteArray();
             }
 
-        } catch (IOException | ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Occured during db operations executions", e);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Exception occured when reading inputs. "+e.getLocalizedMessage(), e);
+            reply = getRandomBytes();
         }
         return reply;
+    }
+
+    private BZStoreData getBzStoreData(String key) {
+        BZStoreData bzStoreData;
+        try {
+            bzStoreData = BZDatabaseController.getlatest(key);
+
+        } catch (InvalidDataAccessException e) {
+            logger.log(Level.SEVERE, "Database access failed. " + e.getLocalizedMessage(), e);
+            bzStoreData = new BZStoreData();
+        }
+        return bzStoreData;
+    }
+
+    private byte[] getRandomBytes() {
+        return String.valueOf(new Random().nextInt()).getBytes();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public byte[] appExecuteUnordered(byte[] transactions, MessageContext msgCtx) {
-        byte[] reply = null;
-        return reply;
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -142,8 +173,7 @@ public class BFTServer extends DefaultSingleRecoverable {
     }
 
     private static String generateHash(String input) {
-        String hash = DigestUtils.md5Hex(input).toUpperCase();
-        return hash;
+        return DigestUtils.md5Hex(input).toUpperCase();
     }
 
 }

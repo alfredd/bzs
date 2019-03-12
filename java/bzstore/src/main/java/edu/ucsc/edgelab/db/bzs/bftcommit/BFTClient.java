@@ -22,14 +22,24 @@ public class BFTClient {
     public List<Long> performCommit(Collection<Bzs.Transaction> transactions) {
         LOGGER.info("Received transaction batch to perform commit consensus.");
         LinkedList<Long> result = new LinkedList<>();
+
+        Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
+
+        for (Bzs.Transaction transaction : transactions) {
+            batchBuilder.addTransactions(transaction);
+        }
+        Bzs.TransactionBatch batch = batchBuilder.build();
+
+
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-            List<byte[]> transactionInBytes = new LinkedList<>();
-            for (Bzs.Transaction i : transactions) {
-                transactionInBytes.add(i.toByteArray());
-            }
-            objOut.writeObject(0);
-            objOut.writeObject(transactionInBytes);
+//            List<byte[]> transactionInBytes = new LinkedList<>();
+//            for (Bzs.Transaction i : transactions) {
+//                transactionInBytes.add(i.toByteArray());
+//            }
+//            objOut.writeObject(0);
+//            objOut.writeObject(transactionInBytes);
+            objOut.write(batch.toByteArray());
             objOut.flush();
             byteOut.flush();
 
