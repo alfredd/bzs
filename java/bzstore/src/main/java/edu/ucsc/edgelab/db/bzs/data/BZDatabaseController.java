@@ -51,4 +51,13 @@ public final class BZDatabaseController {
         //Need to check this. Can this be replaced by a runtime exception.
         return new byte[0];
     }
+
+    public static void rollbackForKeys(List<String> keys) {
+        synchronized (BZ_DATABASE_CONTROLLER) {
+            for(String key: keys) {
+                List<BZStoreData> data = BZ_DATABASE_CONTROLLER.db.get(key);
+                data.remove(0);
+            }
+        }
+    }
 }

@@ -42,6 +42,8 @@ public class BFTClient {
             return response.getResponsesList();
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
+        } catch (Exception e ) {
+            LOGGER.log(Level.WARNING, "Could not parse response. Might be due to consensus failure. Transaction will be aborted.");
         }
         LOGGER.info("Commit consensus completed for transaction.");
         return null;
