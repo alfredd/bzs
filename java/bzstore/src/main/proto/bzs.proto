@@ -18,11 +18,20 @@ service Replica {
 message TransactionBatch {
     repeated Transaction transactions = 1;
     repeated ROTransaction rotransaction = 2;
+    BFTCommit bftCommit = 3;
 }
 
 message TransactionBatchResponse {
     repeated TransactionResponse responses = 1;
     repeated ROTransactionResponse readresponses = 2;
+    BFTCommitResponse bftCommitResponse= 3;
+}
+
+message BFTCommit{
+    repeated Transaction transactions = 1;
+}
+message BFTCommitResponse{
+    repeated TransactionResponse responses = 1;
 }
 
 enum TransactionStatus {
