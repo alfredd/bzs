@@ -19,6 +19,7 @@ public class BFTClient {
     private static final Logger LOGGER = Logger.getLogger(BFTClient.class.getName());
 
     public BFTClient(int ClientId) {
+        LOGGER.info("Trying to connect to server: "+ClientId);
         serviceProxy = new ServiceProxy(ClientId);
     }
 

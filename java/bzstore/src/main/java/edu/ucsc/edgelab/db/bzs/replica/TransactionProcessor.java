@@ -31,7 +31,7 @@ public class TransactionProcessor {
         sequenceNumber = 0;
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
-        
+
     }
 
     public void startEpochMaintainer() {
@@ -76,8 +76,8 @@ public class TransactionProcessor {
         Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
                 responseHandlerRegistry.getTransactionObservers(epoch);
-        BFTClient bftClient = new BFTClient(id);
         if (transactions!=null && transactions.size()>0) {
+            BFTClient bftClient = new BFTClient(id);
             List<Bzs.TransactionResponse> transactionResponses = bftClient.performCommit(transactions.values());
             if (transactionResponses == null) {
                 for (int transactionIndex : transactions.keySet()) {
