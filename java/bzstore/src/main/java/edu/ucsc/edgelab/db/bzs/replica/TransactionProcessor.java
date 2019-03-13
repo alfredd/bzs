@@ -88,27 +88,32 @@ public class TransactionProcessor {
                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i);
                 Bzs.TransactionResponse transactionResponse = transactionResponses.get(i);
 
-                for (Bzs.WriteResponse writeResponse : transactionResponse.getWriteResponsesList()) {
-                    BZStoreData data = new BZStoreData(
-                            writeResponse.getValue(),
-                            writeResponse.getVersion(),
-                            writeResponse.getResponseDigest());
-                    try {
-                        BZDatabaseController.commit(writeResponse.getKey(), data);
-                        responseObserver.onNext(transactionResponse);
-                    } catch (InvalidCommitException e) {
-                        responseObserver.onNext(
-                                Bzs.TransactionResponse.newBuilder(transactionResponse)
-                                        .setStatus(Bzs.TransactionStatus.ABORTED)
-                                        .build());
-                    }
-                }
-                responseObserver.onCompleted();
+                sendResponse(responseObserver, transactionResponse);
             }
         }
 
         responseHandlerRegistry.clearEpochHistory(epoch);
 
+    }
+
+    void sendResponse(StreamObserver<Bzs.TransactionResponse> responseObserver,
+                              Bzs.TransactionResponse transactionResponse) {
+        for (Bzs.WriteResponse writeResponse : transactionResponse.getWriteResponsesList()) {
+            BZStoreData data = new BZStoreData(
+                    writeResponse.getValue(),
+                    writeResponse.getVersion(),
+                    writeResponse.getResponseDigest());
+            try {
+                BZDatabaseController.commit(writeResponse.getKey(), data);
+                responseObserver.onNext(transactionResponse);
+            } catch (InvalidCommitException e) {
+                responseObserver.onNext(
+                        Bzs.TransactionResponse.newBuilder(transactionResponse)
+                                .setStatus(Bzs.TransactionStatus.ABORTED)
+                                .build());
+            }
+        }
+        responseObserver.onCompleted();
     }
 
     void setId(Integer id) {
