@@ -115,15 +115,8 @@ public class BFTServer extends DefaultSingleRecoverable {
     }
 
     private BZStoreData getBzStoreData(String key) {
-        BZStoreData bzStoreData;
-        try {
-            bzStoreData = BZDatabaseController.getlatest(key);
 
-        } catch (InvalidDataAccessException e) {
-            logger.log(Level.WARNING, "Database access failed. " + e.getLocalizedMessage(), e);
-            bzStoreData = new BZStoreData();
-        }
-        return bzStoreData;
+        return BZDatabaseController.getlatest(key);
     }
 
     private byte[] getRandomBytes() {

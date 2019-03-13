@@ -27,9 +27,10 @@ class BpTree extends TreeMap<String, List<BZStoreData>> {
 
             BZStoreData newVersion = new BZStoreData();
             newVersion.value = value;
-            newVersion.version = 0;
+            newVersion.digest = digest;
             if (!this.containsKey(key)) {
                 List<BZStoreData> list = new LinkedList<>();
+                newVersion.version=1;
                 list.add(newVersion);
                 this.put(key, list);
             }

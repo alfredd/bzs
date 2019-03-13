@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
 
 import java.io.*;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,12 +24,12 @@ public final class BZDatabaseController {
         LOGGER.info("Committed data with key: {"+key+"}");
     }
 
-    public static BZStoreData getlatest(String key) throws InvalidDataAccessException {
+    public static BZStoreData getlatest(String key) {
         List<BZStoreData> dataHistory = BZ_DATABASE_CONTROLLER.db.get(key);
         if (dataHistory == null) {
             String message = String.format("No data available for key=%s.", key);
             LOGGER.log(Level.WARNING, message);
-            throw new InvalidDataAccessException(message);
+           return new BZStoreData();
         }
         return dataHistory.get(0);
     }

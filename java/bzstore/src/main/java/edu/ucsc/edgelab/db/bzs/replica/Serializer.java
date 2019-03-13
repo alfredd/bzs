@@ -27,9 +27,8 @@ public class Serializer {
     public boolean readConflicts(Bzs.ReadHistory c) {
         //Needs to be changes where the version is fetched from the datastore and not the first key.
         BZStoreData data;
-        try {
-            data = BZDatabaseController.getlatest(c.getKey());
-        } catch (InvalidDataAccessException e) {
+        data = BZDatabaseController.getlatest(c.getKey());
+        if (data.version==0) {
             return true;
         }
         if (!readMap.containsKey(c.getKey())) {
@@ -52,12 +51,8 @@ public class Serializer {
         for (Bzs.Write writeOperation : t.getWriteOperationsList()) {
             String key = writeOperation.getKey();
             if (!readMap.containsKey(key)) {
-                try {
-                    BZStoreData data = BZDatabaseController.getlatest(key);
-                    readMap.put(key,data.version);
-                } catch (InvalidDataAccessException e) {
-                    readMap.put(key, (long) 0);
-                }
+                BZStoreData data = BZDatabaseController.getlatest(key);
+                readMap.put(key,data.version);
             }
             long version = readMap.get(key);
             readMap.put(key, version + 1);

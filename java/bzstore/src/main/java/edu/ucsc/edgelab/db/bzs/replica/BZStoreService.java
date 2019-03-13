@@ -79,8 +79,9 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     @Override
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
         String key = request.getKey();
-        try {
-            BZStoreData data = BZDatabaseController.getlatest(key);
+        BZStoreData data = BZDatabaseController.getlatest(key);
+        if (data.version>0) {
+
             Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
                     .setKey(key)
                     .setResponseDigest(data.digest)
@@ -89,8 +90,9 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                     .build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-        } catch (InvalidDataAccessException e) {
-            log.log(Level.SEVERE, "Could not retrieve data for key: " + key);
+        } else {
+
+            log.log(Level.WARNING, "Could not retrieve data for key: " + key);
             Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder().setStatus(Bzs.OperationStatus.FAILED).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
