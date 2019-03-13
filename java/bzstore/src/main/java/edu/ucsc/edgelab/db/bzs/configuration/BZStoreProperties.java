@@ -29,12 +29,17 @@ public class BZStoreProperties {
         );
     }
 
-    public String getProperty(String id, Configuration property) throws UnknownConfiguration {
-        String property_value = bzsProperties.getProperty(id+"."+property.name());
+    public String getProperty(final String id, Configuration property) throws UnknownConfiguration {
+        String idname = getIdName(id);
+        String property_value = bzsProperties.getProperty(idname+"."+property.name());
         if (property_value == null) {
             throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
         }
         return property_value;
+    }
+
+    public String getIdName(String id) {
+        return "z"+id;
     }
 
 
