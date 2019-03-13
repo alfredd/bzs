@@ -58,7 +58,7 @@ public class BZStoreServer {
         this.id = id;
         transactionProcessor = new TransactionProcessor();
         transactionProcessor.setId(Integer.decode(id));
-        BFTServer bftServer = new BFTServer(Integer.decode(id));
+
 
     }
 
@@ -76,6 +76,7 @@ public class BZStoreServer {
             logger.info("Shutting down.");
             BZStoreServer.this.stop();
         }));
+        BFTServer bftServer = new BFTServer(Integer.decode(id));
     }
 
     private void stop() {
