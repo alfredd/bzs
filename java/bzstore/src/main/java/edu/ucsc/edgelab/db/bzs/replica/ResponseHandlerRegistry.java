@@ -15,7 +15,7 @@ public class ResponseHandlerRegistry {
         requestRegistry = new LinkedHashMap<>();
     }
 
-    public void addToRegistry(int epochNumber, int sequenceNumber, Bzs.Transaction transaction,
+    public void addToRegistry(final int epochNumber, final int sequenceNumber, Bzs.Transaction transaction,
                               StreamObserver<Bzs.TransactionResponse> responseObserver) {
 
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> epochHistory =
@@ -35,6 +35,7 @@ public class ResponseHandlerRegistry {
     }
 
     public Map<Integer, Bzs.Transaction> getTransactions(int epochNumber) {
+
         return requestRegistry.get(epochNumber);
     }
 

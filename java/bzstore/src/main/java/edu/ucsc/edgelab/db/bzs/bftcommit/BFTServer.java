@@ -6,11 +6,11 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
-import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,12 +33,13 @@ public class BFTServer extends DefaultSingleRecoverable {
         // TODO: Need to re-factor.
         byte[] reply;
         Serializer serializer = new Serializer();
+        logger.info("Processing transaction.");
         try {
 
             Bzs.TransactionBatch transactionBatch =
 //                    Bzs.TransactionBatch.newBuilder().mergeFrom(byteOut.toByteArray()).build();
                     Bzs.TransactionBatch.newBuilder().mergeFrom(transactions).build();
-
+            logger.info("Transaction batch: "+transactionBatch.toString());
             Bzs.TransactionBatchResponse batchResponse;
             Bzs.TransactionBatchResponse.Builder batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
             if (transactionBatch.getTransactionsCount() > 0) {
@@ -47,8 +48,10 @@ public class BFTServer extends DefaultSingleRecoverable {
                     Bzs.Transaction transaction = transactionBatch.getTransactions(transactionIndex);
 
                     if (!serializer.serialize(transaction)) {
+                        logger.log(Level.WARNING, "Returning random bytes. Could not serialize the transaction: "+ transaction.toString());
                         return getRandomBytes();
                     }
+                    logger.info("Generating transaction hash for consensus.");
                     Bzs.TransactionResponse response;
                     Bzs.TransactionResponse.Builder responseBuilder = Bzs.TransactionResponse.newBuilder();
                     for (int i = 0; i < transaction.getWriteOperationsCount(); i++) {
@@ -61,7 +64,8 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 .setValue(writeOp.getValue())
                                 .setVersion(bzStoreData.version + 1)
                                 .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
-                        responseBuilder.setWriteResponses(i, writeResponse);
+                        responseBuilder.addWriteResponses(writeResponse);
+//                        responseBuilder.setWriteResponses(i, writeResponse);
 
                     }
                     responseBuilder.setStatus(Bzs.TransactionStatus.COMMITTED);
@@ -152,8 +156,14 @@ public class BFTServer extends DefaultSingleRecoverable {
         }
     }
 
-    private static String generateHash(String input) {
-        return DigestUtils.md5Hex(input).toUpperCase();
+    private String generateHash(final String input) {
+        long starttime = System.nanoTime();
+        String hash = DigestUtils.md5Hex(input).toUpperCase();
+        long endTime = System.nanoTime() - starttime;
+        logger.info("Hash generated in "+endTime+"nanosecs");
+
+        return hash;
+
     }
 
 }
