@@ -74,7 +74,7 @@ public class TransactionProcessor {
             sequenceNumber = 0;
             serializer.resetEpoch();
         }
-        LOGGER.info("Epoch reset begins for "+epoch);
+        LOGGER.info("Epoch reset begins for " + epoch);
         // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
         Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
@@ -83,24 +83,25 @@ public class TransactionProcessor {
             LOGGER.info("Processing transaction batch.");
             BFTClient bftClient = new BFTClient(id);
             LOGGER.info("Performing BFT Commit");
-            List<Bzs.TransactionResponse> transactionResponses = bftClient.performCommit(transactions.values());
-            if (transactionResponses == null) {
-                LOGGER.info("Received response was null. Transaction failed. Sending response to clients.");
-                for (int transactionIndex : transactions.keySet()) {
-                    StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(transactionIndex);
-                    Bzs.TransactionResponse tResponse =
-                            Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
-                    responseObserver.onNext(tResponse);
-                    responseObserver.onCompleted();
-                }
-            } else {
-                LOGGER.info("Received response from BFT server cluster. Transaction response is of size "+transactions.size());
-                for (int i = 0; i < transactions.size(); i++) {
-                    StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i+1);
-                    Bzs.TransactionResponse transactionResponse = transactionResponses.get(i);
-                    LOGGER.info("Processing transaction response: "+ transactionResponse.toString());
+            Bzs.TransactionBatchResponse batchResponse = bftClient.performCommit(transactions.values());
 
-                    commitAndSendResponse(responseObserver, transactionResponse);
+            if (batchResponse == null) {
+                sendFailureNotifications(transactions, responseObservers);
+            } else {
+                LOGGER.info("Received response from BFT server cluster. Transaction response is of size "
+                        + transactions.size() + ". Performing db commit");
+                Bzs.TransactionBatchResponse commitResponse = bftClient.performDbCommit(batchResponse);
+                if (commitResponse == null) {
+                    sendFailureNotifications(transactions, responseObservers);
+                }
+
+                for (int i = 0; i < transactions.size(); i++) {
+                    StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
+                    Bzs.TransactionResponse transactionResponse = commitResponse.getResponses(i);
+                    LOGGER.info("Processing transaction response: " + transactionResponse.toString());
+                    responseObserver.onNext(transactionResponse);
+                    responseObserver.onCompleted();
+//                    sendResponseToClient(responseObserver, transactionResponse);
                 }
             }
         } else {
@@ -111,41 +112,16 @@ public class TransactionProcessor {
 
     }
 
-    void commitAndSendResponse(StreamObserver<Bzs.TransactionResponse> responseObserver,
-                               Bzs.TransactionResponse transactionResponse) {
-
-        LOGGER.info("Committing transaction: " + transactionResponse);
-        List<String> committedKeys = new LinkedList<>();
-        boolean committed = true;
-        for (Bzs.WriteResponse writeResponse : transactionResponse.getWriteResponsesList()) {
-            BZStoreData data = new BZStoreData(
-                    writeResponse.getValue(),
-                    writeResponse.getVersion(),
-                    writeResponse.getResponseDigest());
-            try {
-                LOGGER.info("Committing write : " + writeResponse);
-                BZDatabaseController.commit(writeResponse.getKey(), data);
-                committedKeys.add(writeResponse.getKey());
-                LOGGER.info("Committed write : " + writeResponse);
-
-            } catch (InvalidCommitException e) {
-                LOGGER.log(Level.WARNING, "Commit failed for transaction: " + transactionResponse.toString() + ". All" +
-                        " committed keys will be rolled back and the transaction will be aborted.");
-                BZDatabaseController.rollbackForKeys(committedKeys);
-                responseObserver.onNext(
-                        Bzs.TransactionResponse.newBuilder(transactionResponse)
-                                .setStatus(Bzs.TransactionStatus.ABORTED)
-                                .build());
-                committed = false;
-                break;
-            }
+    private void sendFailureNotifications(Map<Integer, Bzs.Transaction> transactions, Map<Integer,
+            StreamObserver<Bzs.TransactionResponse>> responseObservers) {
+        LOGGER.info("Received response was null. Transaction failed. Sending response to clients.");
+        for (int transactionIndex : transactions.keySet()) {
+            StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(transactionIndex);
+            Bzs.TransactionResponse tResponse =
+                    Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
+            responseObserver.onNext(tResponse);
+            responseObserver.onCompleted();
         }
-        if (committed) {
-            LOGGER.info("Adding transaction response to observer.");
-            responseObserver.onNext(transactionResponse);
-        }
-        LOGGER.info("Sending response.");
-        responseObserver.onCompleted();
     }
 
     void setId(Integer id) {

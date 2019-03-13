@@ -25,13 +25,16 @@ message TransactionBatchResponse {
     repeated TransactionResponse responses = 1;
     repeated ROTransactionResponse readresponses = 2;
     BFTCommitResponse bftCommitResponse= 3;
+    int32 ID =4;
 }
 
 message BFTCommit{
-    repeated Transaction transactions = 1;
+    repeated TransactionResponse transactions = 1;
+    int32 ID =2;
 }
 message BFTCommitResponse{
     repeated TransactionResponse responses = 1;
+    int32 ID =2;
 }
 
 enum TransactionStatus {

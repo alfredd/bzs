@@ -3,12 +3,10 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.BZStoreGrpc;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ForwardingClient;
-import edu.ucsc.edgelab.db.bzs.bftcommit.BFTServer;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
-import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
 import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
 import io.grpc.stub.StreamObserver;
 
@@ -54,7 +52,8 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 transactionProcessor.processTransaction(request, responseObserver);
             } else {
                 response = forwardingClient.forward(request);
-                transactionProcessor.commitAndSendResponse(responseObserver,response);
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
             }
         } catch (IOException e) {
             log.log(Level.SEVERE, "Could not connect to leader. Aborting transaction.", e);

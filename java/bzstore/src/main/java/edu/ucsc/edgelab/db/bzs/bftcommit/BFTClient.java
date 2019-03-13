@@ -23,9 +23,9 @@ public class BFTClient {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
-    public List<Bzs.TransactionResponse> performCommit(Collection<Bzs.Transaction> transactions) {
+    public Bzs.TransactionBatchResponse performCommit(Collection<Bzs.Transaction> transactions) {
         LOGGER.info("Received transaction batch to perform commit consensus.");
-        LinkedList<Long> result = new LinkedList<>();
+
 
         Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
 
@@ -34,12 +34,15 @@ public class BFTClient {
         }
         Bzs.TransactionBatch batch = batchBuilder.build();
 
-        try {
+        return performConsensusCommit(batch);
+    }
 
+    public Bzs.TransactionBatchResponse performConsensusCommit(Bzs.TransactionBatch batch) {
+        try {
+            LOGGER.info("Starting db commit from client.");
             byte[] reply;
             reply = serviceProxy.invokeOrdered(batch.toByteArray());
-            Bzs.TransactionBatchResponse response = Bzs.TransactionBatchResponse.parseFrom(reply);
-            return response.getResponsesList();
+            return Bzs.TransactionBatchResponse.parseFrom(reply);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
         } catch (Exception e ) {
@@ -48,6 +51,9 @@ public class BFTClient {
         LOGGER.info("Commit consensus completed for transaction.");
         return null;
     }
+
+
+
 
     public boolean performRead(Collection<Bzs.ROTransaction> roTransactions) {
         LOGGER.info("Received RO transaction batch to perform commit consensus.");
@@ -78,5 +84,11 @@ public class BFTClient {
             status = false;
         }
         return status;
+    }
+
+    public Bzs.TransactionBatchResponse performDbCommit(Bzs.TransactionBatchResponse batchResponse) {
+        Bzs.BFTCommit commitdata = Bzs.BFTCommit.newBuilder().addAllTransactions(batchResponse.getResponsesList()).build();
+        Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setBftCommit(commitdata).build();
+        return performConsensusCommit(batch);
     }
 }
