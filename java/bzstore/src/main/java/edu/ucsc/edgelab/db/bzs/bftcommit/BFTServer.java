@@ -18,11 +18,12 @@ import java.util.logging.Logger;
 public class BFTServer extends DefaultSingleRecoverable {
 
     private Logger logger = Logger.getLogger(BFTServer.class.getName());
-    private String transaction_hash;
+
 
     public BFTServer(int id) {
-        transaction_hash = "";
+        logger.info("Starting BFT-Smart Server.");
         new ServiceReplica(id, this, this);
+        logger.info("Started: BFT-Smart Server.");
 
     }
 

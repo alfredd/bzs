@@ -1,5 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
+import edu.ucsc.edgelab.db.bzs.bftcommit.BFTServer;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
 import io.grpc.Server;
@@ -57,6 +58,8 @@ public class BZStoreServer {
         this.id = id;
         transactionProcessor = new TransactionProcessor();
         transactionProcessor.setId(Integer.decode(id));
+        BFTServer bftServer = new BFTServer(Integer.decode(id));
+
     }
 
     private void setServerPort(int serverPort) {
