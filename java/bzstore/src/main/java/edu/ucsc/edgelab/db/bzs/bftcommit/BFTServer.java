@@ -33,11 +33,11 @@ public class BFTServer extends DefaultSingleRecoverable {
         // TODO: Need to re-factor.
         byte[] reply;
         Serializer serializer = new Serializer();
-        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+        try {
 
             Bzs.TransactionBatch transactionBatch =
-                    Bzs.TransactionBatch.newBuilder().mergeFrom(byteOut.toByteArray()).build();
+//                    Bzs.TransactionBatch.newBuilder().mergeFrom(byteOut.toByteArray()).build();
+                    Bzs.TransactionBatch.newBuilder().mergeFrom(transactions).build();
 
             Bzs.TransactionBatchResponse batchResponse;
             Bzs.TransactionBatchResponse.Builder batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
@@ -72,10 +72,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponse = batchResponseBuilder.build();
 
                 logger.info("Completed generating response for transaction batch.");
-                objOut.writeObject(batchResponse.toByteArray());
-                objOut.flush();
-                byteOut.flush();
-                reply = byteOut.toByteArray();
+                reply = batchResponse.toByteArray();
             } else {
                 if (transactionBatch.getRotransactionCount() > 0) {
 
@@ -103,10 +100,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                     batchResponse = batchResponseBuilder.build();
 
                     logger.info("Completed generating response for transaction batch.");
-                    objOut.writeObject(batchResponse.toByteArray());
-                    objOut.flush();
-                    byteOut.flush();
-                    reply = byteOut.toByteArray();
+                    reply = batchResponse.toByteArray();
 
                 } else {
                     reply = getRandomBytes();
@@ -126,7 +120,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             bzStoreData = BZDatabaseController.getlatest(key);
 
         } catch (InvalidDataAccessException e) {
-            logger.log(Level.SEVERE, "Database access failed. " + e.getLocalizedMessage(), e);
+            logger.log(Level.WARNING, "Database access failed. " + e.getLocalizedMessage(), e);
             bzStoreData = new BZStoreData();
         }
         return bzStoreData;

@@ -44,7 +44,7 @@ public class BFTClient {
             byteOut.flush();
 
             byte[] reply;
-            reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+            reply = serviceProxy.invokeOrdered(batch.toByteArray());
             Bzs.TransactionBatchResponse response = Bzs.TransactionBatchResponse.parseFrom(reply);
             return response.getResponsesList();
         } catch (IOException e) {
@@ -60,8 +60,8 @@ public class BFTClient {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
             List<byte[]> transactionInBytes = new LinkedList<>();
-            for (Bzs.ROTransaction i : roTransactions) {
-                transactionInBytes.add(i.toByteArray());
+            for (Bzs.ROTransaction roTransaction : roTransactions) {
+                transactionInBytes.add(roTransaction.toByteArray());
             }
             objOut.writeObject(1);
             objOut.writeObject(transactionInBytes);
