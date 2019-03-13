@@ -88,7 +88,7 @@ public class TransactionProcessor {
                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i);
                 Bzs.TransactionResponse transactionResponse = transactionResponses.get(i);
 
-                sendResponse(responseObserver, transactionResponse);
+                commitAndSendResponse(responseObserver, transactionResponse);
             }
         }
 
@@ -96,8 +96,8 @@ public class TransactionProcessor {
 
     }
 
-    void sendResponse(StreamObserver<Bzs.TransactionResponse> responseObserver,
-                              Bzs.TransactionResponse transactionResponse) {
+    void commitAndSendResponse(StreamObserver<Bzs.TransactionResponse> responseObserver,
+                               Bzs.TransactionResponse transactionResponse) {
         for (Bzs.WriteResponse writeResponse : transactionResponse.getWriteResponsesList()) {
             BZStoreData data = new BZStoreData(
                     writeResponse.getValue(),
