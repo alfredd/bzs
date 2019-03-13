@@ -31,6 +31,10 @@ public class TransactionProcessor {
         sequenceNumber = 0;
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
+        
+    }
+
+    public void startEpochMaintainer() {
         try {
             BZStoreProperties properties = new BZStoreProperties();
             this.epochTimeInMS = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_time_ms));
@@ -73,23 +77,26 @@ public class TransactionProcessor {
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
                 responseHandlerRegistry.getTransactionObservers(epoch);
         BFTClient bftClient = new BFTClient(id);
+        if (transactions!=null && transactions.size()>0) {
+            List<Bzs.TransactionResponse> transactionResponses = bftClient.performCommit(transactions.values());
+            if (transactionResponses == null) {
+                for (int transactionIndex : transactions.keySet()) {
+                    StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(transactionIndex);
+                    Bzs.TransactionResponse tResponse =
+                            Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
+                    responseObserver.onNext(tResponse);
+                    responseObserver.onCompleted();
+                }
+            } else {
+                for (int i = 0; i < transactions.size(); i++) {
+                    StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i);
+                    Bzs.TransactionResponse transactionResponse = transactionResponses.get(i);
 
-        List<Bzs.TransactionResponse> transactionResponses = bftClient.performCommit(transactions.values());
-        if (transactionResponses == null) {
-            for (int transactionIndex : transactions.keySet()) {
-                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(transactionIndex);
-                Bzs.TransactionResponse tResponse =
-                        Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
-                responseObserver.onNext(tResponse);
-                responseObserver.onCompleted();
+                    commitAndSendResponse(responseObserver, transactionResponse);
+                }
             }
         } else {
-            for (int i = 0; i < transactions.size(); i++) {
-                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i);
-                Bzs.TransactionResponse transactionResponse = transactionResponses.get(i);
-
-                commitAndSendResponse(responseObserver, transactionResponse);
-            }
+            LOGGER.info("Nothing to commit in epoch: "+epoch+". Waiting for next epoch.");
         }
 
         responseHandlerRegistry.clearEpochHistory(epoch);

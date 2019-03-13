@@ -15,7 +15,7 @@ public class Configuration {
         String leaderID = properties.getProperty(BZStoreProperties.Configuration.leader);
         info.id = leaderID;
         info.host = properties.getProperty(leaderID, BZStoreProperties.Configuration.host);
-        info.port = Integer.getInteger(properties.getProperty(leaderID, BZStoreProperties.Configuration.port));
+        info.port = Integer.decode(properties.getProperty(leaderID, BZStoreProperties.Configuration.port));
 
         return info;
     }
