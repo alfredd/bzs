@@ -34,14 +34,7 @@ public class BFTClient {
         }
         Bzs.TransactionBatch batch = batchBuilder.build();
 
-        List<Bzs.TransactionResponse> transactionResponses = new LinkedList<>();
-
-        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-
-            objOut.write(batch.toByteArray());
-            objOut.flush();
-            byteOut.flush();
+        try {
 
             byte[] reply;
             reply = serviceProxy.invokeOrdered(batch.toByteArray());
