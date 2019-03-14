@@ -58,4 +58,8 @@ public final class BZDatabaseController {
             }
         }
     }
+
+    public static void clearDatabase() {
+        BZ_DATABASE_CONTROLLER.db.clear();
+    }
 }

@@ -78,6 +78,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                     response = responseBuilder.build();
                     batchResponseBuilder.addResponses(response);
                 }
+                serializer.resetEpoch();
                 batchResponseBuilder.setID(counter);
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(counter, batchResponse);
