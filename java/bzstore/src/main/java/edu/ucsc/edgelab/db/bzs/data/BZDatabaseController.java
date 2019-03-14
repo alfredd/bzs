@@ -1,10 +1,8 @@
 package edu.ucsc.edgelab.db.bzs.data;
 
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
-import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
 
 import java.io.*;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;

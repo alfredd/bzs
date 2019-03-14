@@ -4,7 +4,6 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
-import edu.ucsc.edgelab.db.bzs.exceptions.InvalidDataAccessException;
 
 import java.util.HashMap;
 import java.util.LinkedList;
