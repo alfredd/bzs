@@ -19,7 +19,7 @@ public class Transaction implements TransactionInterface {
     }
 
     public Transaction(String host, int port) {
-        super();
+        this();
         setClient(host, port);
     }
 
@@ -27,10 +27,9 @@ public class Transaction implements TransactionInterface {
         this.client = new BZClient(host, port);
     }
 
-    public BZClient getClient() {
-        return client;
+    public void setClient(BZClient client) {
+        this.client = client;
     }
-
 
     public Bzs.Transaction getTransaction() {
         return transaction;
@@ -39,7 +38,6 @@ public class Transaction implements TransactionInterface {
     @Override
     public String read(String key) {
 
-//        response = client.read(readOperation);
         long startTime = System.currentTimeMillis();
         Bzs.Read read = Bzs.Read.newBuilder().setKey(key).build();
         Bzs.ReadResponse response = client.read(read);
@@ -90,11 +88,6 @@ public class Transaction implements TransactionInterface {
             if (response.getStatus().equals(Bzs.TransactionStatus.COMMITTED)) {
                 LOGGER.info("Transaction committed.");
             }
-        }
-        try {
-            client.shutdown();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 }

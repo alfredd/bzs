@@ -82,7 +82,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponseBuilder.setID(counter);
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(counter, batchResponse);
-                logger.info("Completed generating response for transaction batch.");
+                logger.info("Completed generating response for transaction batch with batch id: "+counter);
                 reply = batchResponse.toByteArray();
             } else if (transactionBatch.getRotransactionCount() > 0) {
 
@@ -113,24 +113,35 @@ public class BFTServer extends DefaultSingleRecoverable {
                 reply = batchResponse.toByteArray();
 
             } else if (transactionBatch.getBftCommit().getTransactionsCount() > 0) {
+                logger.info("====================================");
                 logger.info("======Performing BFT DB Commit======");
+                logger.info("====================================");
                 Bzs.BFTCommit commitTransactions = transactionBatch.getBftCommit();
                 int id = commitTransactions.getID();
+                logger.info("Processing db commit transactions with batch id: "+id);
                 if (!tbrCache.containsKey(id)) {
+                    logger.log(Level.WARNING, "Transactions are not present in cache for id: "+id+". Transaction will abort.");
                     return getRandomBytes();
                 }
                 Bzs.TransactionBatchResponse cached = tbrCache.get(id);
                 if (cached.getResponsesCount() != commitTransactions.getTransactionsCount()) {
+                    logger.log(Level.WARNING, "Commit transaction count is not the same as the cached transactions. Transaction will abort.");
                     return getRandomBytes();
                 }
                 for (int i = 0; i < commitTransactions.getTransactionsCount(); i++) {
-                    if (!cached.getResponses(i).equals(commitTransactions.getTransactions(i))) {
+                    Bzs.TransactionResponse cachedResponses = cached.getResponses(i);
+                    Bzs.TransactionResponse transactions1 = commitTransactions.getTransactions(i);
+                    if (!cachedResponses.equals(transactions1)) {
+                        logger.log(Level.WARNING, "Cached transaction did not match input transaction. Transaction will abort.");
+                        logger.log(Level.WARNING, "Cached Transaction: "+cachedResponses);
+                        logger.log(Level.WARNING, "Input Transaction: "+transactions1);
+
                         return getRandomBytes();
                     }
                 }
 
                 // Commit to database.
-
+                logger.info("Beginning the process to write into the database.");
                 List<String> committedKeys = new LinkedList<>();
                 for (int i =0;i<cached.getResponsesCount();i++ ) {
                     Bzs.TransactionResponse response = cached.getResponses(i);

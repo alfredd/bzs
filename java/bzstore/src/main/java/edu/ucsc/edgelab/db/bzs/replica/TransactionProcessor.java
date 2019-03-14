@@ -79,17 +79,21 @@ public class TransactionProcessor {
             BFTClient bftClient = new BFTClient(id);
             LOGGER.info("Performing BFT Commit");
             Bzs.TransactionBatchResponse batchResponse = bftClient.performCommit(transactions.values());
-
+//            LOGGER.info("After commit consensus the response is : "+batchResponse.toString());
             if (batchResponse == null) {
                 sendFailureNotifications(transactions, responseObservers);
             } else {
                 LOGGER.info("Received response from BFT server cluster. Transaction response is of size "
                         + transactions.size() + ". Performing db commit");
+                LOGGER.info("Before DB COMMIT Consensus the data is: "+batchResponse.toString());
                 Bzs.TransactionBatchResponse commitResponse = bftClient.performDbCommit(batchResponse);
                 if (commitResponse == null) {
+
+                    LOGGER.info("DB COMMIT Consensus failed: "+commitResponse);
                     sendFailureNotifications(transactions, responseObservers);
                     return;
                 }
+                LOGGER.info("After DB COMMIT Consensus the data is: "+commitResponse.toString());
 
                 for (int i = 0; i < transactions.size(); i++) {
                     StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
