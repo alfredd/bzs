@@ -74,13 +74,13 @@ public class TransactionProcessor {
             sequenceNumber = 0;
             serializer.resetEpoch();
         }
-        LOGGER.info("Epoch reset begins for " + epoch);
         // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
         Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
                 responseHandlerRegistry.getTransactionObservers(epoch);
         if (transactions != null && transactions.size() > 0) {
-            LOGGER.info("Processing transaction batch.");
+
+            LOGGER.info("Processing transaction batch in epoch: "+epoch);
             BFTClient bftClient = new BFTClient(id);
             LOGGER.info("Performing BFT Commit");
             Bzs.TransactionBatchResponse batchResponse = bftClient.performCommit(transactions.values());
@@ -93,20 +93,21 @@ public class TransactionProcessor {
                 Bzs.TransactionBatchResponse commitResponse = bftClient.performDbCommit(batchResponse);
                 if (commitResponse == null) {
                     sendFailureNotifications(transactions, responseObservers);
+                    return;
                 }
 
                 for (int i = 0; i < transactions.size(); i++) {
                     StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
-                    Bzs.TransactionResponse transactionResponse = commitResponse.getResponses(i);
+                    Bzs.TransactionResponse transactionResponse = commitResponse.getBftCommitResponse().getResponses(i);
                     LOGGER.info("Processing transaction response: " + transactionResponse.toString());
                     responseObserver.onNext(transactionResponse);
                     responseObserver.onCompleted();
-//                    sendResponseToClient(responseObserver, transactionResponse);
+
                 }
             }
-        } else {
+        }/* else {
             LOGGER.info("Nothing to commit in epoch: " + epoch + ". Waiting for next epoch.");
-        }
+        }*/
 
         responseHandlerRegistry.clearEpochHistory(epoch);
 

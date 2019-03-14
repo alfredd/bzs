@@ -20,17 +20,17 @@ public class ClientDemo {
 //            }
 //        });
 
-//        Transaction t1 = new Transaction(leader.host,leader.port);
-//        t1.write("x","10");
-//        t1.write("y","1");
-//        t1.write("z","3");
-//        t1.commit();
-//
-//        Transaction t2 = new Transaction(leader.host,leader.port);
-//        String vx = t2.read("x");
-//        t2.write("x",vx+45);
-//        t2.write("z","5");
-//        t2.commit();
+        Transaction t1 = new Transaction(leader.host,leader.port);
+        t1.write("x","10");
+        t1.write("y","1");
+        t1.write("z","3");
+        t1.commit();
+
+        Transaction t2 = new Transaction(leader.host,leader.port);
+        String vx = t2.read("x");
+        t2.write("x",vx+45);
+        t2.write("z","5");
+        t2.commit();
 
         BZStoreProperties properties = new BZStoreProperties();
         Integer port1 = Integer.decode(properties.getProperty("1", BZStoreProperties.Configuration.port));

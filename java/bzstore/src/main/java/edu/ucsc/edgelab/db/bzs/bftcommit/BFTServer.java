@@ -112,6 +112,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 reply = batchResponse.toByteArray();
 
             } else if (transactionBatch.getBftCommit().getTransactionsCount() > 0) {
+                logger.info("======Performing BFT DB Commit======");
                 Bzs.BFTCommit commitTransactions = transactionBatch.getBftCommit();
                 int id = commitTransactions.getID();
                 if (!tbrCache.containsKey(id)) {
@@ -157,7 +158,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                         return getRandomBytes();
                     }
                 }
-
+                logger.info("Data committed. Returning response.");
                 Bzs.BFTCommitResponse bftCommitResponse1 = Bzs.BFTCommitResponse.newBuilder()
                         .addAllResponses(commitTransactions.getTransactionsList()).build();
 
@@ -165,6 +166,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                         .setBftCommitResponse(bftCommitResponse1)
                         .setID(id)
                         .build();
+                logger.info("Response object: "+commitResponse2.toString());
                 reply = commitResponse2.toByteArray();
             } else {
                 reply = getRandomBytes();
