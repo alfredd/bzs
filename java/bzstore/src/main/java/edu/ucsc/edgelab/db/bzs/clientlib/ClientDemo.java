@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.BZClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
+import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
 import java.io.IOException;
 
@@ -26,7 +27,11 @@ public class ClientDemo {
         t1.write("x","10");
         t1.write("y","1");
         t1.write("z","3");
-        t1.commit();
+        try {
+            t1.commit();
+        } catch (CommitAbortedException e) {
+            e.printStackTrace();
+        }
 
         Transaction t2 = new Transaction();
         t2.setClient(client);
@@ -35,7 +40,11 @@ public class ClientDemo {
         t2.read("z");
         t2.write("x",vx+45);
         t2.write("z","5");
-        t2.commit();
+        try {
+            t2.commit();
+        } catch (CommitAbortedException e) {
+            e.printStackTrace();
+        }
 
         BZStoreProperties properties = new BZStoreProperties();
         Integer port1 = Integer.decode(properties.getProperty("1", BZStoreProperties.Configuration.port));

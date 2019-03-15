@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.clientlib;
 
 import edu.ucsc.edgelab.db.bzs.BZClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
 import java.util.logging.Logger;
 
@@ -75,7 +76,7 @@ public class Transaction implements TransactionInterface {
     }
 
     @Override
-    public void commit() {
+    public void commit() throws CommitAbortedException {
         long startTime = System.currentTimeMillis();
         LOGGER.info("Committing Transaction: "+transaction.toString());
         Bzs.TransactionResponse response = client.commit(transaction);
@@ -84,6 +85,7 @@ public class Transaction implements TransactionInterface {
         LOGGER.info("Transaction Response: "+response);
         if(response.getStatus().equals(Bzs.TransactionStatus.ABORTED)) {
             LOGGER.info("Transaction was aborted.");
+            throw new CommitAbortedException("Transaction was aborted"+response.toString());
         } else {
             if (response.getStatus().equals(Bzs.TransactionStatus.COMMITTED)) {
                 LOGGER.info("Transaction committed.");

@@ -82,8 +82,13 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponseBuilder.setID(counter);
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(counter, batchResponse);
-                logger.info("Completed generating response for transaction batch with batch id: "+counter);
+                logger.info("Completed generating response for transaction batch with batch id: "+counter+". Transaction batch data: "+batchResponse.toString());
                 reply = batchResponse.toByteArray();
+                List<Integer> inputsBytes = new LinkedList<>();
+                for(byte b: reply) {
+                    inputsBytes.add(b &0xFF);
+                }
+                logger.info("Response Byte array: "+inputsBytes);
             } else if (transactionBatch.getRotransactionCount() > 0) {
 
                 for (int i = 0; i < transactionBatch.getRotransactionCount(); i++) {
@@ -128,7 +133,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                     logger.log(Level.WARNING, "Commit transaction count is not the same as the cached transactions. Transaction will abort.");
                     return getRandomBytes();
                 }
-                for (int i = 0; i < commitTransactions.getTransactionsCount(); i++) {
+                /*for (int i = 0; i < commitTransactions.getTransactionsCount(); i++) {
                     Bzs.TransactionResponse cachedResponses = cached.getResponses(i);
                     Bzs.TransactionResponse transactions1 = commitTransactions.getTransactions(i);
                     if (!cachedResponses.equals(transactions1)) {
@@ -139,7 +144,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                         return getRandomBytes();
                     }
                 }
-
+*/
                 // Commit to database.
                 logger.info("Beginning the process to write into the database.");
                 List<String> committedKeys = new LinkedList<>();
@@ -181,6 +186,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 logger.info("Response object: "+commitResponse2.toString());
                 reply = commitResponse2.toByteArray();
             } else {
+                logger.log(Level.WARNING, "No matches found. Aborting consensus. Input was: "+transactionBatch.toString());
                 reply = getRandomBytes();
             }
 
