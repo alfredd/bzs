@@ -43,6 +43,8 @@ public class TransactionProcessor {
         epochMaintainer.setProcessor(this);
         Timer epochTimer = new Timer("EpochMaintainer", true);
         epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
+
+        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(this);
     }
 
     void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {

@@ -6,7 +6,5 @@ interface TransactionInterface {
 
     String read (String key);
 
-    void write (String key, String value);
-
     void commit () throws CommitAbortedException;
 }

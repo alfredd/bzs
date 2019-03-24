@@ -6,17 +6,14 @@ import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
 import java.util.logging.Logger;
 
-public class Transaction implements TransactionInterface {
+public class Transaction extends TransactionManager implements TransactionInterface {
 
     private BZStoreClient client;
-    private Bzs.Transaction transaction;
-    private Bzs.Transaction.Builder builder;
 
     public static final Logger LOGGER = Logger.getLogger(Transaction.class.getName());
 
     public Transaction() {
-        builder = Bzs.Transaction.newBuilder();
-        this.transaction = builder.build();
+        super();
     }
 
     public Transaction(String host, int port) {
@@ -30,10 +27,6 @@ public class Transaction implements TransactionInterface {
 
     public void setClient(BZStoreClient client) {
         this.client = client;
-    }
-
-    public Bzs.Transaction getTransaction() {
-        return transaction;
     }
 
     @Override
@@ -52,34 +45,12 @@ public class Transaction implements TransactionInterface {
         return responseValue;
     }
 
-    public void setReadHistory( String responseKey, String responseValue, long responseVersion, String digest) {
-        Bzs.ReadHistory history = Bzs.ReadHistory.newBuilder()
-                .setKey(responseKey)
-                .setValue(responseValue)
-                .setVersion(responseVersion)
-                .setResponseDigest(digest)
-                .build();
-        transaction = builder.addReadHistory(history).build();
-
-        logTransaction();
-    }
-
-    public void logTransaction() {
-        LOGGER.info("Transaction object till now: "+transaction.toString());
-    }
-
-    @Override
-    public void write(String key, String value) {
-        Bzs.Write write = Bzs.Write.newBuilder().setKey(key).setValue(value).build();
-        transaction = builder.addWriteOperations(write).build();
-        logTransaction();
-    }
 
     @Override
     public void commit() throws CommitAbortedException {
         long startTime = System.currentTimeMillis();
-        LOGGER.info("Committing Transaction: "+transaction.toString());
-        Bzs.TransactionResponse response = client.commit(transaction);
+        LOGGER.info("Committing Transaction: "+ getTransaction().toString());
+        Bzs.TransactionResponse response = client.commit(getTransaction());
         long duration = System.currentTimeMillis() - startTime;
         LOGGER.info("Transaction processed in "+duration+" msecs");
         LOGGER.info("Transaction Response: "+response);
