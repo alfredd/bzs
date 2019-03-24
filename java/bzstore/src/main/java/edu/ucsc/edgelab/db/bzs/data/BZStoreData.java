@@ -29,6 +29,6 @@ public class BZStoreData {
 
     @Override
     public String toString() {
-        return String.format("value: %s, version: %d, digeest: %s",value,version,digest);
+        return String.format("value: %s, version: %d, digest: %s",value,version,digest);
     }
 }
