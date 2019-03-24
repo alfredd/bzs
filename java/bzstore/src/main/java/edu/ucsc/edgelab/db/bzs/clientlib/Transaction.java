@@ -1,6 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.clientlib;
 
-import edu.ucsc.edgelab.db.bzs.BZClient;
+import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 public class Transaction implements TransactionInterface {
 
-    private BZClient client;
+    private BZStoreClient client;
     private Bzs.Transaction transaction;
     private Bzs.Transaction.Builder builder;
 
@@ -25,10 +25,10 @@ public class Transaction implements TransactionInterface {
     }
 
     public void setClient(String host, int port) {
-        this.client = new BZClient(host, port);
+        this.client = new BZStoreClient(host, port);
     }
 
-    public void setClient(BZClient client) {
+    public void setClient(BZStoreClient client) {
         this.client = client;
     }
 

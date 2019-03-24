@@ -210,7 +210,7 @@ public class BFTServer extends DefaultSingleRecoverable {
     @SuppressWarnings("unchecked")
     @Override
     public byte[] appExecuteUnordered(byte[] transactions, MessageContext msgCtx) {
-        return null;
+        return appExecuteOrdered(transactions,msgCtx);
     }
 
     @SuppressWarnings("unchecked")
@@ -223,17 +223,7 @@ public class BFTServer extends DefaultSingleRecoverable {
     @Override
     public void installSnapshot(byte[] state) {
         ByteArrayInputStream byteIn = new ByteArrayInputStream(state);
-        try {
-            BZDatabaseController.initializeDb(byteIn);
-        } catch (IOException | ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Error while installing snapshot", e);
-        } finally {
-            try {
-                byteIn.close();
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error while closing byte stream during  installSnapshot", e);
-            }
-        }
+        BftUtil.installSH(byteIn, logger);
     }
 
     private String generateHash(final String input) {

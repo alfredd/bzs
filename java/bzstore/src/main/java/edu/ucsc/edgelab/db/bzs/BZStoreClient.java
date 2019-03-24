@@ -7,22 +7,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class BZClient {
+public class BZStoreClient {
 
     private String host;
     private int port;
 
-    private static final Logger log = Logger.getLogger(BZClient.class.getName());
+    private static final Logger log = Logger.getLogger(BZStoreClient.class.getName());
     private final ManagedChannel channel;
     private final BZStoreGrpc.BZStoreBlockingStub blockingStub;
 
-    public BZClient(String host, int port) {
+    public BZStoreClient(String host, int port) {
         this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
         this.host = host;
         this.port = port;
     }
 
-    private BZClient(ManagedChannel channel) {
+    private BZStoreClient(ManagedChannel channel) {
         this.channel = channel;
         blockingStub = BZStoreGrpc.newBlockingStub(channel);
     }

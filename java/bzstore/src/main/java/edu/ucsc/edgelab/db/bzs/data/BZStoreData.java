@@ -20,7 +20,7 @@ public class BZStoreData {
         version=0;
     }
 
-    @Deprecated
+
     public BZStoreData(String value, long version, String digest) {
         this.value = value;
         this.version = version;

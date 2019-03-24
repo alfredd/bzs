@@ -1,6 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.clientlib;
 
-import edu.ucsc.edgelab.db.bzs.BZClient;
+import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
@@ -21,7 +21,7 @@ public class ClientDemo {
 //
 //            }
 //        });
-        BZClient client = new BZClient(leader.host,leader.port);
+        BZStoreClient client = new BZStoreClient(leader.host,leader.port);
         Transaction t1 = new Transaction();
         t1.setClient(client);
         t1.write("x","10");
