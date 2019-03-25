@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 
 public class BenchmarkExecutor implements Runnable {
 
-    private Set<String> keys = new LinkedHashSet<>();
     private List<String> wordList = new LinkedList<>();
     private int transactionCount = 0;
     private int transactionsCompleted = 0;

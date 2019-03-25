@@ -4,7 +4,6 @@ import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
-import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
 import java.io.IOException;
 
