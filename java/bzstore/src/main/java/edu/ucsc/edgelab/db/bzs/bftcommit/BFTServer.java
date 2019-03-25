@@ -12,6 +12,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -176,15 +177,15 @@ public class BFTServer extends DefaultSingleRecoverable {
                     }
                 }
                 logger.info("Data committed. Returning response.");
-                Bzs.BFTCommitResponse bftCommitResponse1 = Bzs.BFTCommitResponse.newBuilder()
-                        .addAllResponses(commitTransactions.getTransactionsList()).build();
-
-                Bzs.TransactionBatchResponse commitResponse2 = Bzs.TransactionBatchResponse.newBuilder()
-                        .setBftCommitResponse(bftCommitResponse1)
-                        .setID(id)
-                        .build();
-                logger.info("Response object: "+commitResponse2.toString());
-                reply = commitResponse2.toByteArray();
+//                Bzs.BFTCommitResponse bftCommitResponse1 = Bzs.BFTCommitResponse.newBuilder()
+//                        .addAllResponses(commitTransactions.getTransactionsList()).build();
+//
+//                Bzs.TransactionBatchResponse commitResponse2 = Bzs.TransactionBatchResponse.newBuilder()
+//                        .setBftCommitResponse(bftCommitResponse1)
+//                        .setID(id)
+//                        .build();
+//                logger.info("Response object: "+commitResponse2.toString());
+                reply = ByteBuffer.allocate(4).putInt(1).array();
             } else {
                 logger.log(Level.WARNING, "No matches found. Aborting consensus. Input was: "+transactionBatch.toString());
                 reply = getRandomBytes();

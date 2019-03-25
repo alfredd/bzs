@@ -1,108 +1,172 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
+import edu.ucsc.edgelab.db.bzs.clientlib.TransactionManager;
+import io.grpc.stub.StreamObserver;
 
-import java.nio.charset.Charset;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BenchmarkExecutor implements Runnable {
 
     private Set<String> keys = new LinkedHashSet<>();
+    private List<String> wordList = new LinkedList<>();
+    private int transactionCount = 0;
+    private int transactionsCompleted = 0;
+    private int transactionsFailed = 0;
+    private boolean started = false;
+
+
+    private static final Logger LOGGER = Logger.getLogger(BenchmarkExecutor.class.getName());
 
     private final TransactionProcessor transactionProcessor;
+    private FileWriter writer = null;
 
-    public BenchmarkExecutor(TransactionProcessor transactionProcessor) {
+    public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws FileNotFoundException {
         this.transactionProcessor = transactionProcessor;
+        String fileName = System.getProperty("user.dir") + "//src/main/resources/ulysses.txt";
+        String reportFileName = System.getProperty("user.dir") + "/Report_" + getDateString() + ".csv";
+        LOGGER.info("Filename: " + fileName);
+        File file = new File(fileName);
+        Scanner scanner = new Scanner(file);
+        Set<String> words = new LinkedHashSet<>();
+        while (scanner.hasNext()) {
+            String[] line = scanner.next().split(" ");
+
+            for (String word : line)
+                if (word != null)
+                    words.add(word);
+        }
+        scanner.close();
+        try {
+            writer = new FileWriter(new File(reportFileName));
+
+            writer.write("Epoch Number, " +
+                    "Total Transactions in Epoch, " +
+                    "Transactions Processed In Epoch(S), " +
+                    "Transactions Failed In Epoch(F), " +
+                    "Total Transaction Count, " +
+                    "Total Transactions Completed, " +
+                    "Total Transactions Failed, " +
+                    "Processing Time(ms)");
+        } catch (IOException e) {
+            LOGGER.info("Error occurred while creating report file: " + reportFileName);
+        }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            LOGGER.info("Shutting down report writer.");
+            try {
+                writer.close();
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING,"Failed to close report file writer.",e);
+            }
+        }));
+        wordList.addAll(words);
+
+
+        LOGGER.info("Total words read from file: " + wordList.size());
+
     }
 
     public Bzs.Transaction generateWriteSet() {
-        Bzs.Transaction t = null;
-
-        return t;
+        TransactionManager transactionManager = new TransactionManager();
+        Random random = new Random();
+        int writeCount = random.nextInt(10);
+        for (int i = 0; i < writeCount; i++) {
+            int keyIndex = random.nextInt(wordList.size());
+            int valueIndex = random.nextInt(wordList.size());
+            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex));
+        }
+        return transactionManager.getTransaction();
     }
 
     @Override
     public void run() {
-
+        try {
+            Thread.sleep(15000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        started = true;
+        sendTransactions(10);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        sendTransactions(4);
     }
 
-    public static void main(String args[]) {
-        int clientIds[] = {5, 6, 7};
-        BFTClient[] clients = new BFTClient[clientIds.length];
-        for (int i = 0; i < clientIds.length; i++) {
-            clients[i] = new BFTClient(clientIds[i]);
+    public void sendTransactions(int i) {
+
+        while ((i--) >= 0) {
+            Bzs.Transaction writeTransaction = generateWriteSet();
+            StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
+            transactionProcessor.processTransaction(writeTransaction, responseObserver);
+            transactionCount += 1;
         }
+    }
 
+    public StreamObserver<Bzs.TransactionResponse> getTransactionResponseStreamObserver() {
+        return new StreamObserver<Bzs.TransactionResponse>() {
+            @Override
+            public void onNext(Bzs.TransactionResponse transactionResponse) {
 
-        for (int j = 1; j <= 10000; j = j * 10) {
-            System.out.println("Total Transactions: " + j);
-            long startTime = System.currentTimeMillis();
-            for (int i = 1; i < j; i++) {
-                String[] test = new String[5];
-                for (int z = 0; z < 5; z++) {
-                    byte[] array = new byte[7]; // length is bounded by 7
-                    new Random().nextBytes(array);
-                    String generatedString = new String(array, Charset.forName("UTF-8"));
-                    test[z] = generatedString;
-                }
-                List<Bzs.Transaction> list = new LinkedList<>();
-                for (int k = 0; k < randInt(5, 10); k++) {
-                    Bzs.Transaction transaction = Bzs.Transaction.newBuilder().build();
-                    Bzs.Write operation = Bzs.Write.newBuilder().setKey(test[randInt(0, 4)]).setValue(test[randInt(0,
-                            4)]).build();
-                    //System.out.println("Key " + operation.getKey() + " Val " + operation.getValue());
-                    transaction = transaction.toBuilder().addWriteOperations(operation).build();
-                    //System.out.println("Performing write" + transaction.toString());
-                    list.add(transaction);
-                }
-                clients[0].performCommit(list);
-                //             System.out.println("Write Performed");
             }
-            long stopTime = System.currentTimeMillis();
-            long elapsedTime = stopTime - startTime;
-            System.out.println(elapsedTime);
+
+            @Override
+            public void onError(Throwable throwable) {
+                transactionsFailed += 1;
+            }
+
+            @Override
+            public void onCompleted() {
+                transactionsCompleted += 1;
+            }
+        };
+    }
+
+    public void logTransactionDetails(int epochNumber, int epochTransactionCount, int transactionsProcessedInEpoch,
+                                      int transactionsFailedInEpoch, long epochProcessingStartTime,
+                                      long epochProcessingEndTime) {
+        if (started) {
+            LOGGER.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
+                    transactionsFailed));
+            String report = String.format("%d, %d, %d, %d, %d, %d, %d, %d \n",
+                    epochNumber,
+                    epochTransactionCount,
+                    transactionsProcessedInEpoch,
+                    transactionsFailedInEpoch,
+                    transactionCount,
+                    transactionsCompleted,
+                    transactionsFailed,
+                    epochProcessingEndTime - epochProcessingStartTime);
+            if (writer != null) {
+                try {
+                    writer.write(report);
+                } catch (IOException e) {
+                    LOGGER.warning("Exception occurred while writing report: " + report);
+                }
+            }
         }
+    }
 
-//        Bzs.ROTransaction transaction = Bzs.ROTransaction.newBuilder().build();
-//        Bzs.Read operation = Bzs.Read.newBuilder().setKey("test_key").build();
-//        System.out.println("Key "+ operation.getKey());
-//        transaction = transaction.toBuilder().addReadOperations(operation).build();
-//
-//        System.out.println("Performing write"+transaction.toString());
-//        List<Bzs.ROTransaction> list = new LinkedList<>();
-//        list.add(transaction);
-//        list.add(transaction);
-//        for(Bzs.ROTransaction t : list){
-//            for(Bzs.Read op : t.getReadOperationsList()){
-//                System.out.println("Key ::"+ operation.getKey());
-//            }
-//        }
-//        System.out.println(clients[0].performRead(list));
-//        System.out.println("Read Performed");
-
+    public static void main(String args[]) throws FileNotFoundException {
+        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(null);
+        String format = getDateString();
+        System.out.println(format);
 
     }
 
-    public static int randInt(int min, int max) {
-
-        // NOTE: This will (intentionally) not run as written so that folks
-        // copy-pasting have to think about how to initialize their
-        // Random instance.  Initialization of the Random instance is outside
-        // the main scope of the question, but some decent options are to have
-        // a field that is initialized once and then re-used as needed or to
-        // use ThreadLocalRandom (if using at least Java 1.7).
-        //
-        // In particular, do NOT do 'Random rand = new Random()' here or you
-        // will get not very good / not very random results.
-        Random rand = new Random();
-
-        // nextInt is normally exclusive of the top value,
-        // so add 1 to make it inclusive
-        int randomNum = rand.nextInt((max - min) + 1) + min;
-
-        return randomNum;
+    public static String getDateString() {
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd.HH.mm.ss");
+        return sdf.format(date);
     }
-
-
 }

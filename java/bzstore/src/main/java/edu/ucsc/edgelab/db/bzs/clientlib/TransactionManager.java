@@ -4,7 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 
 public class TransactionManager {
     protected Bzs.Transaction transaction;
-    protected Bzs.Transaction.Builder builder;
+    protected Bzs.Transaction.Builder builder = Bzs.Transaction.newBuilder();
 
     public TransactionManager() {
         this.transaction = builder.build();

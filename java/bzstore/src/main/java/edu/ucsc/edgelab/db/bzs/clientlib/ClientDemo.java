@@ -21,7 +21,9 @@ public class ClientDemo {
 //
 //            }
 //        });
+
         BZStoreClient client = new BZStoreClient(leader.host,leader.port);
+/*
         Transaction t1 = new Transaction();
         t1.setClient(client);
         t1.write("x","10");
@@ -44,16 +46,16 @@ public class ClientDemo {
             t2.commit();
         } catch (CommitAbortedException e) {
             e.printStackTrace();
-        }
+        }*/
 
         BZStoreProperties properties = new BZStoreProperties();
         Integer port1 = Integer.decode(properties.getProperty("1", BZStoreProperties.Configuration.port));
         String host1 = properties.getProperty("1", BZStoreProperties.Configuration.host);
         Transaction t3 = new Transaction();
         t3.setClient(client);
-        t3.read("x");
-        t3.read("y");
-        t3.read("z");
+        t3.read("twinkle");
+        t3.read("honour");
+        t3.read("earth");
         client.shutdown();
 //        t3.write("x",vx+45);
 //        t3.write("z","5");

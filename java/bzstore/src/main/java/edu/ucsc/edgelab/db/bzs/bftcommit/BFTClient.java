@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,23 +34,30 @@ public class BFTClient {
             batchBuilder.addTransactions(transaction);
         }
         Bzs.TransactionBatch batch = batchBuilder.build();
-
-        return performConsensusCommit(batch);
-    }
-
-    public Bzs.TransactionBatchResponse performConsensusCommit(Bzs.TransactionBatch batch) {
         try {
-            LOGGER.info("Starting db commit from client.");
-            byte[] reply;
-            reply = serviceProxy.invokeOrdered(batch.toByteArray());
+            byte[] reply = performConsensusCommit(batch);
             return Bzs.TransactionBatchResponse.parseFrom(reply);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
         } catch (Exception e ) {
             LOGGER.log(Level.WARNING, "Could not parse response. Might be due to consensus failure. Transaction will be aborted.");
         }
-        LOGGER.info("Commit consensus FAILED for transaction. Returning NULL.");
         return null;
+    }
+
+    public byte[] performConsensusCommit(Bzs.TransactionBatch batch) {
+        LOGGER.info("Starting db commit from client.");
+        byte[] reply;
+        reply = serviceProxy.invokeOrdered(batch.toByteArray());
+        return reply;//Bzs.TransactionBatchResponse.parseFrom(reply);
+/*        try {
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
+        } catch (Exception e ) {
+            LOGGER.log(Level.WARNING, "Could not parse response. Might be due to consensus failure. Transaction will be aborted.");
+        }
+        LOGGER.info("Commit consensus FAILED for transaction. Returning NULL.");
+        return null;*/
     }
 
 
@@ -86,9 +94,16 @@ public class BFTClient {
         return status;
     }
 
-    public Bzs.TransactionBatchResponse performDbCommit(Bzs.TransactionBatchResponse batchResponse) {
+    public int performDbCommit(Bzs.TransactionBatchResponse batchResponse) {
         Bzs.BFTCommit commitdata = Bzs.BFTCommit.newBuilder().addAllTransactions(batchResponse.getResponsesList()).build();
         Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setBftCommit(commitdata).build();
-        return performConsensusCommit(batch);
+        byte[] reply = performConsensusCommit(batch);
+        int id=-10;
+        try {
+            id = ByteBuffer.wrap(reply).getInt();
+        } catch (Exception e) {
+            LOGGER.warning("Could not get correct commit id from response.");
+        }
+        return id;
     }
 }

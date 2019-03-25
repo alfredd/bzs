@@ -6,6 +6,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import io.grpc.stub.StreamObserver;
 
+import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.Timer;
 import java.util.logging.Level;
@@ -21,6 +22,7 @@ public class TransactionProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(TransactionProcessor.class.getName());
     private Integer id;
+    private BenchmarkExecutor benchmarkExecutor;
 
     public TransactionProcessor() {
         serializer = new Serializer();
@@ -44,7 +46,12 @@ public class TransactionProcessor {
         Timer epochTimer = new Timer("EpochMaintainer", true);
         epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
 
-        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(this);
+        try {
+            benchmarkExecutor = new BenchmarkExecutor(this);
+            new Thread(benchmarkExecutor).start();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
@@ -52,8 +59,12 @@ public class TransactionProcessor {
 
             Bzs.TransactionResponse response =
                     Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
+            if (responseObserver != null) {
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            } else {
+                LOGGER.log(Level.WARNING, "Transaction aborted: " + request.toString());
+            }
             return;
         }
         synchronized (this) {
@@ -75,42 +86,59 @@ public class TransactionProcessor {
         Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
                 responseHandlerRegistry.getTransactionObservers(epoch);
+        long startTime = System.currentTimeMillis();
+        int transactionCount = 0;
+        int processed = 0;
+        int failed = 0;
         if (transactions != null && transactions.size() > 0) {
+            transactionCount = transactions.size();
 
-            LOGGER.info("Processing transaction batch in epoch: "+epoch);
+            LOGGER.info("Processing transaction batch in epoch: " + epoch);
             BFTClient bftClient = new BFTClient(id);
             LOGGER.info("Performing BFT Commit");
             Bzs.TransactionBatchResponse batchResponse = bftClient.performCommit(transactions.values());
 //            LOGGER.info("After commit consensus the response is : "+batchResponse.toString());
             if (batchResponse == null) {
+                failed = transactionCount;
                 sendFailureNotifications(transactions, responseObservers);
             } else {
                 LOGGER.info("Received response from BFT server cluster. Transaction response is of size "
                         + transactions.size() + ". Performing db commit");
-                LOGGER.info("Before DB COMMIT Consensus the data is: "+batchResponse.toString());
-                Bzs.TransactionBatchResponse commitResponse = bftClient.performDbCommit(batchResponse);
-                if (commitResponse == null) {
-
-                    LOGGER.info("DB COMMIT Consensus failed: "+commitResponse);
+                LOGGER.info("Before DB COMMIT Consensus the data is: " + batchResponse.toString());
+                int commitResponseID = bftClient.performDbCommit(batchResponse);
+                if (commitResponseID < 0) {
+                    failed = transactionCount;
+                    LOGGER.info("DB COMMIT Consensus failed: " + commitResponseID);
                     sendFailureNotifications(transactions, responseObservers);
-                    return;
-                }
-                LOGGER.info("After DB COMMIT Consensus the data is: "+commitResponse.toString());
-
-                for (int i = 0; i < transactions.size(); i++) {
-                    StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
-                    Bzs.TransactionResponse transactionResponse = commitResponse.getBftCommitResponse().getResponses(i);
-                    LOGGER.info("Processing transaction response: " + transactionResponse.toString());
-                    responseObserver.onNext(transactionResponse);
-                    responseObserver.onCompleted();
-
+                } else {
+//                    LOGGER.info("After DB COMMIT Consensus the data is: " + commitResponseID.toString());
+                    processed = transactionCount;
+                    for (int i = 0; i < transactions.size(); i++) {
+                        StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
+                        Bzs.TransactionResponse transactionResponse =
+                                batchResponse.getResponses(i);
+                        LOGGER.info("Processing transaction response: " + transactionResponse.toString());
+                        responseObserver.onNext(transactionResponse);
+                        responseObserver.onCompleted();
+                    }
                 }
             }
         }/* else {
             LOGGER.info("Nothing to commit in epoch: " + epoch + ". Waiting for next epoch.");
         }*/
 
+        long endTime = System.currentTimeMillis();
+
         responseHandlerRegistry.clearEpochHistory(epoch);
+        if (benchmarkExecutor != null) {
+            benchmarkExecutor.logTransactionDetails(
+                    epochNumber,
+                    transactionCount,
+                    processed,
+                    failed,
+                    startTime,
+                    endTime);
+        }
 
     }
 
