@@ -53,7 +53,8 @@ public class BenchmarkExecutor implements Runnable {
                     "Total Transaction Count, " +
                     "Total Transactions Completed, " +
                     "Total Transactions Failed, " +
-                    "Processing Time(ms)\n");
+                    "Processing Time(ms), " +
+                    "Throughput(Tps)\n");
         } catch (IOException e) {
             LOGGER.info("Error occurred while creating report file: " + reportFileName);
         }
@@ -95,13 +96,13 @@ public class BenchmarkExecutor implements Runnable {
             e.printStackTrace();
         }
         started = true;
-        sendNTransactions(1000);
+        sendNTransactions(2000);
 
     }
 
     public void sendNTransactions(int n) {
         while ((--n)>=0) {
-            sendTransactions(10);
+            sendWriteOnlyTransactions(10);
 //            try {
 //                Thread.sleep(20);
 //            } catch (InterruptedException e) {
@@ -110,7 +111,7 @@ public class BenchmarkExecutor implements Runnable {
         }
     }
 
-    public void sendTransactions(int i) {
+    public void sendWriteOnlyTransactions(int i) {
 
         while ((i--) > 0) {
             Bzs.Transaction writeTransaction = generateWriteSet();
@@ -118,6 +119,10 @@ public class BenchmarkExecutor implements Runnable {
             transactionProcessor.processTransaction(writeTransaction, responseObserver);
             transactionCount += 1;
         }
+    }
+
+    public void sendReadOnlyTransactions(int i ) {
+
     }
 
     public StreamObserver<Bzs.TransactionResponse> getTransactionResponseStreamObserver() {
@@ -149,7 +154,9 @@ public class BenchmarkExecutor implements Runnable {
         if (started) {
             LOGGER.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
                     transactionsFailed));
-            String report = String.format("%d, %d, %d, %d, %d, %d, %d, %d \n",
+            long latency = epochProcessingEndTime - epochProcessingStartTime;
+            double throughput = latency==0? 0 :(double) transactionsProcessedInEpoch*1000 / (latency);
+            String report = String.format("%d, %d, %d, %d, %d, %d, %d, %d, %f\n",
                     epochNumber,
                     epochTransactionCount,
                     transactionsProcessedInEpoch,
@@ -157,7 +164,9 @@ public class BenchmarkExecutor implements Runnable {
                     transactionCount,
                     transactionsCompleted,
                     transactionsFailed,
-                    epochProcessingEndTime - epochProcessingStartTime);
+                    latency,
+                    throughput
+            );
             if (writer != null) {
                 try {
                     writer.write(report);
