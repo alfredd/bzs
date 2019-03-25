@@ -24,16 +24,9 @@ public class BFTClient {
         serviceProxy = new ServiceProxy(ClientId);
     }
 
-    public Bzs.TransactionBatchResponse performCommit(Collection<Bzs.Transaction> transactions) {
+    public Bzs.TransactionBatchResponse performCommit(Bzs.TransactionBatch batch) {
         LOGGER.info("Received transaction batch to perform commit consensus.");
 
-
-        Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
-
-        for (Bzs.Transaction transaction : transactions) {
-            batchBuilder.addTransactions(transaction);
-        }
-        Bzs.TransactionBatch batch = batchBuilder.build();
         try {
             byte[] reply = performConsensusCommit(batch);
             return Bzs.TransactionBatchResponse.parseFrom(reply);
@@ -96,7 +89,7 @@ public class BFTClient {
 
     public int performDbCommit(Bzs.TransactionBatchResponse batchResponse) {
         Bzs.BFTCommit commitdata = Bzs.BFTCommit.newBuilder().addAllTransactions(batchResponse.getResponsesList()).build();
-        Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setBftCommit(commitdata).build();
+        Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setBftCommit(commitdata).setID(batchResponse.getID()).build();
         byte[] reply = performConsensusCommit(batch);
         int id=-10;
         try {

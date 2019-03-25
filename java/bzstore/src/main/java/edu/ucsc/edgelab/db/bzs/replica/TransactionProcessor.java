@@ -7,6 +7,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import io.grpc.stub.StreamObserver;
 
 import java.io.FileNotFoundException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Timer;
 import java.util.logging.Level;
@@ -97,15 +98,16 @@ public class TransactionProcessor {
             LOGGER.info("Processing transaction batch in epoch: " + epoch);
 
             LOGGER.info("Performing BFT Commit");
-            Bzs.TransactionBatchResponse batchResponse = bftClient.performCommit(transactions.values());
-//            LOGGER.info("After commit consensus the response is : "+batchResponse.toString());
+            Bzs.TransactionBatchResponse batchResponse = bftClient.performCommit(getTransactionBatch(epoch, transactions.values()));
             if (batchResponse == null) {
                 failed = transactionCount;
                 sendFailureNotifications(transactions, responseObservers);
             } else {
+                LOGGER.info("After commit consensus (before DB commit) the response is : "+batchResponse.toString()+
+                        " . Batch ID: "+batchResponse.getID());
                 LOGGER.info("Received response from BFT server cluster. Transaction response is of size "
                         + transactions.size() + ". Performing db commit");
-                LOGGER.info("Before DB COMMIT Consensus the data is: " + batchResponse.toString());
+//                LOGGER.info("Before DB COMMIT Consensus the data is: " + batchResponse.toString());
                 int commitResponseID = bftClient.performDbCommit(batchResponse);
                 if (commitResponseID < 0) {
                     failed = transactionCount;
@@ -157,5 +159,15 @@ public class TransactionProcessor {
 
     void setId(Integer id) {
         this.id = id;
+    }
+
+    public Bzs.TransactionBatch getTransactionBatch(int epochNumber, Collection<Bzs.Transaction> transactions) {
+        Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
+
+        for (Bzs.Transaction transaction : transactions) {
+            batchBuilder.addTransactions(transaction);
+        }
+        batchBuilder.setID(epochNumber);
+        return batchBuilder.build();
     }
 }

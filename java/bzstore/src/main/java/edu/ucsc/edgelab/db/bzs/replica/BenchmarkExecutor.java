@@ -53,7 +53,7 @@ public class BenchmarkExecutor implements Runnable {
                     "Total Transaction Count, " +
                     "Total Transactions Completed, " +
                     "Total Transactions Failed, " +
-                    "Processing Time(ms)");
+                    "Processing Time(ms)\n");
         } catch (IOException e) {
             LOGGER.info("Error occurred while creating report file: " + reportFileName);
         }
@@ -76,7 +76,9 @@ public class BenchmarkExecutor implements Runnable {
     public Bzs.Transaction generateWriteSet() {
         TransactionManager transactionManager = new TransactionManager();
         Random random = new Random();
-        int writeCount = random.nextInt(10);
+        int writeCount=0;
+        while (writeCount==0)
+            writeCount = random.nextInt(10);
         for (int i = 0; i < writeCount; i++) {
             int keyIndex = random.nextInt(wordList.size());
             int valueIndex = random.nextInt(wordList.size());
@@ -93,18 +95,24 @@ public class BenchmarkExecutor implements Runnable {
             e.printStackTrace();
         }
         started = true;
-        sendTransactions(10);
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        sendNTransactions(100);
+
+    }
+
+    public void sendNTransactions(int n) {
+        while ((--n)>=0) {
+            sendTransactions(10);
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        sendTransactions(4);
     }
 
     public void sendTransactions(int i) {
 
-        while ((i--) >= 0) {
+        while ((i--) > 0) {
             Bzs.Transaction writeTransaction = generateWriteSet();
             StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
             transactionProcessor.processTransaction(writeTransaction, responseObserver);
@@ -116,17 +124,21 @@ public class BenchmarkExecutor implements Runnable {
         return new StreamObserver<Bzs.TransactionResponse>() {
             @Override
             public void onNext(Bzs.TransactionResponse transactionResponse) {
-
+                if (transactionResponse.getStatus().equals(Bzs.TransactionStatus.ABORTED)) {
+                    transactionsFailed+=1;
+                } else {
+                    transactionsCompleted += 1;
+                }
             }
 
             @Override
             public void onError(Throwable throwable) {
-                transactionsFailed += 1;
+//                transactionsFailed += 1;
             }
 
             @Override
             public void onCompleted() {
-                transactionsCompleted += 1;
+
             }
         };
     }
