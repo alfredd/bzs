@@ -95,18 +95,18 @@ public class BenchmarkExecutor implements Runnable {
             e.printStackTrace();
         }
         started = true;
-        sendNTransactions(100);
+        sendNTransactions(1000);
 
     }
 
     public void sendNTransactions(int n) {
         while ((--n)>=0) {
             sendTransactions(10);
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(20);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 
