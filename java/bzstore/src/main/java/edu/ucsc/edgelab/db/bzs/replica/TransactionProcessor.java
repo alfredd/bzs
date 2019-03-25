@@ -23,6 +23,7 @@ public class TransactionProcessor {
     private static final Logger LOGGER = Logger.getLogger(TransactionProcessor.class.getName());
     private Integer id;
     private BenchmarkExecutor benchmarkExecutor;
+    private BFTClient bftClient = null;
 
     public TransactionProcessor() {
         serializer = new Serializer();
@@ -45,7 +46,7 @@ public class TransactionProcessor {
         epochMaintainer.setProcessor(this);
         Timer epochTimer = new Timer("EpochMaintainer", true);
         epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
-
+        bftClient = new BFTClient(id);
         try {
             benchmarkExecutor = new BenchmarkExecutor(this);
             new Thread(benchmarkExecutor).start();
@@ -94,7 +95,7 @@ public class TransactionProcessor {
             transactionCount = transactions.size();
 
             LOGGER.info("Processing transaction batch in epoch: " + epoch);
-            BFTClient bftClient = new BFTClient(id);
+
             LOGGER.info("Performing BFT Commit");
             Bzs.TransactionBatchResponse batchResponse = bftClient.performCommit(transactions.values());
 //            LOGGER.info("After commit consensus the response is : "+batchResponse.toString());
