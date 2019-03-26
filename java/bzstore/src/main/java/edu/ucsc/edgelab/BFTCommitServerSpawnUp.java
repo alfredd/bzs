@@ -1,6 +1,8 @@
 package edu.ucsc.edgelab;
 
-import edu.ucsc.edgelab.db.bzs.bftcommit.BFTServer;
+import edu.ucsc.edgelab.db.bzs.bftcommit.BftBPServer;
+
+import java.util.LinkedList;
 
 public class BFTCommitServerSpawnUp {
     public static void main(String args[]){
@@ -18,6 +20,26 @@ public class BFTCommitServerSpawnUp {
 //            }
 //        }
         //new BFTServer(Integer.parseInt(args[0]), new BpTree());
-        new BFTServer( 3);
+        LinkedList<Thread> threads = new LinkedList<>();
+        for (int i = 0; i < 4; i++) {
+            int finalI = i;
+            threads.add(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    new BftBPServer(finalI);
+                }
+            }));
+        }
+
+        for (Thread t: threads)
+            t.start();
+
+        for (Thread t: threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
