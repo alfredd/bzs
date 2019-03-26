@@ -5,12 +5,8 @@ import edu.ucsc.edgelab.db.bzs.clientlib.TransactionManager;
 import io.grpc.stub.StreamObserver;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BenchmarkExecutor implements Runnable {
@@ -25,12 +21,11 @@ public class BenchmarkExecutor implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(BenchmarkExecutor.class.getName());
 
     private final TransactionProcessor transactionProcessor;
-    private FileWriter writer = null;
+    private final ReportBuilder reportBuilder;
 
-    public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws FileNotFoundException {
+    public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
         String fileName = System.getProperty("user.dir") + "//src/main/resources/ulysses.txt";
-        String reportFileName = System.getProperty("user.dir") + "/Report_" + getDateString() + ".csv";
         LOGGER.info("Filename: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
@@ -43,30 +38,18 @@ public class BenchmarkExecutor implements Runnable {
                     words.add(word);
         }
         scanner.close();
-        try {
-            writer = new FileWriter(new File(reportFileName));
 
-            writer.write("Epoch Number, " +
-                    "Total Transactions in Epoch, " +
-                    "Transactions Processed In Epoch(S), " +
-                    "Transactions Failed In Epoch(F), " +
-                    "Total Transaction Count, " +
-                    "Total Transactions Completed, " +
-                    "Total Transactions Failed, " +
-                    "Processing Time(ms), " +
-                    "Throughput(Tps)\n");
-        } catch (IOException e) {
-            LOGGER.info("Error occurred while creating report file: " + reportFileName);
-        }
+        String[] fields = new String[]{"Epoch Number, ",
+                "Total Transactions in Epoch, ",
+                "Transactions Processed In Epoch(S), ",
+                "Transactions Failed In Epoch(F), ",
+                "Total Transaction Count, ",
+                "Total Transactions Completed, ",
+                "Total Transactions Failed, ",
+                "Processing Time(ms), ",
+                "Throughput(Tps)\n"};
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            LOGGER.info("Shutting down report writer.");
-            try {
-                writer.close();
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING,"Failed to close report file writer.",e);
-            }
-        }));
+        reportBuilder = new ReportBuilder(fields);
         wordList.addAll(words);
 
 
@@ -77,8 +60,8 @@ public class BenchmarkExecutor implements Runnable {
     public Bzs.Transaction generateWriteSet() {
         TransactionManager transactionManager = new TransactionManager();
         Random random = new Random();
-        int writeCount=0;
-        while (writeCount==0)
+        int writeCount = 0;
+        while (writeCount == 0)
             writeCount = random.nextInt(10);
         for (int i = 0; i < writeCount; i++) {
             int keyIndex = random.nextInt(wordList.size());
@@ -101,7 +84,7 @@ public class BenchmarkExecutor implements Runnable {
     }
 
     public void sendNTransactions(int n) {
-        while ((--n)>=0) {
+        while ((--n) >= 0) {
             sendWriteOnlyTransactions(10);
 //            try {
 //                Thread.sleep(20);
@@ -121,7 +104,7 @@ public class BenchmarkExecutor implements Runnable {
         }
     }
 
-    public void sendReadOnlyTransactions(int i ) {
+    public void sendReadOnlyTransactions(int i) {
 
     }
 
@@ -130,7 +113,7 @@ public class BenchmarkExecutor implements Runnable {
             @Override
             public void onNext(Bzs.TransactionResponse transactionResponse) {
                 if (transactionResponse.getStatus().equals(Bzs.TransactionStatus.ABORTED)) {
-                    transactionsFailed+=1;
+                    transactionsFailed += 1;
                 } else {
                     transactionsCompleted += 1;
                 }
@@ -155,7 +138,7 @@ public class BenchmarkExecutor implements Runnable {
             LOGGER.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
                     transactionsFailed));
             long latency = epochProcessingEndTime - epochProcessingStartTime;
-            double throughput = latency==0? 0 :(double) transactionsProcessedInEpoch*1000 / (latency);
+            double throughput = latency == 0 ? 0 : (double) transactionsProcessedInEpoch * 1000 / (latency);
             String report = String.format("%d, %d, %d, %d, %d, %d, %d, %d, %f\n",
                     epochNumber,
                     epochTransactionCount,
@@ -167,26 +150,17 @@ public class BenchmarkExecutor implements Runnable {
                     latency,
                     throughput
             );
-            if (writer != null) {
-                try {
-                    writer.write(report);
-                } catch (IOException e) {
-                    LOGGER.warning("Exception occurred while writing report: " + report);
-                }
+            if (reportBuilder != null) {
+                reportBuilder.writeLine(report);
             }
         }
     }
 
-    public static void main(String args[]) throws FileNotFoundException {
+    public static void main(String args[]) throws IOException {
         BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(null);
-        String format = getDateString();
+        String format = ReportBuilder.getDateString();
         System.out.println(format);
 
     }
 
-    public static String getDateString() {
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd.HH.mm.ss");
-        return sdf.format(date);
-    }
 }

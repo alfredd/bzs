@@ -7,6 +7,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import io.grpc.stub.StreamObserver;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Timer;
@@ -51,7 +52,7 @@ public class TransactionProcessor {
         try {
             benchmarkExecutor = new BenchmarkExecutor(this);
             new Thread(benchmarkExecutor).start();
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
