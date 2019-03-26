@@ -1,7 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.bftcommit;
 
 import bftsmart.tom.MessageContext;
-import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 
@@ -16,7 +15,6 @@ public class BftBPServer extends BFTServer {
     private Logger logger = Logger.getLogger(BftBPServer.class.getName());
 
     private Map<Integer, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
-    private Integer count;
 
     public BftBPServer(int id) {
         super(id);
@@ -36,7 +34,7 @@ public class BftBPServer extends BFTServer {
     @Override
     public byte[] appExecuteOrdered(byte[] bytes, MessageContext messageContext) {
         logger.info("Length of byte array received: "+ bytes.length);
-        return ByteBuffer.allocate(4).putInt(1).array();
+        return ByteBuffer.allocate(4).putInt(bytes.length).array();
     }
 
     @Override

@@ -49,7 +49,7 @@ public class BenchmarkExecutor implements Runnable {
                 "Processing Time(ms), ",
                 "Throughput(Tps)\n"};
 
-        reportBuilder = new ReportBuilder(fields);
+        reportBuilder = new ReportBuilder("Report_bzs", fields);
         wordList.addAll(words);
 
 

@@ -13,8 +13,8 @@ public class ReportBuilder {
     private final FileWriter writer;
     private static final Logger LOGGER = Logger.getLogger(ReportBuilder.class.getName());
 
-    public ReportBuilder(String[] fields) throws IOException {
-        String reportFileName = System.getProperty("user.dir") + "/Report_" + ReportBuilder.getDateString() + ".csv";
+    public ReportBuilder(String reportFileNamePrefix, String[] fields) throws IOException {
+        String reportFileName = System.getProperty("user.dir") + "/"+reportFileNamePrefix + ReportBuilder.getDateString() + ".csv";
         writer = new FileWriter(new File(reportFileName));
 
         for (String field : fields) {
@@ -45,5 +45,13 @@ public class ReportBuilder {
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd.HH.mm.ss");
         return sdf.format(date);
+    }
+
+    public void close() {
+        try {
+            writer.close();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Failed to close report file writer.", e);
+        }
     }
 }
