@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BFTClient {
-    private ServiceProxy serviceProxy;
+    protected ServiceProxy serviceProxy;
 
     private static final Logger LOGGER = Logger.getLogger(BFTClient.class.getName());
 
@@ -28,7 +28,7 @@ public class BFTClient {
         LOGGER.info("Received transaction batch to perform commit consensus.");
 
         try {
-            byte[] reply = performConsensusCommit(batch);
+            byte[] reply = performConsensusCommit(batch.toByteArray());
             return Bzs.TransactionBatchResponse.parseFrom(reply);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
@@ -38,10 +38,10 @@ public class BFTClient {
         return null;
     }
 
-    public byte[] performConsensusCommit(Bzs.TransactionBatch batch) {
+    public byte[] performConsensusCommit(byte[] data) {
         LOGGER.info("Starting db commit from client.");
         byte[] reply;
-        reply = serviceProxy.invokeOrdered(batch.toByteArray());
+        reply = serviceProxy.invokeOrdered(data);
         return reply;//Bzs.TransactionBatchResponse.parseFrom(reply);
 /*        try {
         } catch (IOException e) {
@@ -90,7 +90,7 @@ public class BFTClient {
     public int performDbCommit(Bzs.TransactionBatchResponse batchResponse) {
         Bzs.BFTCommit commitdata = Bzs.BFTCommit.newBuilder().addAllTransactions(batchResponse.getResponsesList()).build();
         Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setBftCommit(commitdata).setID(batchResponse.getID()).build();
-        byte[] reply = performConsensusCommit(batch);
+        byte[] reply = performConsensusCommit(batch.toByteArray());
         int id=-10;
         try {
             id = ByteBuffer.wrap(reply).getInt();
