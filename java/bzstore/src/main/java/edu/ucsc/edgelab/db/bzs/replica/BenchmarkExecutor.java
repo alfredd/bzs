@@ -56,7 +56,7 @@ public class BenchmarkExecutor implements Runnable {
                 "Throughput (Bps)\n"
         };
 
-        reportBuilder = new ReportBuilder("Report_w_hash", fields);
+        reportBuilder = new ReportBuilder("Report_wo_hash", fields);
         wordList.addAll(words);
 
 
@@ -86,7 +86,7 @@ public class BenchmarkExecutor implements Runnable {
             e.printStackTrace();
         }
         started = true;
-        int n = 3000;
+        int n = 12000;
         int m = 15;
         this.totalCount = n * m;
         this.processed = 0;

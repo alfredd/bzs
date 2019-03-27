@@ -223,8 +223,8 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     private String generateHash(final String input) {
 //        long starttime = System.nanoTime();
-//        String hash = input;
-        String hash = DigestUtils.md5Hex(input).toUpperCase();
+        String hash = input;
+//        String hash = DigestUtils.md5Hex(input).toUpperCase();
 //        long duration = System.nanoTime() - starttime;
 //        logger.info("Hash generated in " + duration + "nanosecs");
 
