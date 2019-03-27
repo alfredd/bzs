@@ -20,7 +20,7 @@ public class TransactionManager {
                 .build();
         transaction = builder.addReadHistory(history).build();
 
-        logTransaction();
+//        logTransaction();
     }
 
     public void logTransaction() {
@@ -30,7 +30,7 @@ public class TransactionManager {
     public void write(String key, String value) {
         Bzs.Write write = Bzs.Write.newBuilder().setKey(key).setValue(value).build();
         transaction = builder.addWriteOperations(write).build();
-        logTransaction();
+//        logTransaction();
     }
 
     public Bzs.Transaction getTransaction() {

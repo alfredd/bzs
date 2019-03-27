@@ -17,16 +17,16 @@ public final class BZDatabaseController {
     }
 
     public static void commit (String key, BZStoreData data) throws InvalidCommitException {
-        LOGGER.info("Committing data with key: {"+key+"}");
+//        LOGGER.info("Committing data with key: {"+key+"}");
         BZ_DATABASE_CONTROLLER.db.commit(key,data.value,data.digest);
-        LOGGER.info("Committed data with key: {"+key+"}");
+//        LOGGER.info("Committed data with key: {"+key+"}");
     }
 
     public static BZStoreData getlatest(String key) {
         List<BZStoreData> dataHistory = BZ_DATABASE_CONTROLLER.db.get(key);
         if (dataHistory == null) {
-            String message = String.format("No data available for key=%s.", key);
-            LOGGER.log(Level.WARNING, message);
+//            String message = String.format("No data available for key=%s.", key);
+//            LOGGER.log(Level.WARNING, message);
            return new BZStoreData();
         }
         return dataHistory.get(0);

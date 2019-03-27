@@ -18,15 +18,17 @@ service Replica {
 message TransactionBatch {
     repeated Transaction transactions = 1;
     repeated ROTransaction rotransaction = 2;
-    BFTCommit bftCommit = 3;
-    int32 ID = 4;
+//    BFTCommit bftCommit = 3;
+    int32 ID = 3;
+    Operation operation =4;
 }
 
 message TransactionBatchResponse {
     repeated TransactionResponse responses = 1;
     repeated ROTransactionResponse readresponses = 2;
-    BFTCommitResponse bftCommitResponse = 3;
-    int32 ID = 4;
+//    BFTCommitResponse bftCommitResponse = 3;
+    int32 ID = 3;
+    Operation operation = 4;
 }
 
 message BFTCommit {
@@ -47,6 +49,11 @@ enum OperationStatus {
     FAILED = 0;
     SUCCESS = 1;
     INVALID = 2;
+}
+
+enum Operation {
+    BFT_PREPARE = 0;
+    BFT_COMMIT = 1;
 }
 
 message Write {

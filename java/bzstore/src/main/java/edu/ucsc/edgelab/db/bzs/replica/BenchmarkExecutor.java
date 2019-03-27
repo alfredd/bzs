@@ -16,12 +16,16 @@ public class BenchmarkExecutor implements Runnable {
     private int transactionsCompleted = 0;
     private int transactionsFailed = 0;
     private boolean started = false;
+    private int previousCompleted = 0;
+    private int currentCompleted = 0;
 
 
     private static final Logger LOGGER = Logger.getLogger(BenchmarkExecutor.class.getName());
 
     private final TransactionProcessor transactionProcessor;
     private final ReportBuilder reportBuilder;
+    private int totalCount;
+    private int processed;
 
     public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
@@ -47,9 +51,12 @@ public class BenchmarkExecutor implements Runnable {
                 "Total Transactions Completed, ",
                 "Total Transactions Failed, ",
                 "Processing Time(ms), ",
-                "Throughput(Tps)\n"};
+                "Throughput(Tps), ",
+                "Bytes processed (Bytes), ",
+                "Throughput (Bps)\n"
+        };
 
-        reportBuilder = new ReportBuilder("Report_bzs", fields);
+        reportBuilder = new ReportBuilder("Report_w_hash", fields);
         wordList.addAll(words);
 
 
@@ -79,13 +86,17 @@ public class BenchmarkExecutor implements Runnable {
             e.printStackTrace();
         }
         started = true;
-        sendNTransactions(2000);
+        int n = 3000;
+        int m = 15;
+        this.totalCount = n * m;
+        this.processed = 0;
+        sendNTransactions(n, m);
 
     }
 
-    public void sendNTransactions(int n) {
+    public void sendNTransactions(int n, int m) {
         while ((--n) >= 0) {
-            sendWriteOnlyTransactions(10);
+            sendWriteOnlyTransactions(m);
 //            try {
 //                Thread.sleep(20);
 //            } catch (InterruptedException e) {
@@ -133,13 +144,19 @@ public class BenchmarkExecutor implements Runnable {
 
     public void logTransactionDetails(int epochNumber, int epochTransactionCount, int transactionsProcessedInEpoch,
                                       int transactionsFailedInEpoch, long epochProcessingStartTime,
-                                      long epochProcessingEndTime) {
-        if (started) {
+                                      long epochProcessingEndTime, int bytesProcessedInEpoch) {
+        currentCompleted= transactionsProcessedInEpoch == 0 ? transactionsFailedInEpoch : transactionsProcessedInEpoch;
+        processed += currentCompleted;
+        if (started && currentCompleted!=previousCompleted) {
+//            if (processed != totalCount) {
+//
+//            }
             LOGGER.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
                     transactionsFailed));
             long latency = epochProcessingEndTime - epochProcessingStartTime;
-            double throughput = latency == 0 ? 0 : (double) transactionsProcessedInEpoch * 1000 / (latency);
-            String report = String.format("%d, %d, %d, %d, %d, %d, %d, %d, %f\n",
+            double throughputTps = latency == 0 ? 0 : (double) transactionsProcessedInEpoch * 1000 / (latency);
+            double throughputBps = latency == 0 ? 0 : (double) bytesProcessedInEpoch * 1000 / (latency);
+            String report = String.format("%d, %d, %d, %d, %d, %d, %d, %d, %f, %d, %f\n",
                     epochNumber,
                     epochTransactionCount,
                     transactionsProcessedInEpoch,
@@ -148,7 +165,9 @@ public class BenchmarkExecutor implements Runnable {
                     transactionsCompleted,
                     transactionsFailed,
                     latency,
-                    throughput
+                    throughputTps,
+                    bytesProcessedInEpoch,
+                    throughputBps
             );
             if (reportBuilder != null) {
                 reportBuilder.writeLine(report);

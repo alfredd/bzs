@@ -28,7 +28,7 @@ public class BFTCommitClient {
 //                System.out.println("Key ::"+ operation.getKey() + " Value: "+operation.getValue());
 //            }
 //        }
-//        System.out.println(clients[0].performCommit(list));
+//        System.out.println(clients[0].performCommitPrepare(list));
 //        System.out.println("Write Performed");
 
         Bzs.ROTransaction transaction = Bzs.ROTransaction.newBuilder().build();
