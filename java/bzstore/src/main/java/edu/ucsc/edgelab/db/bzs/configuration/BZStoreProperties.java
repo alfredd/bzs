@@ -21,7 +21,7 @@ public class BZStoreProperties {
     public BZStoreProperties() throws IOException {
 
         bzsProperties = new Properties();
-        String pathname = System.getProperty("user.dir") + "/src/main/resources/" + CONFIG_PROPERTIES;
+        String pathname = System.getProperty("user.dir") + "/scripts/" + CONFIG_PROPERTIES;
         LOGGER.info("Properties path: "+pathname);
         bzsProperties.load(
                 new FileInputStream(
