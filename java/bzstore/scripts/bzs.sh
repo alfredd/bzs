@@ -7,7 +7,7 @@ then
     exit 1
 fi
 
-if [[ "$#" != "2" ]]
+if [[ "$#" != "1" ]]
 then
     echo "Usage: $0 ID"
     echo "      where ID=0|1|2|3"
