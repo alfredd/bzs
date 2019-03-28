@@ -30,7 +30,7 @@ public class BenchmarkExecutor implements Runnable {
     public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
         String fileName = System.getProperty("user.dir") + "//src/main/resources/ulysses.txt";
-        LOGGER.info("Filename: " + fileName);
+        LOGGER.info("Data File path: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
         Set<String> words = new LinkedHashSet<>();
