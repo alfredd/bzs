@@ -26,7 +26,7 @@ public class BZStoreServer {
 
     public static void main(String[] args) throws IOException {
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-        root.setLevel(ch.qos.logback.classic.Level.ALL);
+        root.setLevel(ch.qos.logback.classic.Level.ERROR);
         if (args.length != 1) {
             System.err.println("Usage: ");
             System.err.println("      bzserver ID ; where ID=z{1..8}");
