@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.TransactionManager;
+import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import io.grpc.stub.StreamObserver;
 
 import java.io.File;
@@ -81,8 +82,11 @@ public class BenchmarkExecutor implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(15000);
-        } catch (InterruptedException e) {
+            BZStoreProperties properties = new BZStoreProperties();
+            String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
+            Integer delayMs = Integer.decode(delay);
+            Thread.sleep(delayMs);
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
         started = true;
