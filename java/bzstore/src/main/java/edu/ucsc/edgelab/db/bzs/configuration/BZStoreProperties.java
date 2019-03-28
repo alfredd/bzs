@@ -6,11 +6,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 public class BZStoreProperties {
 
     public static final String CONFIG_PROPERTIES = "config.properties";
-
+    private static final Logger LOGGER = Logger.getLogger(BZStoreProperties.class.getName());
     public enum Configuration {
         port, host, leader, epoch_time_ms
     }
@@ -20,10 +21,12 @@ public class BZStoreProperties {
     public BZStoreProperties() throws IOException {
 
         bzsProperties = new Properties();
+        String pathname = System.getProperty("user.dir") + "/src/main/resources/" + CONFIG_PROPERTIES;
+        LOGGER.info("Propeties path: "+pathname);
         bzsProperties.load(
                 new FileInputStream(
                         new File(
-                                System.getProperty("user.dir") + "/src/main/resources/" + CONFIG_PROPERTIES
+                                pathname
                         )
                 )
         );
