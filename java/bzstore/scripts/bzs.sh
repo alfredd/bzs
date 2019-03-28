@@ -9,7 +9,7 @@ fi
 
 if [[ "$#" != "2" ]]
 then
-    echo "Usage: ./$0 ID"
+    echo "Usage: $0 ID"
     echo "      where ID=0|1|2|3"
     exit 1
 fi
