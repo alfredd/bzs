@@ -29,7 +29,7 @@ public class BZStoreServer {
         root.setLevel(ch.qos.logback.classic.Level.ERROR);
         if (args.length != 1) {
             System.err.println("Usage: ");
-            System.err.println("      bzserver ID ; where ID=z{1..8}");
+            System.err.println("      bzserver ID ; where ID={0..8}");
             System.exit(1);
         }
 
