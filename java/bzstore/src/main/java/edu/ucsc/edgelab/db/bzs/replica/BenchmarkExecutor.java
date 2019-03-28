@@ -85,6 +85,7 @@ public class BenchmarkExecutor implements Runnable {
             BZStoreProperties properties = new BZStoreProperties();
             String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
             Integer delayMs = Integer.decode(delay);
+            LOGGER.info("Benchmark tests will run after "+delay+"milliseconds");
             Thread.sleep(delayMs);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
