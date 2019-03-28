@@ -3,233 +3,133 @@ package edu.ucsc.edgelab.db.bzs.bftcommit;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import com.google.protobuf.ByteString;
 import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
-import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import javax.xml.bind.DatatypeConverter;
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BFTServer extends DefaultSingleRecoverable {
+    private HashMap<String, BZStoreData> db;
+    private Logger logger;
+    private String transaction_hash;
 
-    private Logger logger = Logger.getLogger(BFTServer.class.getName());
-
-    private Map<Integer, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
-//    private Integer count;
-
-    public BFTServer(int id) {
-        logger.info("Starting BFT-Smart Server.");
-//        count = 0;
+    public BFTServer(int id){
+        db = new HashMap<>();
+        logger = Logger.getLogger(BFTServer.class.getName());
+        transaction_hash = "";
         new ServiceReplica(id, this, this);
-        logger.info("Started: BFT-Smart Server.");
 
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public byte[] appExecuteOrdered(byte[] transactions, MessageContext msgCtx) {
-        // TODO: Need to re-factor.
-        byte[] reply;
-        try {
+    public byte[] appExecuteOrdered(byte[] transactions, MessageContext msgCtx){
+        byte[] reply = null;
+        try (ByteArrayInputStream byteIn = new ByteArrayInputStream(transactions);
+             ObjectInput objIn = new ObjectInputStream(byteIn);
+             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
 
-            Bzs.TransactionBatch transactionBatch =
-//                    Bzs.TransactionBatch.newBuilder().mergeFrom(byteOut.toByteArray()).build();
-                    Bzs.TransactionBatch.newBuilder().mergeFrom(transactions).build();
-//            logger.info("Transaction batch: " + transactionBatch.toString());
-            Bzs.TransactionBatchResponse batchResponse;
-            Bzs.TransactionBatchResponse.Builder batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
-            if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
-                    transactionBatch.getTransactionsCount() > 0) {
-//                count += 1;
-//                Integer counter = count;
-                Serializer serializer = new Serializer();
-                int epochId = transactionBatch.getID();
-                logger.info("Processing transaction batch: "+epochId);
-
-                for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
-                    Bzs.Transaction transaction = transactionBatch.getTransactions(transactionIndex);
-
-                    if (!serializer.serialize(transaction)) {
-                        logger.log(Level.WARNING,
-                                "Returning random bytes. Could not serialize the transaction: " + transaction.toString());
-                        return getRandomBytes();
-                    }
-//                    logger.info("Generating transaction hash for consensus.");
-                    Bzs.TransactionResponse response;
-                    Bzs.TransactionResponse.Builder responseBuilder = Bzs.TransactionResponse.newBuilder();
-                    for (int i = 0; i < transaction.getWriteOperationsCount(); i++) {
-                        Bzs.Write writeOp = transaction.getWriteOperations(i);
-                        BZStoreData bzStoreData;
-                        String key = writeOp.getKey();
-                        bzStoreData = getBzStoreData(key);
-                        Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
-                                .setKey(key)
-                                .setValue(writeOp.getValue())
-                                .setVersion(bzStoreData.version + 1)
-                                .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
-                        responseBuilder.addWriteResponses(writeResponse);
-
-                    }
-                    responseBuilder.setStatus(Bzs.TransactionStatus.COMMITTED);
-                    response = responseBuilder.build();
-                    batchResponseBuilder.addResponses(response);
-                }
-                serializer.resetEpoch();
-                batchResponseBuilder.setID(epochId);
-                batchResponse = batchResponseBuilder.build();
-                tbrCache.put(epochId, batchResponse);
-/*                logger.info("Completed generating response for transaction batch with batch id: " + epochId + ". " +
-                        "Transaction batch data: " + batchResponse.toString()+
-                        ". Transaction count= "+batchResponse.getResponsesCount());*/
-                reply = batchResponse.toByteArray();
-/*                List<Integer> inputsBytes = new LinkedList<>();
-                for (byte b : reply) {
-                    inputsBytes.add(b & 0xFF);
-                }
-                logger.info("Response Byte array: " + inputsBytes);*/
-            } else if ( transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
-                    transactionBatch.getRotransactionCount() > 0) {
-
-                for (int i = 0; i < transactionBatch.getRotransactionCount(); i++) {
-                    Bzs.ROTransaction roTransaction = transactionBatch.getRotransaction(i);
-
-                    Bzs.ROTransactionResponse.Builder roTransactionResponseBuilder =
-                            Bzs.ROTransactionResponse.newBuilder();
-
-                    for (Bzs.Read readOp : roTransaction.getReadOperationsList()) {
-                        BZStoreData storeData = getBzStoreData(readOp.getKey());
-                        Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
-                                .setKey(readOp.getKey())
-                                .setValue(storeData.value)
-                                .setVersion(storeData.version)
-                                .setStatus(
-                                        readOp.getKey() == null ? Bzs.OperationStatus.INVALID :
-                                                Bzs.OperationStatus.SUCCESS
-                                )
-                                .setResponseDigest(storeData.digest).buildPartial();
-                        roTransactionResponseBuilder.addReadResponses(response);
-                    }
-                    batchResponseBuilder.addReadresponses(roTransactionResponseBuilder.build());
-                }
-                batchResponse = batchResponseBuilder.build();
-
-                logger.info("Completed generating response for transaction batch.");
-                reply = batchResponse.toByteArray();
-
-            } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_COMMIT)) {
-                logger.info("====================================");
-                logger.info("======Performing BFT DB Commit======");
-                logger.info("====================================");
-//                Bzs.BFTCommit commitTransactions = transactionBatch.getBftCommit();
-                int id = transactionBatch.getID();
-                logger.info("Processing db commit transactions with batch id: " + id);
-//                logger.info("CommitTransactions: " + commitTransactions.toString());
-                if (!tbrCache.containsKey(id)) {
-                    logger.log(Level.WARNING, "Transactions are not present in cache for id: " + id + ". Transaction " +
-                            "will abort.");
-                    return getRandomBytes();
-                }
-                Bzs.TransactionBatchResponse cached = tbrCache.get(id);
-//                logger.info("CachedResponse: "+cached.toString());
-                // Commit to database.
-                logger.info("Beginning the process to write into the database.");
-                List<String> committedKeys = new LinkedList<>();
-                for (int i = 0; i < cached.getResponsesCount(); i++) {
-                    Bzs.TransactionResponse response = cached.getResponses(i);
-                    boolean committed = true;
-                    for (Bzs.WriteResponse writeResponse : response.getWriteResponsesList()) {
-                        BZStoreData data = new BZStoreData(
-                                writeResponse.getValue(),
-                                writeResponse.getVersion(),
-                                writeResponse.getResponseDigest());
+            Integer type = (Integer)objIn.readObject();
+            if(type == 0){//Performing BFT commit
+                //System.out.println("=========Performing BFT Transactions=========");
+                LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
+                List<String> hashes = new LinkedList<>();
+                for(byte[] b : batch){
+                    Bzs.Transaction t = Bzs.Transaction.newBuilder().mergeFrom(b).build();
+                    //transaction_hash = generateHash( transaction_hash + t.toString());
+                    hashes.add(transaction_hash);
+                    for(Bzs.Write i : t.getWriteOperationsList()){
                         try {
-//                            logger.info("Committing write : " + writeResponse);
-                            BZDatabaseController.commit(writeResponse.getKey(), data);
-                            committedKeys.add(writeResponse.getKey());
-//                            logger.info("Committed write : " + writeResponse);
-
-                        } catch (InvalidCommitException e) {
-                            logger.log(Level.WARNING, "Commit failed for transaction: " + response.toString() + ". " +
-                                    "All" +
-                                    " committed keys will be rolled back and the transaction will be aborted.");
-                            BZDatabaseController.rollbackForKeys(committedKeys);
-
-                            committed = false;
-                            break;
+                            BZStoreData data = new BZStoreData();
+                            data.value = i.getValue();
+                            data.version = 1;
+                            //data.digest = generateHash(data.value);
+                            db.put(i.getKey(), data);
+                        }
+                        catch (Exception e){
+                            System.out.println("Commit did not happen");
                         }
                     }
-                    if (!committed) {
-                        return getRandomBytes();
-                    }
                 }
-                logger.info("Data committed. Returning response.");
-//                Bzs.BFTCommitResponse bftCommitResponse1 = Bzs.BFTCommitResponse.newBuilder()
-//                        .addAllResponses(commitTransactions.getTransactionsList()).build();
-//
-//                Bzs.TransactionBatchResponse commitResponse2 = Bzs.TransactionBatchResponse.newBuilder()
-//                        .setBftCommitResponse(bftCommitResponse1)
-//                        .setID(id)
-//                        .build();
-//                logger.info("Response object: "+commitResponse2.toString());
-                reply = ByteBuffer.allocate(4).putInt(1).array();
-            } else {
-                logger.log(Level.WARNING,
-                        "No matches found. Aborting consensus. Input was: " + transactionBatch.toString());
-                reply = getRandomBytes();
+                //System.out.println("HASHES :::::"+ hashes.toString());
+                boolean bReply = Math.random() < 0.5;
+                objOut.writeObject(hashes);
+                objOut.flush();
+                byteOut.flush();
+                reply = byteOut.toByteArray();
+            }
+            else{
+                LinkedList<byte[]> batch = (LinkedList<byte[]>) objIn.readObject();
+                List<String> hashes = new LinkedList<>();
+                for(byte[] b : batch){
+                    String b_hash = "";
+                    Bzs.ROTransaction t = Bzs.ROTransaction.newBuilder().mergeFrom(b).build();
+                    for(Bzs.Read i : t.getReadOperationsList()){
+
+                        b_hash = generateHash(b_hash + db.get(i.getKey()).value + db.get(i.getKey()).value);
+                    }
+                    hashes.add(b_hash);
+                }
+                System.out.println("HASHES :::::"+ hashes.toString());
+                boolean bReply = Math.random() < 0.5;
+                objOut.writeObject(hashes);
+                objOut.flush();
+                byteOut.flush();
+                reply = byteOut.toByteArray();
             }
 
-
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Exception occured when reading inputs. " + e.getLocalizedMessage(), e);
-            reply = getRandomBytes();
+        }
+        catch (IOException | ClassNotFoundException e){
+            logger.log(Level.SEVERE, "Occured during db operations executions", e);
         }
         return reply;
     }
 
-    private BZStoreData getBzStoreData(String key) {
-
-        return BZDatabaseController.getlatest(key);
-    }
-
-    private byte[] getRandomBytes() {
-        return String.valueOf(new Random().nextInt()).getBytes();
+    @SuppressWarnings("unchecked")
+    @Override
+    public byte[] appExecuteUnordered(byte[] transactions, MessageContext msgCtx){
+        byte[] reply = null;
+        return  reply;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public byte[] appExecuteUnordered(byte[] transactions, MessageContext msgCtx) {
-        return appExecuteOrdered(transactions, msgCtx);
+    public byte[] getSnapshot(){
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+            //objOut.writeObject(db);
+            return byteOut.toByteArray();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error while taking snapshot", e);
+        }
+        return new byte[0];
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public byte[] getSnapshot() {
-        return BZDatabaseController.getDBSnapshot();
+    public void installSnapshot(byte[] state){
+        try (ByteArrayInputStream byteIn = new ByteArrayInputStream(state);
+             ObjectInput objIn = new ObjectInputStream(byteIn)) {
+             //db = (HashMap<String, BZStoreData>) objIn.readObject();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error while installing snapshot", e);
+        }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void installSnapshot(byte[] state) {
-        ByteArrayInputStream byteIn = new ByteArrayInputStream(state);
-        BftUtil.installSH(byteIn, logger);
-    }
-
-    private String generateHash(final String input) {
-//        long starttime = System.nanoTime();
-//        String hash = input;
+    private static String generateHash(String  input)
+    {
         String hash = DigestUtils.md5Hex(input).toUpperCase();
-//        long duration = System.nanoTime() - starttime;
-//        logger.info("Hash generated in " + duration + "nanosecs");
-
         return hash;
-
     }
 
 }
