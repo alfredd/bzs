@@ -30,7 +30,7 @@ public class BenchmarkExecutor implements Runnable {
 
     public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
-        String fileName = System.getProperty("user.dir") + "/scripts/ulysses.txt";
+        String fileName = System.getProperty("user.dir") + "/ulysses.txt";
         LOGGER.info("Data File path: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
