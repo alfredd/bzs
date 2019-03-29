@@ -42,7 +42,7 @@ public class TransactionProcessor {
 
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
-        epochManager.setTransactionProcessor();
+        epochManager.startEpochMaintenance();
         initDatabase();
 
     }

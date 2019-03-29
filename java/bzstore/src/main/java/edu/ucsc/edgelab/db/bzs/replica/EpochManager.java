@@ -28,7 +28,7 @@ public class EpochManager {
         }
     }
 
-    public void setTransactionProcessor() {
+    public void startEpochMaintenance() {
         EpochMaintainer epochMaintainer = new EpochMaintainer();
         epochMaintainer.setProcessor(transactionProcessor);
         Timer epochTimer = new Timer("EpochMaintainer", true);
