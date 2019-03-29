@@ -39,6 +39,13 @@ public class TransactionProcessor {
 
     public void initTransactionProcessor() {
 
+        initEpochTime();
+        startBftClient();
+        initDatabase();
+        setEpochMaintainer(new EpochMaintainer());
+    }
+
+    public void initEpochTime() {
         try {
             BZStoreProperties properties = new BZStoreProperties();
             this.epochTimeInMS = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_time_ms));
@@ -46,9 +53,6 @@ public class TransactionProcessor {
             LOGGER.log(Level.WARNING, "Exception occurred while getting epoch time. " + e.getLocalizedMessage());
             this.epochTimeInMS = Configuration.getDefaultEpochTimeInMS();
         }
-        startBftClient();
-        initDatabase();
-        setEpochMaintainer(new EpochMaintainer());
     }
 
     public void setEpochMaintainer(EpochMaintainer epochMaintainer) {
