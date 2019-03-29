@@ -2,14 +2,11 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
-import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
-import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Timer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,8 +22,13 @@ public class TransactionProcessor {
     private Integer id;
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
-    private EpochMaintainer epochMaintainer;
 
+    public TransactionProcessor(Integer id) {
+        super();
+        this.id = id;
+    }
+
+    @Deprecated
     public TransactionProcessor() {
         serializer = new Serializer();
         sequenceNumber = 0;
@@ -39,27 +41,11 @@ public class TransactionProcessor {
 
     public void initTransactionProcessor() {
 
-        initEpochTime();
         startBftClient();
+        EpochManager epochManager = new EpochManager();
+        epochManager.setTransactionProcessor(this);
         initDatabase();
-        setEpochMaintainer(new EpochMaintainer());
-    }
 
-    public void initEpochTime() {
-        try {
-            BZStoreProperties properties = new BZStoreProperties();
-            this.epochTimeInMS = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_time_ms));
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception occurred while getting epoch time. " + e.getLocalizedMessage());
-            this.epochTimeInMS = Configuration.getDefaultEpochTimeInMS();
-        }
-    }
-
-    public void setEpochMaintainer(EpochMaintainer epochMaintainer) {
-        this.epochMaintainer = epochMaintainer;
-        this.epochMaintainer.setProcessor(this);
-        Timer epochTimer = new Timer("EpochMaintainer", true);
-        epochTimer.scheduleAtFixedRate(this.epochMaintainer, epochTimeInMS, epochTimeInMS);
     }
 
     public void initDatabase() {
@@ -72,7 +58,7 @@ public class TransactionProcessor {
     }
 
     public void startBftClient() {
-        if (bftClient != null && id != null)
+        if (bftClient == null && id != null)
             bftClient = new BFTClient(id);
     }
 
@@ -180,10 +166,6 @@ public class TransactionProcessor {
             responseObserver.onNext(tResponse);
             responseObserver.onCompleted();
         }
-    }
-
-    void setId(Integer id) {
-        this.id = id;
     }
 
     public Bzs.TransactionBatch getTransactionBatch(int epochNumber, Collection<Bzs.Transaction> transactions) {
