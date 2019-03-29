@@ -11,8 +11,14 @@ public class EpochManager {
 
     private static final Logger LOGGER = Logger.getLogger(EpochManager.class.getName());
     private Integer epochTimeInMS;
+    private TransactionProcessor transactionProcessor;
 
-    public EpochManager() {
+    public EpochManager(TransactionProcessor transactionProcessor) {
+        this();
+        this.transactionProcessor = transactionProcessor;
+    }
+
+    private EpochManager() {
         try {
             BZStoreProperties properties = new BZStoreProperties();
             this.epochTimeInMS = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_time_ms));
@@ -22,9 +28,9 @@ public class EpochManager {
         }
     }
 
-    public void setTransactionProcessor(TransactionProcessor processor) {
+    public void setTransactionProcessor() {
         EpochMaintainer epochMaintainer = new EpochMaintainer();
-        epochMaintainer.setProcessor(processor);
+        epochMaintainer.setProcessor(transactionProcessor);
         Timer epochTimer = new Timer("EpochMaintainer", true);
         epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
     }

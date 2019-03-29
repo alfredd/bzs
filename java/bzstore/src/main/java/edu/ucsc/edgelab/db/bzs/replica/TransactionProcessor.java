@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 
 public class TransactionProcessor {
 
-    private Integer epochTimeInMS;
     private Serializer serializer;
     private int sequenceNumber;
     private int epochNumber;
@@ -24,7 +23,7 @@ public class TransactionProcessor {
     private BFTClient bftClient = null;
 
     public TransactionProcessor(Integer id) {
-        super();
+        this();
         this.id = id;
     }
 
@@ -42,8 +41,8 @@ public class TransactionProcessor {
     public void initTransactionProcessor() {
 
         startBftClient();
-        EpochManager epochManager = new EpochManager();
-        epochManager.setTransactionProcessor(this);
+        EpochManager epochManager = new EpochManager(this);
+        epochManager.setTransactionProcessor();
         initDatabase();
 
     }

@@ -7,7 +7,7 @@ function setup_workspace() {
     cp -rf ../../../library/config .
     cp -f ../../../library/bin/BFT-SMaRt.jar .
     # Un-comment the next line if mvn is present and you want to build bzstore
-    # cp -rf ../target/bzstore-1.0-SNAPSHOT-jar-with-dependencies.jar .
+    cp -rf ../target/bzstore-1.0-SNAPSHOT-jar-with-dependencies.jar .
 }
 
 if [[ "$1" == "setup" ]]
