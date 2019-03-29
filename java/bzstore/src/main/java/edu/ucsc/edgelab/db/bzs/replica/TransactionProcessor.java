@@ -52,7 +52,7 @@ public class TransactionProcessor {
             benchmarkExecutor = new BenchmarkExecutor(this);
             new Thread(benchmarkExecutor).start();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Creation of benchmark execution client failed: "+e.getLocalizedMessage(),e);
         }
     }
 
