@@ -37,7 +37,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         if (leaderInfo!=null && !this.id.equals(leaderInfo.id)) {
             forwardingClient = new ForwardingClient(leaderInfo.host, leaderInfo.port);
         } else if (this.id.equals(leaderInfo.id)) {
-            tp.startEpochMaintainer();
+            tp.initTransactionProcessor();
         }
     }
 

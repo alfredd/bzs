@@ -25,16 +25,20 @@ public class TransactionProcessor {
     private Integer id;
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
+    private EpochMaintainer epochMaintainer;
 
     public TransactionProcessor() {
         serializer = new Serializer();
         sequenceNumber = 0;
         epochNumber = 0;
+        id=null;
+        bftClient=null;
         responseHandlerRegistry = new ResponseHandlerRegistry();
 
     }
 
-    public void startEpochMaintainer() {
+    public void initTransactionProcessor() {
+
         try {
             BZStoreProperties properties = new BZStoreProperties();
             this.epochTimeInMS = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_time_ms));
@@ -42,23 +46,35 @@ public class TransactionProcessor {
             LOGGER.log(Level.WARNING, "Exception occurred while getting epoch time. " + e.getLocalizedMessage());
             this.epochTimeInMS = Configuration.getDefaultEpochTimeInMS();
         }
+        startBftClient();
+        initDatabase();
+        setEpochMaintainer(new EpochMaintainer());
+    }
 
-        EpochMaintainer epochMaintainer = new EpochMaintainer();
-        epochMaintainer.setProcessor(this);
+    public void setEpochMaintainer(EpochMaintainer epochMaintainer) {
+        this.epochMaintainer = epochMaintainer;
+        this.epochMaintainer.setProcessor(this);
         Timer epochTimer = new Timer("EpochMaintainer", true);
-        epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
-        bftClient = new BFTClient(id);
+        epochTimer.scheduleAtFixedRate(this.epochMaintainer, epochTimeInMS, epochTimeInMS);
+    }
+
+    public void initDatabase() {
         try {
             benchmarkExecutor = new BenchmarkExecutor(this);
             new Thread(benchmarkExecutor).start();
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Creation of benchmark execution client failed: "+e.getLocalizedMessage(),e);
+            LOGGER.log(Level.WARNING, "Creation of benchmark execution client failed: " + e.getLocalizedMessage(), e);
         }
+    }
+
+    public void startBftClient() {
+        if (bftClient != null && id != null)
+            bftClient = new BFTClient(id);
     }
 
     void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         if (!serializer.serialize(request)) {
-            LOGGER.info("Transaction cannot be serialized. Will abort. Request: "+request);
+            LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
                     Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
             if (responseObserver != null) {
