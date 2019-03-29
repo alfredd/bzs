@@ -27,8 +27,8 @@ public class TransactionProcessor {
         this.id = id;
     }
 
-    @Deprecated
-    public TransactionProcessor() {
+
+    private TransactionProcessor() {
         serializer = new Serializer();
         sequenceNumber = 0;
         epochNumber = 0;
