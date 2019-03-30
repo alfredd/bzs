@@ -37,6 +37,11 @@ public class TransactionProcessor {
         id = null;
         bftClient = null;
         responseHandlerRegistry = new ResponseHandlerRegistry();
+
+
+    }
+
+    private void initMaxBatchSize() {
         try {
             BZStoreProperties properties = new BZStoreProperties();
             this.maxBatchSize =
@@ -47,11 +52,10 @@ public class TransactionProcessor {
             maxBatchSize = 2000;
         }
         LOGGER.info("Maximum BatchSize is set to " + maxBatchSize);
-
     }
 
     public void initTransactionProcessor() {
-
+        initMaxBatchSize();
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
         epochManager.startEpochMaintenance();

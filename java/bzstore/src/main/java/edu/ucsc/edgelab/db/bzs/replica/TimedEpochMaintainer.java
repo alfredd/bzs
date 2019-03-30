@@ -2,7 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import java.util.TimerTask;
 
-public class EpochMaintainer extends TimerTask {
+public class TimedEpochMaintainer extends TimerTask {
 
     private TransactionProcessor transactionProcessor;
 

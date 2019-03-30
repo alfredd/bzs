@@ -29,9 +29,9 @@ public class EpochManager {
     }
 
     public void startEpochMaintenance() {
-        EpochMaintainer epochMaintainer = new EpochMaintainer();
+        TimedEpochMaintainer epochMaintainer = new TimedEpochMaintainer();
         epochMaintainer.setProcessor(transactionProcessor);
-        Timer epochTimer = new Timer("EpochMaintainer", true);
+        Timer epochTimer = new Timer("TimedEpochMaintainer", true);
         epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
     }
 }
