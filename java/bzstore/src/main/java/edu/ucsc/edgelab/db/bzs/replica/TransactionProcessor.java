@@ -42,6 +42,8 @@ public class TransactionProcessor {
             this.maxBatchSize =
                     Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_batch_size));
         } catch (Exception e) {
+            LOGGER.log(Level.WARNING,
+                    "Exception occurred when getting max batch size from config files: " + e.getLocalizedMessage(), e);
             maxBatchSize = 2000;
         }
         LOGGER.info("Maximum BatchSize is set to " + maxBatchSize);
