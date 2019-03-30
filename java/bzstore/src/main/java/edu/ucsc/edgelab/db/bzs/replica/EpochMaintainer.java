@@ -12,6 +12,6 @@ public class EpochMaintainer extends TimerTask {
 
     @Override
     public void run() {
-        transactionProcessor.resetEpoch();
+        transactionProcessor.resetEpoch(true);
     }
 }

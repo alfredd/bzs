@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
+import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.logging.Logger;
 
 public class TransactionProcessor {
 
+    private Integer maxBatchSize;
     private Serializer serializer;
     private int sequenceNumber;
     private int epochNumber;
@@ -32,9 +34,17 @@ public class TransactionProcessor {
         serializer = new Serializer();
         sequenceNumber = 0;
         epochNumber = 0;
-        id=null;
-        bftClient=null;
+        id = null;
+        bftClient = null;
         responseHandlerRegistry = new ResponseHandlerRegistry();
+        try {
+            BZStoreProperties properties = new BZStoreProperties();
+            this.maxBatchSize =
+                    Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_batch_size));
+        } catch (Exception e) {
+            maxBatchSize = 2000;
+        }
+        LOGGER.info("Maximum BatchSize is set to " + maxBatchSize);
 
     }
 
@@ -74,83 +84,81 @@ public class TransactionProcessor {
             }
             return;
         }
-        synchronized (this) {
-            sequenceNumber += 1;
-            responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
+        sequenceNumber += 1;
+        responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
+        final int seqNum = sequenceNumber;
+        if (seqNum > maxBatchSize) {
+            new Thread(() -> resetEpoch(false)).start();
         }
     }
 
-    void resetEpoch() {
+    void resetEpoch(boolean isTimedEpochReset) {
         // Increment Epoch number and reset sequence number.
-        int epoch = epochNumber;
-        serializer.resetEpoch();
         synchronized (this) {
+            final int seqNumber = sequenceNumber;
+            if (isTimedEpochReset && seqNumber < maxBatchSize) {
+                return;
+            }
+            final int epoch = epochNumber;
+            serializer.resetEpoch();
             epochNumber += 1;
             sequenceNumber = 0;
             serializer.resetEpoch();
-        }
-        // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
-        Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
-        Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
-                responseHandlerRegistry.getTransactionObservers(epoch);
-        long startTime = 0;
-        int transactionCount = 0;
-        int processed = 0;
-        int failed = 0;
-        int bytesProcessed = 0;
-        if (transactions != null && transactions.size() > 0) {
-            transactionCount = transactions.size();
+            // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
+            Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
+            Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
+                    responseHandlerRegistry.getTransactionObservers(epoch);
+            long startTime = 0;
+            int transactionCount = 0;
+            int processed = 0;
+            int failed = 0;
+            int bytesProcessed = 0;
+            if (transactions != null && transactions.size() > 0) {
+                transactionCount = transactions.size();
 
-            LOGGER.info("Processing transaction batch in epoch: " + epoch);
+                LOGGER.info("Processing transaction batch in epoch: " + epoch);
 
-            LOGGER.info("Performing BFT Commit");
-            Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch, transactions.values());
-            bytesProcessed = transactionBatch.toByteArray().length;
-            startTime = System.currentTimeMillis();
-            Bzs.TransactionBatchResponse batchResponse = bftClient.performCommitPrepare(transactionBatch);
-            if (batchResponse == null) {
-                failed = transactionCount;
-                sendFailureNotifications(transactions, responseObservers);
-            } else {
-//                LOGGER.info("After commit consensus (before DB commit) the response is : "+batchResponse.toString()+
-//                        " . Batch ID: "+batchResponse.getID());
-//                LOGGER.info("Received response from BFT server cluster. Transaction response is of size "
-//                        + transactions.size() + ". Performing db commit");
-//                LOGGER.info("Before DB COMMIT Consensus the data is: " + batchResponse.toString());
-                int commitResponseID = bftClient.performDbCommit(batchResponse);
-                if (commitResponseID < 0) {
+                LOGGER.info("Performing BFT Commit");
+                Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch, transactions.values());
+                bytesProcessed = transactionBatch.toByteArray().length;
+                startTime = System.currentTimeMillis();
+                Bzs.TransactionBatchResponse batchResponse = bftClient.performCommitPrepare(transactionBatch);
+                if (batchResponse == null) {
                     failed = transactionCount;
-                    LOGGER.info("DB COMMIT Consensus failed: " + commitResponseID);
                     sendFailureNotifications(transactions, responseObservers);
                 } else {
-//                    LOGGER.info("After DB COMMIT Consensus the data is: " + commitResponseID.toString());
-                    processed = transactionCount;
-                    for (int i = 0; i < transactions.size(); i++) {
-                        StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
-                        Bzs.TransactionResponse transactionResponse =
-                                batchResponse.getResponses(i);
-//                        LOGGER.info("Processing transaction response: " + transactionResponse.toString());
-                        responseObserver.onNext(transactionResponse);
-                        responseObserver.onCompleted();
+
+                    int commitResponseID = bftClient.performDbCommit(batchResponse);
+                    if (commitResponseID < 0) {
+                        failed = transactionCount;
+                        LOGGER.info("DB COMMIT Consensus failed: " + commitResponseID);
+                        sendFailureNotifications(transactions, responseObservers);
+                    } else {
+                        processed = transactionCount;
+                        for (int i = 0; i < transactions.size(); i++) {
+                            StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
+                            Bzs.TransactionResponse transactionResponse =
+                                    batchResponse.getResponses(i);
+                            responseObserver.onNext(transactionResponse);
+                            responseObserver.onCompleted();
+                        }
                     }
                 }
             }
-        }/* else {
-            LOGGER.info("Nothing to commit in epoch: " + epoch + ". Waiting for next epoch.");
-        }*/
 
-        long endTime = System.currentTimeMillis();
+            long endTime = System.currentTimeMillis();
 
-        responseHandlerRegistry.clearEpochHistory(epoch);
-        if (benchmarkExecutor != null) {
-            benchmarkExecutor.logTransactionDetails(
-                    epochNumber,
-                    transactionCount,
-                    processed,
-                    failed,
-                    startTime,
-                    endTime,
-                    bytesProcessed);
+            responseHandlerRegistry.clearEpochHistory(epoch);
+            if (benchmarkExecutor != null) {
+                benchmarkExecutor.logTransactionDetails(
+                        epochNumber,
+                        transactionCount,
+                        processed,
+                        failed,
+                        startTime,
+                        endTime,
+                        bytesProcessed);
+            }
         }
 
     }
@@ -175,5 +183,9 @@ public class TransactionProcessor {
         }
         batchBuilder.setID(epochNumber).setOperation(Bzs.Operation.BFT_PREPARE);
         return batchBuilder.build();
+    }
+
+    public int getSequenceNumber() {
+        return sequenceNumber;
     }
 }

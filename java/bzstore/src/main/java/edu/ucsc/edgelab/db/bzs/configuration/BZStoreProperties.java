@@ -13,7 +13,7 @@ public class BZStoreProperties {
     public static final String CONFIG_PROPERTIES = "config.properties";
     private static final Logger LOGGER = Logger.getLogger(BZStoreProperties.class.getName());
     public enum Configuration {
-        port, host, leader, epoch_time_ms, delay_start
+        port, host, leader, epoch_time_ms, epoch_batch_size, delay_start
     }
 
     private Properties bzsProperties;
