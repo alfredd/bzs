@@ -77,7 +77,7 @@ public class TransactionProcessor {
             bftClient = new BFTClient(id);
     }
 
-    void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+    public void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         if (!serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
@@ -181,7 +181,7 @@ public class TransactionProcessor {
         }
     }
 
-    public Bzs.TransactionBatch getTransactionBatch(int epochNumber, Collection<Bzs.Transaction> transactions) {
+    Bzs.TransactionBatch getTransactionBatch(int epochNumber, Collection<Bzs.Transaction> transactions) {
         Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
 
         for (Bzs.Transaction transaction : transactions) {
@@ -189,9 +189,5 @@ public class TransactionProcessor {
         }
         batchBuilder.setID(epochNumber).setOperation(Bzs.Operation.BFT_PREPARE);
         return batchBuilder.build();
-    }
-
-    public int getSequenceNumber() {
-        return sequenceNumber;
     }
 }
