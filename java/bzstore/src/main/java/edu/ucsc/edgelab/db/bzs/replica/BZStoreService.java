@@ -22,25 +22,15 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     private TransactionProcessor transactionProcessor;
     private ForwardingClient forwardingClient = null;
 
-    public BZStoreService(Integer id, Integer clusterID, TransactionProcessor tp) {
+    public BZStoreService(Integer id, Integer clusterID, TransactionProcessor tp, boolean isLeader) {
         log.info("BZStore service started. Replica ID: " + id);
         this.replicaID = id;
         this.clusterID = clusterID;
 
         transactionProcessor = tp;
-        ServerInfo leaderInfo;
-        try {
-            leaderInfo = Configuration.getLeaderInfo(clusterID);
-        } catch (Exception e) {
-            String msg = "Cannot create connection to leader.";
-            log.log(Level.SEVERE, msg);
-            throw new UnknownConfiguration(msg, e);
-        }
-        if (leaderInfo != null && !leaderInfo.replicaID.equals(this.replicaID)) {
+        ServerInfo leaderInfo = ServerInfo.getLeaderInfo(clusterID);
+        if (!isLeader)
             forwardingClient = new ForwardingClient(leaderInfo.host, leaderInfo.port);
-        } else if (leaderInfo.replicaID.equals(this.replicaID)) {
-            tp.initTransactionProcessor();
-        }
     }
 
     @Override

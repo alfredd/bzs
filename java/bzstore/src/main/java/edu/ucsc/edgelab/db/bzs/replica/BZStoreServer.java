@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTServer;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -69,9 +70,13 @@ public class BZStoreServer {
     }
 
     private void start() throws IOException {
+        ServerInfo leaderInfo = ServerInfo.getLeaderInfo(clusterID);
+        boolean isLeader = amITheLeader(leaderInfo);
+        if (isLeader)
+            transactionProcessor.initTransactionProcessor();
         server = ServerBuilder.forPort(this.serverPort)
-                .addService(new BZStoreService(replicaID, clusterID, this.transactionProcessor))
-                .addService(new BZStoreReplica(clusterID, replicaID, this.transactionProcessor))
+                .addService(new BZStoreService(replicaID, clusterID, this.transactionProcessor, isLeader))
+                .addService(new BZStoreReplica(clusterID, replicaID, this.transactionProcessor, isLeader))
                 .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -79,6 +84,10 @@ public class BZStoreServer {
             BZStoreServer.this.stop();
         }));
         BFTServer bftServer = new BFTServer(replicaID);
+    }
+
+    private boolean amITheLeader(ServerInfo leaderInfo) {
+        return leaderInfo.replicaID.equals(this.replicaID);
     }
 
     private void stop() {
