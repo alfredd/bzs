@@ -85,7 +85,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponseBuilder.setID(epochId);
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(epochId, batchResponse);
-/*                logger.info("Completed generating response for transaction batch with batch id: " + epochId + ". " +
+/*                logger.info("Completed generating response for transaction batch with batch replicaID: " + epochId + ". " +
                         "Transaction batch data: " + batchResponse.toString()+
                         ". Transaction count= "+batchResponse.getResponsesCount());*/
                 reply = batchResponse.toByteArray();
@@ -129,10 +129,10 @@ public class BFTServer extends DefaultSingleRecoverable {
                 logger.info("====================================");
 //                Bzs.BFTCommit commitTransactions = transactionBatch.getBftCommit();
                 int id = transactionBatch.getID();
-                logger.info("Processing db commit transactions with batch id: " + id);
+                logger.info("Processing db commit transactions with batch replicaID: " + id);
 //                logger.info("CommitTransactions: " + commitTransactions.toString());
                 if (!tbrCache.containsKey(id)) {
-                    logger.log(Level.WARNING, "Transactions are not present in cache for id: " + id + ". Transaction " +
+                    logger.log(Level.WARNING, "Transactions are not present in cache for replicaID: " + id + ". Transaction " +
                             "will abort.");
                     return getRandomBytes();
                 }
@@ -175,7 +175,7 @@ public class BFTServer extends DefaultSingleRecoverable {
 //
 //                Bzs.TransactionBatchResponse commitResponse2 = Bzs.TransactionBatchResponse.newBuilder()
 //                        .setBftCommitResponse(bftCommitResponse1)
-//                        .setID(id)
+//                        .setID(replicaID)
 //                        .build();
 //                logger.info("Response object: "+commitResponse2.toString());
                 reply = ByteBuffer.allocate(4).putInt(1).array();

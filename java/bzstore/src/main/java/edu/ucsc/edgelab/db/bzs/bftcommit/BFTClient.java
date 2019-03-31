@@ -99,7 +99,7 @@ public class BFTClient {
         try {
             id = ByteBuffer.wrap(reply).getInt();
         } catch (Exception e) {
-            LOGGER.warning("Could not get correct commit id from response.");
+            LOGGER.warning("Could not get correct commit replicaID from response.");
         }
         return id;
     }

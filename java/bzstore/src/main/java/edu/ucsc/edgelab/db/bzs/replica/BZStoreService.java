@@ -17,26 +17,28 @@ import java.util.logging.Logger;
 class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     private static final Logger log = Logger.getLogger(BZStoreService.class.getName());
-    private final Integer id;
+    private final Integer replicaID;
+    private final Integer clusterID;
     private TransactionProcessor transactionProcessor;
     private ForwardingClient forwardingClient = null;
 
     public BZStoreService(Integer id, Integer clusterID, TransactionProcessor tp) {
         log.info("BZStore service started. Replica ID: " + id);
-        this.id = id;
+        this.replicaID = id;
+        this.clusterID = clusterID;
 
         transactionProcessor = tp;
         ServerInfo leaderInfo;
         try {
-            leaderInfo = Configuration.getLeaderInfo();
+            leaderInfo = Configuration.getLeaderInfo(clusterID);
         } catch (Exception e) {
             String msg = "Cannot create connection to leader.";
             log.log(Level.SEVERE, msg);
             throw new UnknownConfiguration(msg, e);
         }
-        if (leaderInfo!=null && !leaderInfo.id.equals(this.id)) {
+        if (leaderInfo != null && !leaderInfo.replicaID.equals(this.replicaID)) {
             forwardingClient = new ForwardingClient(leaderInfo.host, leaderInfo.port);
-        } else if (this.id.equals(leaderInfo.id)) {
+        } else if (leaderInfo.replicaID.equals(this.replicaID)) {
             tp.initTransactionProcessor();
         }
     }
@@ -46,8 +48,8 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
         Bzs.TransactionResponse response;
         try {
-            ServerInfo leader = Configuration.getLeaderInfo();
-            if (leader.id.equals(id)) {
+            ServerInfo leader = Configuration.getLeaderInfo(clusterID);
+            if (leader.replicaID.equals(replicaID)) {
                 // If this instance is the leader process the transaction.
                 transactionProcessor.processTransaction(request, responseObserver);
             } else {
@@ -79,7 +81,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
         String key = request.getKey();
         BZStoreData data = BZDatabaseController.getlatest(key);
-        if (data.version>0) {
+        if (data.version > 0) {
 
             Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
                     .setKey(key)

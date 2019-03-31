@@ -32,20 +32,27 @@ public class BZStoreProperties {
         );
     }
 
-    public String getProperty(final String id, Configuration property) throws UnknownConfiguration {
-        String idname = getIdName(id);
-        String property_value = bzsProperties.getProperty(idname+"."+property.name());
+    public String getProperty(final Integer clusterID, final Integer replicaID, Configuration property) throws UnknownConfiguration {
+        String idName = getIdName(clusterID, replicaID, property);
+        String property_value = bzsProperties.getProperty(idName);
         if (property_value == null) {
             throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
         }
         return property_value;
     }
 
-    public String getIdName(String id) {
-        return "z"+id;
+    String getIdName(Integer clusterID, Integer replicaID, Configuration property) {
+        return String.format("c.%d.%d.%s",clusterID,replicaID,property.name());
     }
 
 
+    public String getProperty(Integer clusterID, Configuration property) throws UnknownConfiguration {
+        String property_value = bzsProperties.getProperty(property.name()+"."+clusterID);
+        if (property_value == null) {
+            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
+        }
+        return property_value;
+    }
     public String getProperty(Configuration property) throws UnknownConfiguration {
         String property_value = bzsProperties.getProperty(property.name());
         if (property_value == null) {

@@ -16,11 +16,11 @@ import java.util.logging.Logger;
 public class BZStoreServer {
 
     private static final Logger logger = Logger.getLogger(BZStoreServer.class.getName());
-    private Integer clusterId;
+    private Integer clusterID;
 
     private int serverPort;
 
-    private Integer id;
+    private Integer replicaID;
 
     private Server server;
     private TransactionProcessor transactionProcessor;
@@ -29,21 +29,22 @@ public class BZStoreServer {
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
         root.setLevel(ch.qos.logback.classic.Level.ERROR);
         if (args.length != 2) {
+            System.err.println("Number of input arguments is not 2 but "+args.length);
             System.err.println("Usage: ");
             System.err.println("      bzserver CLUSTER_ID REPLICA_ID ; where ID={0..8}");
             System.exit(1);
         }
 
-        String clusterId = args[0];
-        String id = args[1];
+        Integer clusterID = Integer.decode(args[0]);
+        Integer replicaID = Integer.decode(args[1]);
 
         BZStoreProperties properties = new BZStoreProperties();
         try {
             Integer port = Integer.decode(
                     properties.getProperty(
-                            id, BZStoreProperties.Configuration.port));
+                            clusterID, replicaID, BZStoreProperties.Configuration.port));
             logger.info(String.format("Server port configured at %d", port));
-            BZStoreServer bzStoreServer = new BZStoreServer(id, clusterId);
+            BZStoreServer bzStoreServer = new BZStoreServer(replicaID, clusterID);
             bzStoreServer.setServerPort(port);
             bzStoreServer.start();
             try {
@@ -56,11 +57,11 @@ public class BZStoreServer {
         }
     }
 
-    public BZStoreServer(String id, String clusterId) {
+    public BZStoreServer(Integer id, Integer clusterId) {
 
-        this.id = Integer.decode(id);
-        this.clusterId = Integer.decode(clusterId);
-        transactionProcessor = new TransactionProcessor(this.id, this.clusterId);
+        this.replicaID = id;
+        this.clusterID = clusterId;
+        transactionProcessor = new TransactionProcessor(this.replicaID, this.clusterID);
     }
 
     private void setServerPort(int serverPort) {
@@ -69,15 +70,15 @@ public class BZStoreServer {
 
     private void start() throws IOException {
         server = ServerBuilder.forPort(this.serverPort)
-                .addService(new BZStoreService(id, clusterId, this.transactionProcessor))
-                .addService(new BZStoreReplica(id, clusterId, this.transactionProcessor))
+                .addService(new BZStoreService(replicaID, clusterID, this.transactionProcessor))
+                .addService(new BZStoreReplica(replicaID, clusterID, this.transactionProcessor))
                 .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutting down.");
             BZStoreServer.this.stop();
         }));
-        BFTServer bftServer = new BFTServer(id);
+        BFTServer bftServer = new BFTServer(replicaID);
     }
 
     private void stop() {

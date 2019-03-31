@@ -13,7 +13,7 @@ public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
     private TransactionProcessor transactionProcessor;
 
     public BZStoreReplica(Integer id, Integer clusterID, TransactionProcessor transactionProcessor) {
-        log.info("Forwarding service created. Replica id: " + id);
+        log.info("Forwarding service created. Replica replicaID: " + id);
         this.id = id;
         this.transactionProcessor = transactionProcessor;
     }
