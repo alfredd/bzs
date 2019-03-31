@@ -24,7 +24,7 @@ public class TransactionProcessor {
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
 
-    public TransactionProcessor(Integer id) {
+    public TransactionProcessor(Integer id, Integer clusterId) {
         this();
         this.id = id;
     }

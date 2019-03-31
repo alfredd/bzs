@@ -9,10 +9,10 @@ import java.util.logging.Logger;
 public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
 
     private static final Logger log = Logger.getLogger(BZStoreReplica.class.getName());
-    private final String id;
+    private final Integer id;
     private TransactionProcessor transactionProcessor;
 
-    public BZStoreReplica(String id, TransactionProcessor transactionProcessor) {
+    public BZStoreReplica(Integer id, Integer clusterID, TransactionProcessor transactionProcessor) {
         log.info("Forwarding service created. Replica id: " + id);
         this.id = id;
         this.transactionProcessor = transactionProcessor;

@@ -17,11 +17,11 @@ import java.util.logging.Logger;
 class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     private static final Logger log = Logger.getLogger(BZStoreService.class.getName());
-    private final String id;
+    private final Integer id;
     private TransactionProcessor transactionProcessor;
     private ForwardingClient forwardingClient = null;
 
-    public BZStoreService(String id, TransactionProcessor tp) {
+    public BZStoreService(Integer id, Integer clusterID, TransactionProcessor tp) {
         log.info("BZStore service started. Replica ID: " + id);
         this.id = id;
 
@@ -34,7 +34,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
             log.log(Level.SEVERE, msg);
             throw new UnknownConfiguration(msg, e);
         }
-        if (leaderInfo!=null && !this.id.equals(leaderInfo.id)) {
+        if (leaderInfo!=null && !leaderInfo.id.equals(this.id)) {
             forwardingClient = new ForwardingClient(leaderInfo.host, leaderInfo.port);
         } else if (this.id.equals(leaderInfo.id)) {
             tp.initTransactionProcessor();
