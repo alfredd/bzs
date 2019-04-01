@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Transaction extends TransactionManager implements TransactionInterface {
@@ -63,6 +64,18 @@ public class Transaction extends TransactionManager implements TransactionInterf
         } else {
             if (response.getStatus().equals(Bzs.TransactionStatus.COMMITTED)) {
                 LOGGER.info("Transaction committed.");
+            }
+        }
+    }
+
+    public void close() {
+        if (this.client!=null) {
+            try {
+                this.client.shutdown();
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.WARNING,
+                        "Exception occurred while closing client connection: "+e.getLocalizedMessage(),
+                        e);
             }
         }
     }

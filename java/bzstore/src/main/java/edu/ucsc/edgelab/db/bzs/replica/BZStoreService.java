@@ -82,11 +82,11 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
             // Get Key from specific node.
             ServerInfo remote;
             try {
-
                 remote = ServerInfo.getReplicaInfo(cid, rid);
-                Transaction t = new Transaction();
-                t.setClient(remote.host, remote.port);
-                data = t.read(key);
+                Transaction readClient = new Transaction();
+                readClient.setClient(remote.host, remote.port);
+                data = readClient.read(key);
+                readClient.close();
             } catch (Exception e) {
                 log.severe(e.getLocalizedMessage());
                 data = new BZStoreData();
