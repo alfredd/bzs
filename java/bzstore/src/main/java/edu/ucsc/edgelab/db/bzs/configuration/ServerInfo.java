@@ -18,4 +18,17 @@ public class ServerInfo {
         }
         return leaderInfo;
     }
+
+    public static ServerInfo getReplicaInfo(Integer clusterID, Integer replicaID) {
+        ServerInfo serverInfo;
+        try {
+            serverInfo = Configuration.getServerInfo(clusterID,replicaID);
+        } catch (Exception e) {
+            String msg = "Cannot get server info. " + e.getLocalizedMessage();
+            throw new UnknownConfiguration(msg, e);
+        }
+        return serverInfo;
+    }
+
+
 }
