@@ -29,7 +29,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         this.clusterID = clusterID;
 
         transactionProcessor = tp;
-        ServerInfo leaderInfo = ServerInfo.getLeaderInfo(clusterID);
+        ServerInfo leaderInfo = ServerInfo.getLeaderInfo(this.clusterID);
         if (!isLeader)
             forwardingClient = new ForwardingClient(leaderInfo.host, leaderInfo.port);
     }
