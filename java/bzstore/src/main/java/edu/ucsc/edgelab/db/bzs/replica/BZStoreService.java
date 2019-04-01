@@ -70,11 +70,20 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     @Override
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
         String key = request.getKey();
+        String[] keys = key.split(":");
+        if (keys.length == 3) {
+            int cid = Integer.decode(keys[0]);
+            int rid = Integer.decode(keys[1]);
+            key = keys[2];
+            // Get Key from specific node.
+            return;
+        }
+
         BZStoreData data = BZDatabaseController.getlatest(key);
         if (data.version > 0) {
 
             Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
-                    .setKey(key)
+                    .setKey(clusterID + ":" + replicaID + ":" + key)
                     .setResponseDigest(data.digest)
                     .setValue(data.value)
                     .setVersion(data.version)
