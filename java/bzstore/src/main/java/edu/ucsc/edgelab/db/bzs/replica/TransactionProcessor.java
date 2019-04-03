@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 public class TransactionProcessor {
 
+    private Integer clusterID;
     private Integer maxBatchSize;
     private Serializer serializer;
     private int sequenceNumber;
@@ -20,13 +21,14 @@ public class TransactionProcessor {
     private ResponseHandlerRegistry responseHandlerRegistry;
 
     private static final Logger LOGGER = Logger.getLogger(TransactionProcessor.class.getName());
-    private Integer id;
+    private Integer replicaID;
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
 
     public TransactionProcessor(Integer id, Integer clusterId) {
         this();
-        this.id = id;
+        this.replicaID = id;
+        this.clusterID = clusterId;
     }
 
 
@@ -34,7 +36,7 @@ public class TransactionProcessor {
         serializer = new Serializer();
         sequenceNumber = 0;
         epochNumber = 0;
-        id = null;
+        replicaID = null;
         bftClient = null;
         responseHandlerRegistry = new ResponseHandlerRegistry();
 
@@ -65,7 +67,7 @@ public class TransactionProcessor {
 
     public void initDatabase() {
         try {
-            benchmarkExecutor = new BenchmarkExecutor(this);
+            benchmarkExecutor = new BenchmarkExecutor(clusterID, this);
             new Thread(benchmarkExecutor).start();
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Creation of benchmark execution client failed: " + e.getLocalizedMessage(), e);
@@ -73,8 +75,8 @@ public class TransactionProcessor {
     }
 
     public void startBftClient() {
-        if (bftClient == null && id != null)
-            bftClient = new BFTClient(id);
+        if (bftClient == null && replicaID != null)
+            bftClient = new BFTClient(replicaID);
     }
 
     public void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {

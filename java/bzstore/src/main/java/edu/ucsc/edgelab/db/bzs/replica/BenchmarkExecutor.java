@@ -29,9 +29,13 @@ public class BenchmarkExecutor implements Runnable {
     private int processed;
     private int flushed = 0;
 
-    public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws IOException {
+    public BenchmarkExecutor(Integer clusterID, TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
-        String fileName = System.getProperty("user.dir") + "/ulysses.txt";
+
+        BZStoreProperties properties = new BZStoreProperties();
+        String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
+
+        String fileName = System.getProperty("user.dir") + "/"+dataFile;
         LOGGER.info("Data File path: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
@@ -185,7 +189,7 @@ public class BenchmarkExecutor implements Runnable {
     }
 
     public static void main(String args[]) throws IOException {
-        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(null);
+        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(0, null);
         String format = ReportBuilder.getDateString();
         System.out.println(format);
 
