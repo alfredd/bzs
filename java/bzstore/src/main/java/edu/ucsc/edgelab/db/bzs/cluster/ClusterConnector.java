@@ -52,7 +52,7 @@ public class ClusterConnector extends TimerTask {
         }
     }
 
-    public void createClient(BZStoreProperties properties, int i) {
+    private void createClient(BZStoreProperties properties, int i) {
         if (properties== null) {
             try {
                 properties = new BZStoreProperties();
