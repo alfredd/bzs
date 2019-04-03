@@ -31,6 +31,10 @@ public class BZStoreClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
+    public boolean isConnected() {
+        return !channel.isTerminated();
+    }
+
     public Bzs.TransactionResponse commit(Bzs.Transaction transaction) {
         log.log(Level.FINE, "Beginning transaction commit for : " + transaction.toString());
 
