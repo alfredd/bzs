@@ -73,6 +73,10 @@ public class TransactionProcessor {
     }
 
     public void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+
+        // Check if commit data (write operations) is local to cluster or not. If write operations contain even a
+        // single commit not local to cluster: process transaction?
+
         if (!serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
