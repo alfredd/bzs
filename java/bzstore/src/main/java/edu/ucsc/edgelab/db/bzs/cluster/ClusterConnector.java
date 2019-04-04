@@ -67,4 +67,8 @@ public class ClusterConnector extends TimerTask {
         int portInt = Integer.decode(port);
         clients.put(i, new BZStoreClient(host, portInt));
     }
+
+    public ClusterClient getClusterClient() {
+        return new ClusterClient(clients);
+    }
 }
