@@ -19,6 +19,7 @@ public class TransactionProcessor {
     private int sequenceNumber;
     private int epochNumber;
     private ResponseHandlerRegistry responseHandlerRegistry;
+    private LocalDataVerifier localDataVerifier;
 
     private static final Logger LOGGER = Logger.getLogger(TransactionProcessor.class.getName());
     private Integer replicaID;
@@ -26,21 +27,13 @@ public class TransactionProcessor {
     private BFTClient bftClient = null;
 
     public TransactionProcessor(Integer id, Integer clusterId) {
-        this();
         this.replicaID = id;
         this.clusterID = clusterId;
-    }
-
-
-    private TransactionProcessor() {
+        localDataVerifier = new LocalDataVerifier(clusterID);
         serializer = new Serializer();
         sequenceNumber = 0;
         epochNumber = 0;
-        replicaID = null;
-        bftClient = null;
         responseHandlerRegistry = new ResponseHandlerRegistry();
-
-
     }
 
     private void initMaxBatchSize() {
