@@ -13,6 +13,7 @@ service BZStore {
 service Replica {
     rpc Forward (Transaction) returns (TransactionResponse);
     rpc ForwardROT (ROTransaction) returns (ROTransactionResponse);
+    //rpc RetrievePublicSignatures (string) returns (string);    // Possible interface to retrieve digital signatures from nodes.
 }
 
 message TransactionBatch {
