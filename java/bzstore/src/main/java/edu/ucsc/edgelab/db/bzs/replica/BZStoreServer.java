@@ -3,9 +3,11 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTServer;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import org.rocksdb.RocksDBException;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -63,6 +65,11 @@ public class BZStoreServer {
         this.replicaID = id;
         this.clusterID = clusterId;
         transactionProcessor = new TransactionProcessor(this.replicaID, this.clusterID);
+        try {
+            BZDatabaseController.initDB(clusterId,replicaID);
+        } catch (RocksDBException e) {
+            throw new RuntimeException(e.getLocalizedMessage(),e);
+        }
     }
 
     private void setServerPort(int serverPort) {

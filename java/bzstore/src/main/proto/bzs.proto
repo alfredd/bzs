@@ -108,3 +108,8 @@ message TransactionResponse {
     TransactionStatus status = 1;
     repeated WriteResponse writeResponses = 2;
 }
+
+message DBData {
+    string value=1;
+    int64 version=2;
+}

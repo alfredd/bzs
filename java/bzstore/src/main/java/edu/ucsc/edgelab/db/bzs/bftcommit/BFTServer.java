@@ -40,15 +40,11 @@ public class BFTServer extends DefaultSingleRecoverable {
         try {
 
             Bzs.TransactionBatch transactionBatch =
-//                    Bzs.TransactionBatch.newBuilder().mergeFrom(byteOut.toByteArray()).build();
                     Bzs.TransactionBatch.newBuilder().mergeFrom(transactions).build();
-//            logger.info("Transaction batch: " + transactionBatch.toString());
             Bzs.TransactionBatchResponse batchResponse;
             Bzs.TransactionBatchResponse.Builder batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
             if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getTransactionsCount() > 0) {
-//                count += 1;
-//                Integer counter = count;
                 Serializer serializer = new Serializer();
                 int epochId = transactionBatch.getID();
                 logger.info("Processing transaction batch: "+epochId);
@@ -61,7 +57,6 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 "Returning random bytes. Could not serialize the transaction: " + transaction.toString());
                         return getRandomBytes();
                     }
-//                    logger.info("Generating transaction hash for consensus.");
                     Bzs.TransactionResponse response;
                     Bzs.TransactionResponse.Builder responseBuilder = Bzs.TransactionResponse.newBuilder();
                     for (int i = 0; i < transaction.getWriteOperationsCount(); i++) {
@@ -85,15 +80,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponseBuilder.setID(epochId);
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(epochId, batchResponse);
-/*                logger.info("Completed generating response for transaction batch with batch replicaID: " + epochId + ". " +
-                        "Transaction batch data: " + batchResponse.toString()+
-                        ". Transaction count= "+batchResponse.getResponsesCount());*/
                 reply = batchResponse.toByteArray();
-/*                List<Integer> inputsBytes = new LinkedList<>();
-                for (byte b : reply) {
-                    inputsBytes.add(b & 0xFF);
-                }
-                logger.info("Response Byte array: " + inputsBytes);*/
             } else if ( transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getRotransactionCount() > 0) {
 
@@ -124,21 +111,13 @@ public class BFTServer extends DefaultSingleRecoverable {
                 reply = batchResponse.toByteArray();
 
             } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_COMMIT)) {
-                logger.info("====================================");
-                logger.info("======Performing BFT DB Commit======");
-                logger.info("====================================");
-//                Bzs.BFTCommit commitTransactions = transactionBatch.getBftCommit();
                 int id = transactionBatch.getID();
-                logger.info("Processing db commit transactions with batch replicaID: " + id);
-//                logger.info("CommitTransactions: " + commitTransactions.toString());
                 if (!tbrCache.containsKey(id)) {
                     logger.log(Level.WARNING, "Transactions are not present in cache for replicaID: " + id + ". Transaction " +
                             "will abort.");
                     return getRandomBytes();
                 }
                 Bzs.TransactionBatchResponse cached = tbrCache.get(id);
-//                logger.info("CachedResponse: "+cached.toString());
-                // Commit to database.
                 logger.info("Beginning the process to write into the database.");
                 List<String> committedKeys = new LinkedList<>();
                 for (int i = 0; i < cached.getResponsesCount(); i++) {
@@ -150,16 +129,14 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 writeResponse.getVersion(),
                                 writeResponse.getResponseDigest());
                         try {
-//                            logger.info("Committing write : " + writeResponse);
                             BZDatabaseController.commit(writeResponse.getKey(), data);
                             committedKeys.add(writeResponse.getKey());
-//                            logger.info("Committed write : " + writeResponse);
 
                         } catch (InvalidCommitException e) {
-                            logger.log(Level.WARNING, "Commit failed for transaction: " + response.toString() + ". " +
-                                    "All" +
-                                    " committed keys will be rolled back and the transaction will be aborted.");
-                            BZDatabaseController.rollbackForKeys(committedKeys);
+//                            logger.log(Level.WARNING, "Commit failed for transaction: " + response.toString() + ". " +
+//                                    "All" +
+//                                    " committed keys will be rolled back and the transaction will be aborted.");
+//                            BZDatabaseController.rollbackForKeys(committedKeys);
 
                             committed = false;
                             break;
@@ -170,14 +147,6 @@ public class BFTServer extends DefaultSingleRecoverable {
                     }
                 }
                 logger.info("Data committed. Returning response.");
-//                Bzs.BFTCommitResponse bftCommitResponse1 = Bzs.BFTCommitResponse.newBuilder()
-//                        .addAllResponses(commitTransactions.getTransactionsList()).build();
-//
-//                Bzs.TransactionBatchResponse commitResponse2 = Bzs.TransactionBatchResponse.newBuilder()
-//                        .setBftCommitResponse(bftCommitResponse1)
-//                        .setID(replicaID)
-//                        .build();
-//                logger.info("Response object: "+commitResponse2.toString());
                 reply = ByteBuffer.allocate(4).putInt(1).array();
             } else {
                 logger.log(Level.WARNING,
@@ -223,8 +192,8 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     private String generateHash(final String input) {
 //        long starttime = System.nanoTime();
-//        String hash = input;
-        String hash = DigestUtils.md5Hex(input).toUpperCase();
+        String hash = "";
+//        String hash = DigestUtils.md5Hex(input).toUpperCase();
 //        long duration = System.nanoTime() - starttime;
 //        logger.info("Hash generated in " + duration + "nanosecs");
 
