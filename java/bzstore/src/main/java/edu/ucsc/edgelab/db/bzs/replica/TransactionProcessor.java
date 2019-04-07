@@ -55,7 +55,6 @@ public class TransactionProcessor {
         EpochManager epochManager = new EpochManager(this);
         epochManager.startEpochMaintenance();
         initDatabase();
-
     }
 
     public void initDatabase() {

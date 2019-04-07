@@ -3,9 +3,7 @@ package edu.ucsc.edgelab.db.bzs.data;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.rocksdb.RocksDBException;
 
-import java.io.*;
-import java.util.List;
-import java.util.logging.Level;
+import java.io.ByteArrayInputStream;
 import java.util.logging.Logger;
 
 public final class BZDatabaseController {
@@ -43,13 +41,14 @@ public final class BZDatabaseController {
     }
 
     public static byte[] getDBSnapshot() {
-        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
-            objOut.writeObject(BZ_DATABASE_CONTROLLER.db);
-            return byteOut.toByteArray();
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Error while taking snapshot", e);
-        }
+        // TODO: Need a better way to replicate data.
+//        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+//             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+//            objOut.writeObject(BZ_DATABASE_CONTROLLER.db);
+//            return byteOut.toByteArray();
+//        } catch (IOException e) {
+//            LOGGER.log(Level.SEVERE, "Error while taking snapshot", e);
+//        }
 
         //Need to check this. Can this be replaced by a runtime exception.
         return new byte[0];
