@@ -73,12 +73,11 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         Bzs.OperationStatus status = Bzs.OperationStatus.SUCCESS;
         ;
         String key = request.getKey();
+        Integer cid = request.getClusterID();
+        Integer rid = request.getReplicaID();
         BZStoreData data;
-        String[] keys = key.split(":");
-        if (keys.length == 3 && !keys[0].equals(clusterID.toString())) {
-            int cid = Integer.decode(keys[0]);
-            int rid = Integer.decode(keys[1]);
-            key = keys[2];
+
+        if (cid != clusterID) {
             // Get Key from specific node.
             ServerInfo remote;
             try {
@@ -92,19 +91,14 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 data = new BZStoreData();
                 status = Bzs.OperationStatus.FAILED;
             }
-        } else if (keys.length == 2) {
-            log.log(Level.WARNING, "Could not retrieve data for key: " + key);
-            data = new BZStoreData();
-            status = Bzs.OperationStatus.INVALID;
         } else {
             data = BZDatabaseController.getlatest(key);
         }
-        if (data.version <= 0 && status.equals(Bzs.OperationStatus.SUCCESS)) {
-            status = Bzs.OperationStatus.INVALID;
-        }
 
         Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
-                .setKey(clusterID + ":" + replicaID + ":" + key)
+                .setKey(key)
+                .setClusterID(clusterID)
+                .setReplicaID(replicaID)
                 .setResponseDigest(data.digest)
                 .setValue(data.value)
                 .setVersion(data.version)

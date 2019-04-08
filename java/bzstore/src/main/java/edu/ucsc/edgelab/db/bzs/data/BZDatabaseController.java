@@ -35,6 +35,12 @@ public final class BZDatabaseController {
         return dataHistory;
     }
 
+    public static boolean containsKey(String key) {
+        boolean status=false;
+        BZ_DATABASE_CONTROLLER.db.containsKey(key);
+        return status;
+    }
+
     public static void initializeDb(ByteArrayInputStream dbIOStream) {
 //        ObjectInput objIn = new ObjectInputStream(dbIOStream);
 //        BZ_DATABASE_CONTROLLER.db = (BpTree) objIn.readObject();

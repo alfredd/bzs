@@ -66,4 +66,14 @@ class BackendDb {
     void close() {
         db.close();
     }
+
+    public boolean containsKey(String key) {
+        boolean found = true;
+        try {
+            found = db.get(key.getBytes())!=null;
+        } catch (RocksDBException e) {
+            found = false;
+        }
+        return false;
+    }
 }

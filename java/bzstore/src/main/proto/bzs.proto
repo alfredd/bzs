@@ -10,6 +10,11 @@ service BZStore {
     rpc ReadOperation (Read) returns (ReadResponse);
 }
 
+service Cluster {
+    rpc Commit (Transaction) returns (TransactionResponse);
+    rpc ReadOperation (Read) returns (ReadResponse);
+}
+
 service Replica {
     rpc Forward (Transaction) returns (TransactionResponse);
     rpc ForwardROT (ROTransaction) returns (ROTransactionResponse);
@@ -19,15 +24,15 @@ service Replica {
 message TransactionBatch {
     repeated Transaction transactions = 1;
     repeated ROTransaction rotransaction = 2;
-//    BFTCommit bftCommit = 3;
+    //    BFTCommit bftCommit = 3;
     int32 ID = 3;
-    Operation operation =4;
+    Operation operation = 4;
 }
 
 message TransactionBatchResponse {
     repeated TransactionResponse responses = 1;
     repeated ROTransactionResponse readresponses = 2;
-//    BFTCommitResponse bftCommitResponse = 3;
+    //    BFTCommitResponse bftCommitResponse = 3;
     int32 ID = 3;
     Operation operation = 4;
 }
@@ -60,6 +65,8 @@ enum Operation {
 message Write {
     string key = 1;
     string value = 2;
+    int32 clusterID = 3;
+    int32 replicaID = 4;
 }
 
 message WriteResponse {
@@ -68,10 +75,14 @@ message WriteResponse {
     int64 version = 3;
     string responseDigest = 4;
     OperationStatus status = 5;
+    int32 clusterID = 6;
+    int32 replicaID = 7;
 }
 
 message Read {
     string key = 1;
+    int32 clusterID = 2;
+    int32 replicaID = 3;
 }
 
 message ReadResponse {
@@ -80,6 +91,8 @@ message ReadResponse {
     int64 version = 3;
     string responseDigest = 4;
     OperationStatus status = 5;
+    int32 clusterID = 6;
+    int32 replicaID = 7;
 }
 
 message ReadHistory {
@@ -87,6 +100,8 @@ message ReadHistory {
     string value = 2;
     int64 version = 3;
     string responseDigest = 4;
+    int32 clusterID = 5;
+    int32 replicaID = 6;
 }
 
 message ROTransaction {
@@ -110,6 +125,6 @@ message TransactionResponse {
 }
 
 message DBData {
-    string value=1;
-    int64 version=2;
+    string value = 1;
+    int64 version = 2;
 }

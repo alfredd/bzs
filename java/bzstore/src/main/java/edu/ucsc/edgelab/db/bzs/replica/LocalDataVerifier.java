@@ -10,9 +10,12 @@ public class LocalDataVerifier {
         this.clusterID = clusterID;
     }
 
-    public boolean containsLocalCommit(Bzs.Transaction transaction) {
+    public boolean containsLocalWrite(Bzs.Transaction transaction) {
         boolean containsLocal =true;
-
+        for (Bzs.Write writeOps : transaction.getWriteOperationsList()) {
+            String writeKey = writeOps.getKey();
+            writeKey.split(":");
+        }
 
         return containsLocal;
     }
