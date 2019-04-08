@@ -116,12 +116,13 @@ message ROTransactionResponse {
 message Transaction {
     repeated ReadHistory readHistory = 1;
     repeated Write writeOperations = 2;
+    string transactionID = 3;
 }
-
 
 message TransactionResponse {
     TransactionStatus status = 1;
     repeated WriteResponse writeResponses = 2;
+    string transactionID = 3;
 }
 
 message DBData {

@@ -54,10 +54,10 @@ public class TransactionProcessor {
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
         epochManager.startEpochMaintenance();
-        initDatabase();
+        initLocalDatabase();
     }
 
-    public void initDatabase() {
+    public void initLocalDatabase() {
         try {
             benchmarkExecutor = new BenchmarkExecutor(clusterID, this);
             new Thread(benchmarkExecutor).start();
