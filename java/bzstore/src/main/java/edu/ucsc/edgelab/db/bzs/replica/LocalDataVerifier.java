@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 
 public class LocalDataVerifier {
 
@@ -11,12 +12,13 @@ public class LocalDataVerifier {
     }
 
     public boolean containsLocalWrite(Bzs.Transaction transaction) {
-        boolean containsLocal =true;
+        boolean containsLocalWrite =true;
         for (Bzs.Write writeOps : transaction.getWriteOperationsList()) {
             String writeKey = writeOps.getKey();
-            writeKey.split(":");
+            containsLocalWrite = BZDatabaseController.containsKey(writeKey);
+            if (containsLocalWrite)
+                break;
         }
-
-        return containsLocal;
+        return containsLocalWrite;
     }
 }
