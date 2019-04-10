@@ -5,15 +5,16 @@ import edu.ucsc.edgelab.db.bzs.clientlib.Transaction;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
 public class SerializerTest {
-    @Test
+    @Ignore
     public void serialTest() {
 
-        BZDatabaseController.clearDatabase();
+//        BZDatabaseController.clearDatabase();
         try {
             String testKey = "mytestkey";
             String mytestvalue = "mytestvalue";
@@ -66,7 +67,7 @@ public class SerializerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testSerialization_1() throws InvalidCommitException {
         Transaction t1 = new Transaction();
         t1.write("x", "10");
@@ -92,7 +93,7 @@ public class SerializerTest {
 
     }
 
-    @Test
+    @Ignore
     public void testSerialization_1_with_epochReset() throws InvalidCommitException {
 //        BZDatabaseController.clearDatabase();
         Transaction t1 = new Transaction();

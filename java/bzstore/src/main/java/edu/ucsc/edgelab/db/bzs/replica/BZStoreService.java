@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.BZStoreGrpc;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ForwardingClient;
+import edu.ucsc.edgelab.db.bzs.clientlib.Transaction;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
@@ -17,28 +18,20 @@ import java.util.logging.Logger;
 class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     private static final Logger log = Logger.getLogger(BZStoreService.class.getName());
-    private final String id;
+    private final Integer replicaID;
+    private final Integer clusterID;
     private TransactionProcessor transactionProcessor;
     private ForwardingClient forwardingClient = null;
 
-    public BZStoreService(String id, TransactionProcessor tp) {
+    public BZStoreService(Integer id, Integer clusterID, TransactionProcessor tp, boolean isLeader) {
         log.info("BZStore service started. Replica ID: " + id);
-        this.id = id;
+        this.replicaID = id;
+        this.clusterID = clusterID;
 
         transactionProcessor = tp;
-        ServerInfo leaderInfo;
-        try {
-            leaderInfo = Configuration.getLeaderInfo();
-        } catch (Exception e) {
-            String msg = "Cannot create connection to leader.";
-            log.log(Level.SEVERE, msg);
-            throw new UnknownConfiguration(msg, e);
-        }
-        if (leaderInfo!=null && !this.id.equals(leaderInfo.id)) {
+        ServerInfo leaderInfo = ServerInfo.getLeaderInfo(this.clusterID);
+        if (!isLeader)
             forwardingClient = new ForwardingClient(leaderInfo.host, leaderInfo.port);
-        } else if (this.id.equals(leaderInfo.id)) {
-            tp.startEpochMaintainer();
-        }
     }
 
     @Override
@@ -46,8 +39,8 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
         Bzs.TransactionResponse response;
         try {
-            ServerInfo leader = Configuration.getLeaderInfo();
-            if (leader.id.equals(id)) {
+            ServerInfo leader = Configuration.getLeaderInfo(clusterID);
+            if (leader.replicaID.equals(replicaID)) {
                 // If this instance is the leader process the transaction.
                 transactionProcessor.processTransaction(request, responseObserver);
             } else {
@@ -77,24 +70,42 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     @Override
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
+        Bzs.OperationStatus status = Bzs.OperationStatus.SUCCESS;
+        ;
         String key = request.getKey();
-        BZStoreData data = BZDatabaseController.getlatest(key);
-        if (data.version>0) {
+        Integer cid = request.getClusterID();
+        Integer rid = request.getReplicaID();
+        BZStoreData data;
 
-            Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
-                    .setKey(key)
-                    .setResponseDigest(data.digest)
-                    .setValue(data.value)
-                    .setVersion(data.version)
-                    .build();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
+        if (cid != clusterID) {
+            // Get Key from specific node.
+            ServerInfo remote;
+            try {
+                remote = ServerInfo.getReplicaInfo(cid, rid);
+                Transaction readClient = new Transaction();
+                readClient.setClient(remote.host, remote.port);
+                data = readClient.read(key);
+                readClient.close();
+            } catch (Exception e) {
+                log.severe(e.getLocalizedMessage());
+                data = new BZStoreData();
+                status = Bzs.OperationStatus.FAILED;
+            }
         } else {
-
-            log.log(Level.WARNING, "Could not retrieve data for key: " + key);
-            Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder().setStatus(Bzs.OperationStatus.FAILED).build();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
+            data = BZDatabaseController.getlatest(key);
         }
+
+        Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
+                .setKey(key)
+                .setClusterID(clusterID)
+                .setReplicaID(replicaID)
+                .setResponseDigest(data.digest)
+                .setValue(data.value)
+                .setVersion(data.version)
+                .setStatus(status)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
     }
 }

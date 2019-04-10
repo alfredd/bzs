@@ -9,12 +9,15 @@ import java.util.logging.Logger;
 public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
 
     private static final Logger log = Logger.getLogger(BZStoreReplica.class.getName());
-    private final String id;
+    private final Integer replicaID;
+    private final Integer clusterID;
     private TransactionProcessor transactionProcessor;
 
-    public BZStoreReplica(String id, TransactionProcessor transactionProcessor) {
-        log.info("Forwarding service created. Replica id: " + id);
-        this.id = id;
+    public BZStoreReplica(Integer clusterID, Integer replicaID, TransactionProcessor transactionProcessor,
+                          boolean isLeader) {
+        log.info("Forwarding service created. Replica replicaID: " + replicaID);
+        this.replicaID = replicaID;
+        this.clusterID = clusterID;
         this.transactionProcessor = transactionProcessor;
     }
 

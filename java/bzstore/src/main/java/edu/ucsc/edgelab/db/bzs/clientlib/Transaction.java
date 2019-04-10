@@ -2,8 +2,10 @@ package edu.ucsc.edgelab.db.bzs.clientlib;
 
 import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Transaction extends TransactionManager implements TransactionInterface {
@@ -30,19 +32,21 @@ public class Transaction extends TransactionManager implements TransactionInterf
     }
 
     @Override
-    public String read(String key) {
+    public BZStoreData read(String key) {
 
         long startTime = System.currentTimeMillis();
         Bzs.Read read = Bzs.Read.newBuilder().setKey(key).build();
         Bzs.ReadResponse response = client.read(read);
+        BZStoreData data = new BZStoreData();
         String responseKey = response.getKey();
-        String responseValue = response.getValue();
-        String digest = response.getResponseDigest();
-        long responseVersion = response.getVersion();
-        setReadHistory(responseKey, responseValue, responseVersion, digest);
+        data.value = response.getValue();
+        data.digest = response.getResponseDigest();
+        data.version = response.getVersion();
+        setReadHistory(responseKey, data.value, data.version, data.digest);
         long duration = System.currentTimeMillis() - startTime;
+
         LOGGER.info("Read operation processed in "+duration+" msecs");
-        return responseValue;
+        return data;
     }
 
 
@@ -60,6 +64,18 @@ public class Transaction extends TransactionManager implements TransactionInterf
         } else {
             if (response.getStatus().equals(Bzs.TransactionStatus.COMMITTED)) {
                 LOGGER.info("Transaction committed.");
+            }
+        }
+    }
+
+    public void close() {
+        if (this.client!=null) {
+            try {
+                this.client.shutdown();
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.WARNING,
+                        "Exception occurred while closing client connection: "+e.getLocalizedMessage(),
+                        e);
             }
         }
     }

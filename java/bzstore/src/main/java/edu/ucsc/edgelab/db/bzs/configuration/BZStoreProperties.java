@@ -12,8 +12,9 @@ public class BZStoreProperties {
 
     public static final String CONFIG_PROPERTIES = "config.properties";
     private static final Logger LOGGER = Logger.getLogger(BZStoreProperties.class.getName());
+
     public enum Configuration {
-        port, host, leader, epoch_time_ms, delay_start
+        port, host, leader, epoch_time_ms, epoch_batch_size, delay_start, data, cluster_count
     }
 
     private Properties bzsProperties;
@@ -21,8 +22,8 @@ public class BZStoreProperties {
     public BZStoreProperties() throws IOException {
 
         bzsProperties = new Properties();
-        String pathname = System.getProperty("user.dir") + "/src/main/resources/" + CONFIG_PROPERTIES;
-        LOGGER.info("Properties path: "+pathname);
+        String pathname = System.getProperty("user.dir") + "/" + CONFIG_PROPERTIES;
+        LOGGER.info("Properties path: " + pathname);
         bzsProperties.load(
                 new FileInputStream(
                         new File(
@@ -32,24 +33,35 @@ public class BZStoreProperties {
         );
     }
 
-    public String getProperty(final String id, Configuration property) throws UnknownConfiguration {
-        String idname = getIdName(id);
-        String property_value = bzsProperties.getProperty(idname+"."+property.name());
+    public String getProperty(final Integer clusterID, final Integer replicaID, Configuration property) throws UnknownConfiguration {
+        String idName = getIdName(clusterID, replicaID, property);
+        String property_value = bzsProperties.getProperty(idName);
         if (property_value == null) {
-            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
+            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.",
+                    property.name()));
         }
         return property_value;
     }
 
-    public String getIdName(String id) {
-        return "z"+id;
+    String getIdName(Integer clusterID, Integer replicaID, Configuration property) {
+        return String.format("c.%d.%d.%s", clusterID, replicaID, property.name());
     }
 
+
+    public String getProperty(Integer clusterID, Configuration property) throws UnknownConfiguration {
+        String property_value = bzsProperties.getProperty(property.name() + "." + clusterID);
+        if (property_value == null) {
+            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.",
+                    property.name()));
+        }
+        return property_value;
+    }
 
     public String getProperty(Configuration property) throws UnknownConfiguration {
         String property_value = bzsProperties.getProperty(property.name());
         if (property_value == null) {
-            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
+            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.",
+                    property.name()));
         }
         return property_value;
     }

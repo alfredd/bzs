@@ -9,16 +9,16 @@ import java.util.logging.Logger;
 
 public final class BftUtil {
     public static void installSH(ByteArrayInputStream byteIn, Logger logger) {
-        try {
-            BZDatabaseController.initializeDb(byteIn);
-        } catch (IOException | ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Error while installing snapshot", e);
-        } finally {
-            try {
-                byteIn.close();
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error while closing byte stream during  installSnapshot", e);
-            }
-        }
+//        try {
+//            BZDatabaseController.initializeDb(byteIn);
+//        } catch (IOException | ClassNotFoundException e) {
+//            logger.log(Level.SEVERE, "Error while installing snapshot", e);
+//        } finally {
+//            try {
+//                byteIn.close();
+//            } catch (IOException e) {
+//                logger.log(Level.SEVERE, "Error while closing byte stream during  installSnapshot", e);
+//            }
+//        }
     }
 }

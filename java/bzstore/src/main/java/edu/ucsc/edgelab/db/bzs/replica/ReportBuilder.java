@@ -14,7 +14,8 @@ public class ReportBuilder {
     private static final Logger LOGGER = Logger.getLogger(ReportBuilder.class.getName());
 
     public ReportBuilder(String reportFileNamePrefix, String[] fields) throws IOException {
-        String reportFileName = System.getProperty("user.dir") + "/"+reportFileNamePrefix + ReportBuilder.getDateString() + ".csv";
+        String reportFileName =
+                System.getProperty("user.dir") + "/" + reportFileNamePrefix + ReportBuilder.getDateString() + ".csv";
         writer = new FileWriter(new File(reportFileName));
 
         for (String field : fields) {
@@ -36,7 +37,7 @@ public class ReportBuilder {
         try {
             writer.write(line);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Exception occurred while writing report: " + line,e);
+            LOGGER.log(Level.WARNING, "Exception occurred while writing report: " + line, e);
         }
     }
 
@@ -52,6 +53,14 @@ public class ReportBuilder {
             writer.close();
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failed to close report file writer.", e);
+        }
+    }
+
+    void flush() {
+        try {
+            writer.flush();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Exception occurred while calling flush().", e);
         }
     }
 }

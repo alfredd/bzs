@@ -27,10 +27,15 @@ public class BenchmarkExecutor implements Runnable {
     private final ReportBuilder reportBuilder;
     private int totalCount;
     private int processed;
+    private int flushed = 0;
 
-    public BenchmarkExecutor(TransactionProcessor transactionProcessor) throws IOException {
+    public BenchmarkExecutor(Integer clusterID, TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
-        String fileName = System.getProperty("user.dir") + "//src/main/resources/ulysses.txt";
+
+        BZStoreProperties properties = new BZStoreProperties();
+        String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
+
+        String fileName = System.getProperty("user.dir") + "/"+dataFile;
         LOGGER.info("Data File path: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
@@ -85,7 +90,7 @@ public class BenchmarkExecutor implements Runnable {
             BZStoreProperties properties = new BZStoreProperties();
             String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
             Integer delayMs = Integer.decode(delay);
-            LOGGER.info("Benchmark tests will run after "+delay+"milliseconds");
+            LOGGER.info("Benchmark tests will run after " + delay + "milliseconds");
             Thread.sleep(delayMs);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
@@ -150,12 +155,10 @@ public class BenchmarkExecutor implements Runnable {
     public void logTransactionDetails(int epochNumber, int epochTransactionCount, int transactionsProcessedInEpoch,
                                       int transactionsFailedInEpoch, long epochProcessingStartTime,
                                       long epochProcessingEndTime, int bytesProcessedInEpoch) {
-        currentCompleted= transactionsProcessedInEpoch == 0 ? transactionsFailedInEpoch : transactionsProcessedInEpoch;
+        currentCompleted = transactionsProcessedInEpoch == 0 ? transactionsFailedInEpoch : transactionsProcessedInEpoch;
         processed += currentCompleted;
-        if (started && currentCompleted!=previousCompleted) {
-//            if (processed != totalCount) {
-//
-//            }
+        if (started && currentCompleted != previousCompleted) {
+            flushed = 0;
             LOGGER.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
                     transactionsFailed));
             long latency = epochProcessingEndTime - epochProcessingStartTime;
@@ -177,11 +180,16 @@ public class BenchmarkExecutor implements Runnable {
             if (reportBuilder != null) {
                 reportBuilder.writeLine(report);
             }
+        } else {
+            if (flushed == 0) {
+                flushed = 1;
+                reportBuilder.flush();
+            }
         }
     }
 
     public static void main(String args[]) throws IOException {
-        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(null);
+        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(0, null);
         String format = ReportBuilder.getDateString();
         System.out.println(format);
 

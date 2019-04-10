@@ -10,7 +10,7 @@ import java.io.IOException;
 public class ClientDemo {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ServerInfo leader = Configuration.getLeaderInfo();
+        ServerInfo leader = Configuration.getLeaderInfo(0);
 
 
 
@@ -48,8 +48,8 @@ public class ClientDemo {
         }*/
 
         BZStoreProperties properties = new BZStoreProperties();
-        Integer port1 = Integer.decode(properties.getProperty("1", BZStoreProperties.Configuration.port));
-        String host1 = properties.getProperty("1", BZStoreProperties.Configuration.host);
+        Integer port1 = Integer.decode(properties.getProperty(0, 1, BZStoreProperties.Configuration.port));
+        String host1 = properties.getProperty(0, 1, BZStoreProperties.Configuration.host);
         Transaction t3 = new Transaction();
         t3.setClient(client);
         t3.read("twinkle");
