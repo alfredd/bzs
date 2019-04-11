@@ -198,3 +198,32 @@ public class TransactionProcessor {
         return batchBuilder.build();
     }
 }
+
+
+class TransactionID implements Comparable<TransactionID>{
+    public int epochNumber, sequenceNumber;
+
+    public TransactionID(int epochNumber, int sequenceNumber) {
+        this.epochNumber = epochNumber;
+        this.sequenceNumber = sequenceNumber;
+    }
+
+    @Override
+    public boolean equals(Object tid) {
+        if (tid.getClass().getName().equals(TransactionID.class.getName())) {
+            TransactionID objtid = (TransactionID) tid;
+            return objtid.epochNumber == epochNumber && objtid.sequenceNumber == sequenceNumber;
+        }
+        return false;
+
+    }
+
+    @Override
+    public int compareTo(TransactionID t2) {
+        int eDiff = epochNumber - t2.epochNumber;
+        int sDiff = sequenceNumber - t2.sequenceNumber;
+        if (eDiff!=0)
+            return eDiff;
+        return sDiff;
+    }
+}
