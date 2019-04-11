@@ -77,6 +77,11 @@ public class TransactionProcessor {
          TODO: Check if commit data (write operations) is local to cluster or not. If write operations contain even a
          single commit not local to cluster: process transaction?
         */
+
+        MetaInfo metaInfo = localDataVerifier.getMetaInfo(request);
+        if (metaInfo.remoteRead || metaInfo.remoteWrite) {
+            // TODO: Create a remote transaction processor class.
+        }
         if (!serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
