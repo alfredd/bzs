@@ -79,9 +79,7 @@ public class TransactionProcessor {
         */
 
         MetaInfo metaInfo = localDataVerifier.getMetaInfo(request);
-        if (metaInfo.remoteRead || metaInfo.remoteWrite) {
-            // TODO: Create a remote transaction processor class.
-        }
+
         if (!serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
@@ -96,6 +94,11 @@ public class TransactionProcessor {
         }
         sequenceNumber += 1;
         responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
+        if (metaInfo.remoteRead || metaInfo.remoteWrite) {
+            String tid=String.format("%d:%d", epochNumber,sequenceNumber);
+            // TODO: Create a remote transaction processor class.
+
+        }
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
             new Thread(() -> resetEpoch(false)).start();

@@ -43,4 +43,18 @@ public class ResponseHandlerRegistry {
         return requestHandlerRegistry.get(epochNumber);
     }
 
+    public Bzs.Transaction getTransaction(int epochNumber, int sequenceNumber) {
+        Map<Integer, Bzs.Transaction> transactions = getTransactions(epochNumber);
+        if (transactions!=null)
+            return transactions.get(sequenceNumber);
+        return null;
+    }
+
+    public StreamObserver<Bzs.TransactionResponse> getStreamObserver(int epochNumber, int sequenceNumber) {
+        Map<Integer, StreamObserver<Bzs.TransactionResponse>> streamObservers = getTransactionObservers(epochNumber);
+        if (streamObservers!=null)
+            return streamObservers.get(sequenceNumber);
+        return null;
+    }
+
 }
