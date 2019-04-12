@@ -221,9 +221,9 @@ class TransactionID implements Comparable<TransactionID>{
     @Override
     public int compareTo(TransactionID t2) {
         int eDiff = epochNumber - t2.epochNumber;
-        int sDiff = sequenceNumber - t2.sequenceNumber;
-        if (eDiff!=0)
+        if (eDiff!=0) {
             return eDiff;
-        return sDiff;
+        }
+        return sequenceNumber - t2.sequenceNumber;
     }
 }

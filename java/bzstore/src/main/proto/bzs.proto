@@ -11,6 +11,7 @@ service BZStore {
 }
 
 service Cluster {
+    rpc CommitPrepare (Transaction) returns (TransactionResponse);
     rpc Commit (Transaction) returns (TransactionResponse);
     rpc ReadOperation (Read) returns (ReadResponse);
 }
