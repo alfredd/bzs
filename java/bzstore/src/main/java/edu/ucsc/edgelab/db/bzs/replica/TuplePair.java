@@ -1,19 +1,19 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 public class TuplePair {
-    public int n1;
-    public int n2;
+    public int first;
+    public int second;
 
-    public TuplePair(int n1, int n2) {
-        this.n1 = n1;
-        this.n2 = n2;
+    public TuplePair(int first, int second) {
+        this.first = first;
+        this.second = second;
     }
 
     @Override
     public boolean equals(Object tid) {
         if (tid.getClass().getName().equals(TransactionID.class.getName())) {
             TransactionID objtid = (TransactionID) tid;
-            return objtid.n1 == n1 && objtid.n2 == n2;
+            return objtid.first == first && objtid.second == second;
         }
         return false;
 

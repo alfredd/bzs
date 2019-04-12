@@ -10,10 +10,10 @@ class TransactionID extends TuplePair implements Comparable<TransactionID>{
 
     @Override
     public int compareTo(TransactionID t2) {
-        int eDiff = n1 - t2.n1;
+        int eDiff = first - t2.first;
         if (eDiff!=0) {
             return eDiff;
         }
-        return n2 - t2.n2;
+        return second - t2.second;
     }
 }
