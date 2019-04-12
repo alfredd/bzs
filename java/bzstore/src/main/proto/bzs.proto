@@ -50,6 +50,7 @@ message BFTCommitResponse {
 enum TransactionStatus {
     COMMITTED = 0;
     ABORTED = 1;
+    PREPARED = 2;
 }
 
 enum OperationStatus {
