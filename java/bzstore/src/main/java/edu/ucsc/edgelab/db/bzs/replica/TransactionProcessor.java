@@ -77,6 +77,9 @@ public class TransactionProcessor {
          TODO: Check if commit data (write operations) is local to cluster or not. If write operations contain even a
          single commit not local to cluster: process transaction?
         */
+
+        MetaInfo metaInfo = localDataVerifier.getMetaInfo(request);
+
         if (!serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
@@ -91,6 +94,11 @@ public class TransactionProcessor {
         }
         sequenceNumber += 1;
         responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
+        if (metaInfo.remoteRead || metaInfo.remoteWrite) {
+            String tid=String.format("%d:%d", epochNumber,sequenceNumber);
+            // TODO: Create a remote transaction processor class.
+
+        }
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
             new Thread(() -> resetEpoch(false)).start();
@@ -188,5 +196,34 @@ public class TransactionProcessor {
         }
         batchBuilder.setID(epochNumber).setOperation(Bzs.Operation.BFT_PREPARE);
         return batchBuilder.build();
+    }
+}
+
+
+class TransactionID implements Comparable<TransactionID>{
+    public int epochNumber, sequenceNumber;
+
+    public TransactionID(int epochNumber, int sequenceNumber) {
+        this.epochNumber = epochNumber;
+        this.sequenceNumber = sequenceNumber;
+    }
+
+    @Override
+    public boolean equals(Object tid) {
+        if (tid.getClass().getName().equals(TransactionID.class.getName())) {
+            TransactionID objtid = (TransactionID) tid;
+            return objtid.epochNumber == epochNumber && objtid.sequenceNumber == sequenceNumber;
+        }
+        return false;
+
+    }
+
+    @Override
+    public int compareTo(TransactionID t2) {
+        int eDiff = epochNumber - t2.epochNumber;
+        if (eDiff!=0) {
+            return eDiff;
+        }
+        return sequenceNumber - t2.sequenceNumber;
     }
 }

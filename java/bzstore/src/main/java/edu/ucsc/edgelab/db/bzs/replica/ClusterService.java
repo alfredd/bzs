@@ -7,6 +7,11 @@ import io.grpc.stub.StreamObserver;
 public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
+    public void commitPrepare(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+        super.commitPrepare(request, responseObserver);
+    }
+
+    @Override
     public void commit(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
 
         super.commit(request, responseObserver);
