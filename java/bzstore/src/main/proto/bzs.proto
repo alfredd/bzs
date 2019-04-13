@@ -57,9 +57,9 @@ enum OperationStatus {
     FAILED = 0; // To be removed. Kept for backward compatibility (for now). Use "ABORTED" instead.
     SUCCESS = 1;
     INVALID = 2;
-    COMMITTED = 3;
-    ABORTED = 4;
-    PREPARED = 5;
+    COMMIT_SUCCESS = 3;
+    ABORT = 4;
+    PREPARE_SUCCESS = 5;
 }
 
 enum Operation {
