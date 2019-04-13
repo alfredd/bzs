@@ -54,9 +54,12 @@ enum TransactionStatus {
 }
 
 enum OperationStatus {
-    FAILED = 0;
+    FAILED = 0; // To be removed.
     SUCCESS = 1;
     INVALID = 2;
+    COMMITTED = 3;
+    ABORTED = 4;
+    PREPARED = 5;
 }
 
 enum Operation {
