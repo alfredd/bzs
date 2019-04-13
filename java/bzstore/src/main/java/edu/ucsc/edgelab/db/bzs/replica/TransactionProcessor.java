@@ -25,15 +25,17 @@ public class TransactionProcessor {
     private Integer replicaID;
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
+    private RemoteTransactionProcessor remoteTransactionProcessor;
 
-    public TransactionProcessor(Integer id, Integer clusterId) {
-        this.replicaID = id;
+    public TransactionProcessor(Integer replicaId, Integer clusterId) {
+        this.replicaID = replicaId;
         this.clusterID = clusterId;
         localDataVerifier = new LocalDataVerifier(clusterID);
         serializer = new Serializer();
         sequenceNumber = 0;
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
+        remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
     }
 
     private void initMaxBatchSize() {
@@ -55,6 +57,7 @@ public class TransactionProcessor {
         EpochManager epochManager = new EpochManager(this);
         epochManager.startEpochMaintenance();
         initLocalDatabase();
+        remoteTransactionProcessor.setObserver(this);
     }
 
     public void initLocalDatabase() {
@@ -94,15 +97,19 @@ public class TransactionProcessor {
         }
         sequenceNumber += 1;
         responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
+        TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
-            String tid=String.format("%d:%d", epochNumber,sequenceNumber);
             // TODO: Create a remote transaction processor class.
-
+            remoteTransactionProcessor.processAsync(tid, request);
         }
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
             new Thread(() -> resetEpoch(false)).start();
         }
+    }
+
+    void remoteTransactionPrepared(TransactionID tid) {
+
     }
 
     void resetEpoch(boolean isTimedEpochReset) {
@@ -198,5 +205,4 @@ public class TransactionProcessor {
         return batchBuilder.build();
     }
 }
-
 
