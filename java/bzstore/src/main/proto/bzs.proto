@@ -54,7 +54,7 @@ enum TransactionStatus {
 }
 
 enum OperationStatus {
-    FAILED = 0; // To be removed.
+    FAILED = 0; // To be removed. Kept for backward compatibility (for now). Use "ABORTED" instead.
     SUCCESS = 1;
     INVALID = 2;
     COMMITTED = 3;
