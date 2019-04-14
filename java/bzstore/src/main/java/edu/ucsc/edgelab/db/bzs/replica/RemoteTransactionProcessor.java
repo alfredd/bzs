@@ -13,9 +13,12 @@ public class RemoteTransactionProcessor  {
         this.replicaID = replicaID;
     }
 
-    public void processAsync(TransactionID tid,
-                             Bzs.Transaction request) {
-
+    public void processAsync(TransactionID tid, Bzs.Transaction request) {
+        // Create a new thread for each tid
+        // Get remote cluster ID
+        // create a map of transaction=>clusterid=>status of prepare message
+        // once responses of prepared messages start coming back, update the transaction status.
+        // Once all responses are received call processor.prepared(tid)
     }
 
     public void setObserver(TransactionProcessor transactionProcessor) {

@@ -108,7 +108,11 @@ public class TransactionProcessor {
         }
     }
 
-    void remoteTransactionPrepared(TransactionID tid) {
+    /**
+     * Callback from @{@link RemoteTransactionProcessor}
+     * @param tid
+     */
+    void prepared(TransactionID tid) {
 
     }
 
