@@ -25,11 +25,13 @@ public class RemoteTransactionProcessor {
     }
 
     /**
-     *    Create a new thread for each tid
-     *    Get remote cluster ID
-     *    create a map of transaction=>clusterid=>status of prepare message
-     *    once responses of prepared messages start coming back, update the transaction status.
-     *    Once all responses are received call processor.prepared(tid)
+     *    The process roughly is:
+     *    1. Create a new thread for each tid
+     *    2. Get remote cluster ID
+     *    3. create a map of transaction=>clusterid=>status of prepare message
+     *    4. once responses of prepared messages start coming back, update the transaction status.
+     *    5. Once all responses are received call processor.prepared(tid)
+     *    This is done by the @{@link RemoteProcessor}
      * @param tid
      * @param request
      */
