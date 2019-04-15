@@ -13,17 +13,21 @@ class RemoteProcessor implements Runnable {
     private final Integer rid;
     private final ClusterClient clusterConnector;
     private TransactionID tid;
-    private Bzs.Transaction transaction;
+//    private Bzs.Transaction transaction;
     Map<Integer, Bzs.TransactionResponse> remoteResponses = new ConcurrentHashMap<>();
     private TransactionProcessor responseObserver;
+    private String transactionID;
+    private Bzs.Transaction remoteTransaction;
 
 
     public RemoteProcessor(TransactionID tid, Bzs.Transaction transaction, Integer cid, Integer rid, ClusterConnector c) {
         this.tid = tid;
-        this.transaction = transaction;
+//        this.transaction = transaction;
         this.cid = cid;
         this.rid = rid;
         this.clusterConnector = c.getClusterClient();
+        transactionID = String.format("%d:%d:%d:%d",cid,rid,tid.getEpochNumber(),tid.getSequenceNumber());
+        remoteTransaction = Bzs.Transaction.newBuilder(transaction).setTransactionID(transactionID).build();
     }
 
     public void setResponseObserver(TransactionProcessor processor) {
@@ -67,14 +71,15 @@ class RemoteProcessor implements Runnable {
     }
 
     public List<Thread> sendMessageToClusterLeaders(Set<Integer> remoteCIDs, MessageType messageType) {
+
         List<Thread> remoteThreads = new LinkedList<>();
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
                 if (messageType==MessageType.Prepare) {
-                    Bzs.TransactionResponse response = clusterConnector.commitPrepare(transaction, cid);
+                    Bzs.TransactionResponse response = clusterConnector.commitPrepare(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 } else if(messageType==MessageType.Abort) {
-                    Bzs.TransactionResponse response = clusterConnector.abort(transaction, cid);
+                    Bzs.TransactionResponse response = clusterConnector.abort(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 }
             });
@@ -88,11 +93,11 @@ class RemoteProcessor implements Runnable {
 
         Set<Integer> cidSet = new HashSet<>();
 
-        for (int i =0;i<transaction.getReadHistoryCount();i++) {
-            cidSet.add(transaction.getReadHistory(i).getClusterID());
+        for (int i =0;i<remoteTransaction.getReadHistoryCount();i++) {
+            cidSet.add(remoteTransaction.getReadHistory(i).getClusterID());
         }
-        for (int i =0;i<transaction.getWriteOperationsCount();i++) {
-            cidSet.add(transaction.getWriteOperations(i).getClusterID());
+        for (int i =0;i<remoteTransaction.getWriteOperationsCount();i++) {
+            cidSet.add(remoteTransaction.getWriteOperations(i).getClusterID());
         }
         return cidSet;
     }
