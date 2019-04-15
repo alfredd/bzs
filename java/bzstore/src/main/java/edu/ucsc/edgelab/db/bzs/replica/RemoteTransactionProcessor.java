@@ -72,7 +72,7 @@ class RemoteProcessor implements Runnable {
 
     @Override
     public void run() {
-        List<Integer> remoteCIDs = getListOfClusterIDs();
+        Set<Integer> remoteCIDs = getListOfClusterIDs();
         List<Thread> remoteThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Prepare);
 
         joinAllThreads(remoteThreads);
@@ -102,7 +102,7 @@ class RemoteProcessor implements Runnable {
         }
     }
 
-    public List<Thread> sendMessageToClusterLeaders(List<Integer> remoteCIDs, MessageType messageType) {
+    public List<Thread> sendMessageToClusterLeaders(Set<Integer> remoteCIDs, MessageType messageType) {
         List<Thread> remoteThreads = new LinkedList<>();
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
@@ -120,11 +120,16 @@ class RemoteProcessor implements Runnable {
         return remoteThreads;
     }
 
-    private List<Integer> getListOfClusterIDs() {
+    private Set<Integer> getListOfClusterIDs() {
 
-        LinkedList<Integer> cidList = new LinkedList<>();
+        Set<Integer> cidSet = new HashSet<>();
 
-
-        return cidList;
+        for (int i =0;i<transaction.getReadHistoryCount();i++) {
+            cidSet.add(transaction.getReadHistory(i).getClusterID());
+        }
+        for (int i =0;i<transaction.getWriteOperationsCount();i++) {
+            cidSet.add(transaction.getWriteOperations(i).getClusterID());
+        }
+        return cidSet;
     }
 }
