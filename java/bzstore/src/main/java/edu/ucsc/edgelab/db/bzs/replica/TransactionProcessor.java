@@ -111,8 +111,9 @@ public class TransactionProcessor {
     /**
      * Callback from @{@link RemoteTransactionProcessor}
      * @param tid
+     * @param transactionStatus
      */
-    void prepared(TransactionID tid) {
+    void prepared(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
 
     }
 

@@ -41,4 +41,8 @@ public class ClusterClient {
         return commit(transaction, clusterID);
     }
 
+    public Bzs.TransactionResponse abort (Bzs.Transaction transaction, Integer clusterID) {
+        return null;
+    }
+
 }
