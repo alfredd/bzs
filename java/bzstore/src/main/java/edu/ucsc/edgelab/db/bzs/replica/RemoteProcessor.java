@@ -76,7 +76,7 @@ class RemoteProcessor implements Runnable {
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
                 if (messageType==MessageType.Prepare) {
-                    Bzs.TransactionResponse response = clusterConnector.commitPrepare(remoteTransaction, cid);
+                    Bzs.TransactionResponse response = clusterConnector.prepare(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 } else if(messageType==MessageType.Abort) {
                     Bzs.TransactionResponse response = clusterConnector.abort(remoteTransaction, cid);

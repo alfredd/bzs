@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 public class ClusterConnector extends TimerTask {
     private final Integer clusterID;
-    private Map<Integer, BZStoreClient> clients;
+    private Map<Integer, ClusterServiceClient> clients;
 
     public static final Logger LOGGER = Logger.getLogger(ClusterConnector.class.getName());
 
@@ -40,7 +40,7 @@ public class ClusterConnector extends TimerTask {
             if (!clients.containsKey(i)) {
                 createClient(properties, i);
             }
-            BZStoreClient bzStoreClient = clients.get(i);
+            ClusterServiceClient bzStoreClient = clients.get(i);
             if (!bzStoreClient.isConnected()) {
                 try {
                     bzStoreClient.shutdown();
@@ -65,7 +65,7 @@ public class ClusterConnector extends TimerTask {
         String host = properties.getProperty(i, Integer.decode(replicaID), BZStoreProperties.Configuration.host);
         String port = properties.getProperty(i, Integer.decode(replicaID), BZStoreProperties.Configuration.port);
         int portInt = Integer.decode(port);
-        clients.put(i, new BZStoreClient(host, portInt));
+        clients.put(i, new ClusterServiceClient(host, portInt));
     }
 
     public ClusterClient getClusterClient() {
