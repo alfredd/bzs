@@ -23,8 +23,8 @@ public class ClusterConnector extends TimerTask {
 
     @Override
     public void run() {
-        Integer clusterCount=0;
-        BZStoreProperties properties=null;
+        Integer clusterCount = 0;
+        BZStoreProperties properties = null;
         try {
             properties = new BZStoreProperties();
             clusterCount = Integer.decode(
@@ -45,7 +45,8 @@ public class ClusterConnector extends TimerTask {
                 try {
                     bzStoreClient.shutdown();
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.WARNING, "Exception occurred when trying to shutdown a client."+e.getLocalizedMessage());
+                    LOGGER.log(Level.WARNING,
+                            "Exception occurred when trying to shutdown a client." + e.getLocalizedMessage());
                 }
                 createClient(properties, i);
             }
@@ -53,11 +54,11 @@ public class ClusterConnector extends TimerTask {
     }
 
     private void createClient(BZStoreProperties properties, int i) {
-        if (properties== null) {
+        if (properties == null) {
             try {
                 properties = new BZStoreProperties();
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, e.getLocalizedMessage(),e);
+                LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
                 return;
             }
         }

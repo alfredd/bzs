@@ -8,7 +8,7 @@ import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class RemoteOpProcessor implements Runnable{
+public abstract class RemoteOpProcessor implements Runnable {
     protected final Integer cid;
     protected final Integer rid;
     protected final ClusterClient clusterConnector;
@@ -25,7 +25,7 @@ public abstract class RemoteOpProcessor implements Runnable{
         this.rid = rid;
         this.clusterConnector = clusterConnector.getClusterClient();
         this.tid = tid;
-        transactionID = String.format("%d:%d:%d:%d",cid,rid,tid.getEpochNumber(),tid.getSequenceNumber());
+        transactionID = String.format("%d:%d:%d:%d", cid, rid, tid.getEpochNumber(), tid.getSequenceNumber());
         remoteTransaction = Bzs.Transaction.newBuilder(transaction).setTransactionID(transactionID).build();
     }
 
@@ -48,10 +48,10 @@ public abstract class RemoteOpProcessor implements Runnable{
         List<Thread> remoteThreads = new LinkedList<>();
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
-                if (messageType== MessageType.Prepare) {
+                if (messageType == MessageType.Prepare) {
                     Bzs.TransactionResponse response = clusterConnector.prepare(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
-                } else if(messageType== MessageType.Abort) {
+                } else if (messageType == MessageType.Abort) {
                     Bzs.TransactionResponse response = clusterConnector.abort(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 }
@@ -66,10 +66,10 @@ public abstract class RemoteOpProcessor implements Runnable{
 
         Set<Integer> cidSet = new HashSet<>();
 
-        for (int i =0;i<remoteTransaction.getReadHistoryCount();i++) {
+        for (int i = 0; i < remoteTransaction.getReadHistoryCount(); i++) {
             cidSet.add(remoteTransaction.getReadHistory(i).getClusterID());
         }
-        for (int i =0;i<remoteTransaction.getWriteOperationsCount();i++) {
+        for (int i = 0; i < remoteTransaction.getWriteOperationsCount(); i++) {
             cidSet.add(remoteTransaction.getWriteOperations(i).getClusterID());
         }
         return cidSet;

@@ -11,7 +11,8 @@ import java.util.Set;
 class PrepareProcessor extends RemoteOpProcessor {
 
 
-    public PrepareProcessor(TransactionID tid, Bzs.Transaction transaction, Integer cid, Integer rid, ClusterConnector c) {
+    public PrepareProcessor(TransactionID tid, Bzs.Transaction transaction, Integer cid, Integer rid,
+                            ClusterConnector c) {
         super(cid, rid, tid, transaction, c);
     }
 

@@ -13,7 +13,8 @@ import java.util.Set;
  * Must refactor at some point.
  */
 public class CommitProcessor extends RemoteOpProcessor {
-    public CommitProcessor(Integer cid, Integer rid, TransactionID tid, Bzs.Transaction transaction, ClusterConnector clusterConnector) {
+    public CommitProcessor(Integer cid, Integer rid, TransactionID tid, Bzs.Transaction transaction,
+                           ClusterConnector clusterConnector) {
         super(cid, rid, tid, transaction, clusterConnector);
     }
 
@@ -45,7 +46,7 @@ public class CommitProcessor extends RemoteOpProcessor {
         List<Thread> remoteThreads = new LinkedList<>();
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
-                if (messageType== MessageType.Commit) {
+                if (messageType == MessageType.Commit) {
                     Bzs.TransactionResponse response = clusterConnector.commit(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 }
