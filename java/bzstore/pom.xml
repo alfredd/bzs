@@ -55,6 +55,7 @@
         </dependency>
 
 
+        <!-- https://mvnrepository.com/artifact/com.github.bft-smart/library -->
         <dependency>
             <groupId>bft-smmvart</groupId>
             <artifactId>bft-smart</artifactId>
@@ -62,6 +63,7 @@
             <version>1.0</version>
             <systemPath>${basedir}/../../library/bin/BFT-SMaRt.jar</systemPath>
         </dependency>
+
 
         <dependency>
             <groupId>io.netty</groupId>
@@ -161,7 +163,19 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>edu.ucsc.edgelab.db.bzs.replica.BZStoreServer</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -199,4 +213,11 @@
 
         </plugins>
     </build>
+    <repositories>
+        <repository>
+            <id>mulesoft-repo</id>
+            <name>Mulesoft Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+        </repository>
+    </repositories>
 </project>
