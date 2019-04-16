@@ -6,8 +6,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,15 +24,19 @@ public class TransactionProcessor {
     private Integer replicaID;
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
+    private RemoteTransactionProcessor remoteTransactionProcessor;
+    private Map<TransactionID, Bzs.TransactionStatus> transactionStatus;
 
-    public TransactionProcessor(Integer id, Integer clusterId) {
-        this.replicaID = id;
+    public TransactionProcessor(Integer replicaId, Integer clusterId) {
+        this.replicaID = replicaId;
         this.clusterID = clusterId;
         localDataVerifier = new LocalDataVerifier(clusterID);
         serializer = new Serializer();
         sequenceNumber = 0;
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
+        remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
+        transactionStatus = new LinkedHashMap<>();
     }
 
     private void initMaxBatchSize() {
@@ -55,6 +58,7 @@ public class TransactionProcessor {
         EpochManager epochManager = new EpochManager(this);
         epochManager.startEpochMaintenance();
         initLocalDatabase();
+        remoteTransactionProcessor.setObserver(this);
     }
 
     public void initLocalDatabase() {
@@ -94,14 +98,26 @@ public class TransactionProcessor {
         }
         sequenceNumber += 1;
         responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
+        TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
-            String tid=String.format("%d:%d", epochNumber,sequenceNumber);
             // TODO: Create a remote transaction processor class.
-
+            remoteTransactionProcessor.prepareAsync(tid, request);
         }
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
             new Thread(() -> resetEpoch(false)).start();
+        }
+    }
+
+    /**
+     * Callback from @{@link RemoteTransactionProcessor}
+     * @param tid
+     * @param status
+     */
+    void remoteOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
+        this.transactionStatus.put(tid,status);
+        if (status.equals(Bzs.TransactionStatus.ABORTED)) {
+            LOGGER.log(Level.WARNING, "Aborting transaction "+tid);
         }
     }
 
@@ -199,31 +215,3 @@ public class TransactionProcessor {
     }
 }
 
-
-class TransactionID implements Comparable<TransactionID>{
-    public int epochNumber, sequenceNumber;
-
-    public TransactionID(int epochNumber, int sequenceNumber) {
-        this.epochNumber = epochNumber;
-        this.sequenceNumber = sequenceNumber;
-    }
-
-    @Override
-    public boolean equals(Object tid) {
-        if (tid.getClass().getName().equals(TransactionID.class.getName())) {
-            TransactionID objtid = (TransactionID) tid;
-            return objtid.epochNumber == epochNumber && objtid.sequenceNumber == sequenceNumber;
-        }
-        return false;
-
-    }
-
-    @Override
-    public int compareTo(TransactionID t2) {
-        int eDiff = epochNumber - t2.epochNumber;
-        if (eDiff!=0) {
-            return eDiff;
-        }
-        return sequenceNumber - t2.sequenceNumber;
-    }
-}

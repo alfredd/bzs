@@ -188,11 +188,4 @@ public class BenchmarkExecutor implements Runnable {
         }
     }
 
-    public static void main(String args[]) throws IOException {
-        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(0, null);
-        String format = ReportBuilder.getDateString();
-        System.out.println(format);
-
-    }
-
 }

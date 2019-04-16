@@ -14,6 +14,7 @@ service Cluster {
     rpc CommitPrepare (Transaction) returns (TransactionResponse);
     rpc Commit (Transaction) returns (TransactionResponse);
     rpc ReadOperation (Read) returns (ReadResponse);
+    rpc Abort (Transaction) returns (TransactionResponse);
 }
 
 service Replica {
@@ -50,12 +51,16 @@ message BFTCommitResponse {
 enum TransactionStatus {
     COMMITTED = 0;
     ABORTED = 1;
+    PREPARED = 2;
 }
 
 enum OperationStatus {
-    FAILED = 0;
+    FAILED = 0; // To be removed. Kept for backward compatibility (for now). Use "ABORTED" instead.
     SUCCESS = 1;
     INVALID = 2;
+    COMMIT_SUCCESS = 3;
+    ABORT = 4;
+    PREPARE_SUCCESS = 5;
 }
 
 enum Operation {

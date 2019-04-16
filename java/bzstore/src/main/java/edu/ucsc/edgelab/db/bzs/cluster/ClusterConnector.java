@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 public class ClusterConnector extends TimerTask {
     private final Integer clusterID;
-    private Map<Integer, BZStoreClient> clients;
+    private Map<Integer, ClusterServiceClient> clients;
 
     public static final Logger LOGGER = Logger.getLogger(ClusterConnector.class.getName());
 
@@ -23,8 +23,8 @@ public class ClusterConnector extends TimerTask {
 
     @Override
     public void run() {
-        Integer clusterCount=0;
-        BZStoreProperties properties=null;
+        Integer clusterCount = 0;
+        BZStoreProperties properties = null;
         try {
             properties = new BZStoreProperties();
             clusterCount = Integer.decode(
@@ -40,12 +40,13 @@ public class ClusterConnector extends TimerTask {
             if (!clients.containsKey(i)) {
                 createClient(properties, i);
             }
-            BZStoreClient bzStoreClient = clients.get(i);
+            ClusterServiceClient bzStoreClient = clients.get(i);
             if (!bzStoreClient.isConnected()) {
                 try {
                     bzStoreClient.shutdown();
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.WARNING, "Exception occurred when trying to shutdown a client."+e.getLocalizedMessage());
+                    LOGGER.log(Level.WARNING,
+                            "Exception occurred when trying to shutdown a client." + e.getLocalizedMessage());
                 }
                 createClient(properties, i);
             }
@@ -53,11 +54,11 @@ public class ClusterConnector extends TimerTask {
     }
 
     private void createClient(BZStoreProperties properties, int i) {
-        if (properties== null) {
+        if (properties == null) {
             try {
                 properties = new BZStoreProperties();
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, e.getLocalizedMessage(),e);
+                LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
                 return;
             }
         }
@@ -65,7 +66,7 @@ public class ClusterConnector extends TimerTask {
         String host = properties.getProperty(i, Integer.decode(replicaID), BZStoreProperties.Configuration.host);
         String port = properties.getProperty(i, Integer.decode(replicaID), BZStoreProperties.Configuration.port);
         int portInt = Integer.decode(port);
-        clients.put(i, new BZStoreClient(host, portInt));
+        clients.put(i, new ClusterServiceClient(host, portInt));
     }
 
     public ClusterClient getClusterClient() {
