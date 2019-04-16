@@ -84,6 +84,7 @@ public class BZStoreServer {
         server = ServerBuilder.forPort(this.serverPort)
                 .addService(new BZStoreService(replicaID, clusterID, this.transactionProcessor, isLeader))
                 .addService(new BZStoreReplica(clusterID, replicaID, this.transactionProcessor, isLeader))
+                .addService(new ClusterService(clusterID, replicaID, this.transactionProcessor, isLeader))
                 .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

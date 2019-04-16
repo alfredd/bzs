@@ -143,15 +143,14 @@ public class TransactionProcessor {
             int failed = 0;
             int bytesProcessed = 0;
             if (transactions != null && transactions.size() > 0) {
+                startTime = System.currentTimeMillis();
                 transactionCount = transactions.size();
 
                 LOGGER.info("Processing transaction batch in epoch: " + epoch);
 
                 LOGGER.info("Performing BFT Commit");
                 Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch, transactions.values());
-                bytesProcessed = transactionBatch.toByteArray().length;
-                startTime = System.currentTimeMillis();
-                Bzs.TransactionBatchResponse batchResponse = bftClient.performCommitPrepare(transactionBatch);
+                Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
                 if (batchResponse == null) {
                     failed = transactionCount;
                     sendFailureNotifications(transactions, responseObservers);
@@ -173,6 +172,7 @@ public class TransactionProcessor {
                         }
                     }
                 }
+                bytesProcessed = transactionBatch.toByteArray().length;
             }
 
             long endTime = System.currentTimeMillis();
@@ -190,6 +190,10 @@ public class TransactionProcessor {
             }
         }
 
+    }
+
+    public Bzs.TransactionBatchResponse performPrepare(Bzs.TransactionBatch transactionBatch) {
+        return bftClient.performCommitPrepare(transactionBatch);
     }
 
     private void sendFailureNotifications(Map<Integer, Bzs.Transaction> transactions, Map<Integer,
@@ -212,6 +216,10 @@ public class TransactionProcessor {
         }
         batchBuilder.setID(epochNumber).setOperation(Bzs.Operation.BFT_PREPARE);
         return batchBuilder.build();
+    }
+
+    public BFTClient getBFTClient() {
+        return  bftClient;
     }
 }
 
