@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-class PrepareProcessor extends RemoteOpProcessor implements Runnable {
+class PrepareProcessor extends RemoteOpProcessor {
 
 
     public PrepareProcessor(TransactionID tid, Bzs.Transaction transaction, Integer cid, Integer rid, ClusterConnector c) {
@@ -34,7 +34,7 @@ class PrepareProcessor extends RemoteOpProcessor implements Runnable {
             joinAllThreads(abortThreads);
             transactionStatus = Bzs.TransactionStatus.ABORTED;
         }
-        responseObserver.prepared(tid, transactionStatus);
+        responseObserver.remoteOperationObserver(tid, transactionStatus);
     }
 
 }

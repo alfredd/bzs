@@ -8,7 +8,7 @@ import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RemoteOpProcessor {
+public abstract class RemoteOpProcessor implements Runnable{
     protected final Integer cid;
     protected final Integer rid;
     protected final ClusterClient clusterConnector;

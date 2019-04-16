@@ -113,7 +113,7 @@ public class TransactionProcessor {
      * @param tid
      * @param transactionStatus
      */
-    void prepared(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
+    void remoteOperationObserver(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
 
     }
 
