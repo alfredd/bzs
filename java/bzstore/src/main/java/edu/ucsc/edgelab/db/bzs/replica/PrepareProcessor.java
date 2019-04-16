@@ -1,13 +1,14 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.MessageType;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterClient;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-class RemoteProcessor implements Runnable {
+class PrepareProcessor implements Runnable {
 
     private final Integer cid;
     private final Integer rid;
@@ -20,7 +21,7 @@ class RemoteProcessor implements Runnable {
     private Bzs.Transaction remoteTransaction;
 
 
-    public RemoteProcessor(TransactionID tid, Bzs.Transaction transaction, Integer cid, Integer rid, ClusterConnector c) {
+    public PrepareProcessor(TransactionID tid, Bzs.Transaction transaction, Integer cid, Integer rid, ClusterConnector c) {
         this.tid = tid;
 //        this.transaction = transaction;
         this.cid = cid;
@@ -32,10 +33,6 @@ class RemoteProcessor implements Runnable {
 
     public void setResponseObserver(TransactionProcessor processor) {
         this.responseObserver = processor;
-    }
-
-    enum MessageType {
-        Prepare, Abort, Commit
     }
 
     @Override
@@ -53,7 +50,7 @@ class RemoteProcessor implements Runnable {
 
         Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.PREPARED;
         if (!prepared) {
-            List<Thread> abortThreads = sendMessageToClusterLeaders(remoteCIDs,MessageType.Abort);
+            List<Thread> abortThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Abort);
             joinAllThreads(abortThreads);
             transactionStatus = Bzs.TransactionStatus.ABORTED;
         }
@@ -75,10 +72,10 @@ class RemoteProcessor implements Runnable {
         List<Thread> remoteThreads = new LinkedList<>();
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
-                if (messageType==MessageType.Prepare) {
+                if (messageType== MessageType.Prepare) {
                     Bzs.TransactionResponse response = clusterConnector.prepare(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
-                } else if(messageType==MessageType.Abort) {
+                } else if(messageType== MessageType.Abort) {
                     Bzs.TransactionResponse response = clusterConnector.abort(remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 }

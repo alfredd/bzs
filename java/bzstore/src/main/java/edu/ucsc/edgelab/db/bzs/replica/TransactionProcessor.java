@@ -100,7 +100,7 @@ public class TransactionProcessor {
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
             // TODO: Create a remote transaction processor class.
-            remoteTransactionProcessor.processAsync(tid, request);
+            remoteTransactionProcessor.prepareAsync(tid, request);
         }
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {

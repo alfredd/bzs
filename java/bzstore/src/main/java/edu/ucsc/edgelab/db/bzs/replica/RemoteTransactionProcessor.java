@@ -31,15 +31,19 @@ public class RemoteTransactionProcessor {
      *    3. create a map of transaction=>clusterid=>status of prepare message
      *    4. once responses of prepared messages start coming back, update the transaction status.
      *    5. Once all responses are received call processor.prepared(tid)
-     *    This is done by the @{@link RemoteProcessor}
+     *    This is done by the @{@link PrepareProcessor}
      * @param tid
      * @param request
      */
-    public void processAsync(final TransactionID tid, final Bzs.Transaction request) {
+    public void prepareAsync(final TransactionID tid, final Bzs.Transaction request) {
 
-        RemoteProcessor remoteProcessor = new RemoteProcessor(tid,request,clusterID,replicaID, clusterConnector);
+        PrepareProcessor remoteProcessor = new PrepareProcessor(tid,request,clusterID,replicaID, clusterConnector);
         remoteProcessor.setResponseObserver(processor);
         new Thread(remoteProcessor).start();
+    }
+
+    public void commitAsync(final TransactionID tid, final Bzs.Transaction request) {
+
     }
 
     public void setObserver(TransactionProcessor transactionProcessor) {
