@@ -38,7 +38,7 @@ public class BFTCommitClient {
                     //System.out.println("Performing write" + transaction.toString());
                     list.add(transaction);
                 }
-               clients[0].performCommit(list);
+               //clients[0].performCommit(list);
   //             System.out.println("Write Performed");
             }
             long stopTime = System.currentTimeMillis();

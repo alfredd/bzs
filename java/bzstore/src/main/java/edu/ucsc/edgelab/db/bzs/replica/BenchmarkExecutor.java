@@ -33,8 +33,8 @@ public class BenchmarkExecutor implements Runnable {
         this.transactionProcessor = transactionProcessor;
 
         BZStoreProperties properties = new BZStoreProperties();
-        String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
-
+        //String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
+        String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/"+dataFile;
         LOGGER.info("Data File path: " + fileName);
         File file = new File(fileName);
@@ -45,7 +45,8 @@ public class BenchmarkExecutor implements Runnable {
 
             for (String word : line)
                 if (word != null)
-                    words.add(word);
+                    if(hashmod(word, 3) == clusterID)
+                        words.add(word);
         }
         scanner.close();
 
@@ -186,6 +187,17 @@ public class BenchmarkExecutor implements Runnable {
                 reportBuilder.flush();
             }
         }
+    }
+
+    public static void main(String args[]) throws IOException {
+        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(0, null);
+        String format = ReportBuilder.getDateString();
+        System.out.println(format);
+
+    }
+
+    public static Integer hashmod(String key, int totalCluster){
+        return  key.hashCode() % totalCluster;
     }
 
 }
