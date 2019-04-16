@@ -7,7 +7,9 @@ import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +28,7 @@ public class TransactionProcessor {
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
+    private Set<TransactionID> abortedTransactions;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
@@ -36,6 +39,7 @@ public class TransactionProcessor {
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
+        abortedTransactions = new HashSet<>();
     }
 
     private void initMaxBatchSize() {
@@ -114,7 +118,10 @@ public class TransactionProcessor {
      * @param transactionStatus
      */
     void remoteOperationObserver(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
-
+        if (transactionStatus.equals(Bzs.TransactionStatus.ABORTED)) {
+            LOGGER.log(Level.WARNING, "Aborting transaction "+tid);
+            abortedTransactions.add(tid);
+        }
     }
 
     void resetEpoch(boolean isTimedEpochReset) {

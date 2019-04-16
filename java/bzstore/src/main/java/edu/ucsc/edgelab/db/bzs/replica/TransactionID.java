@@ -23,4 +23,9 @@ class TransactionID extends TuplePair implements Comparable<TransactionID>{
         }
         return second - t2.second;
     }
+
+    @Override
+    public String toString() {
+        return String.format("(Epoch, Sequence)=(%d,%d)",first,second);
+    }
 }
