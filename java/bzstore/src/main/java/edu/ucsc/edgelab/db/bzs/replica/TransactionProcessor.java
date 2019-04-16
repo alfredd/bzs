@@ -6,10 +6,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +25,7 @@ public class TransactionProcessor {
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
-    private Set<TransactionID> abortedTransactions;
+    private Map<TransactionID, Bzs.TransactionStatus> transactionStatus;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
@@ -39,7 +36,7 @@ public class TransactionProcessor {
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
-        abortedTransactions = new HashSet<>();
+        transactionStatus = new LinkedHashMap<>();
     }
 
     private void initMaxBatchSize() {
@@ -115,12 +112,12 @@ public class TransactionProcessor {
     /**
      * Callback from @{@link RemoteTransactionProcessor}
      * @param tid
-     * @param transactionStatus
+     * @param status
      */
-    void remoteOperationObserver(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
-        if (transactionStatus.equals(Bzs.TransactionStatus.ABORTED)) {
+    void remoteOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
+        this.transactionStatus.put(tid,status);
+        if (status.equals(Bzs.TransactionStatus.ABORTED)) {
             LOGGER.log(Level.WARNING, "Aborting transaction "+tid);
-            abortedTransactions.add(tid);
         }
     }
 
