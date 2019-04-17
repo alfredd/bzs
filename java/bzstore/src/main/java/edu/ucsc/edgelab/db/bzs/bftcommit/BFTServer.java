@@ -148,6 +148,14 @@ public class BFTServer extends DefaultSingleRecoverable {
                 }
                 logger.info("Data committed. Returning response.");
                 reply = ByteBuffer.allocate(4).putInt(1).array();
+            } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_ABORT)) {
+                String id = transactionBatch.getID();
+                if (tbrCache.containsKey(id)) {
+                    Bzs.TransactionBatchResponse storedBatch = tbrCache.remove(id);
+                    logger.log(Level.INFO, "Transaction abort received for: " + id + ". Transaction " +
+                            "will be aborted. Transaction details: "+storedBatch.toString());
+                }
+                reply = ByteBuffer.allocate(4).putInt(1).array();
             } else {
                 logger.log(Level.WARNING,
                         "No matches found. Aborting consensus. Input was: " + transactionBatch.toString());

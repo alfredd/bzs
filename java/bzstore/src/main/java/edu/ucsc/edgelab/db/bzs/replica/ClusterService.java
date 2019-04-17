@@ -105,6 +105,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void abort(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+        LockManager.releaseLocks(request);
         performOperationandSendResponse(request, responseObserver, Bzs.Operation.BFT_ABORT,
                 Bzs.TransactionStatus.ABORTED, Bzs.TransactionStatus.FAILURE);
     }
