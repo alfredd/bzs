@@ -50,7 +50,7 @@ public class RSAKeyPairGenerator {
 
         public static void main(String[] args) {
             try {
-                (new bftsmart.tom.util.RSAKeyPairGenerator()).run(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+                (new RSAKeyPairGenerator()).run(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
             } catch (Exception var2) {
                 System.out.println(var2.getMessage());
                 System.err.println("Use: RSAKeyPairGenerator <id> <key size>");

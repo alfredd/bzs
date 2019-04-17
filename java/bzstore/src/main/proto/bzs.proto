@@ -20,7 +20,17 @@ service Cluster {
 service Replica {
     rpc Forward (Transaction) returns (TransactionResponse);
     rpc ForwardROT (ROTransaction) returns (ROTransactionResponse);
-    //rpc RetrievePublicSignatures (string) returns (string);    // Possible interface to retrieve digital signatures from nodes.
+    rpc GetPublicKey (KeyType) returns (Key);    // Possible interface to retrieve digital signatures from nodes.
+    rpc GetPrivateKey (KeyType) returns (Key);    // Possible interface to retrieve digital signatures from nodes.
+}
+
+message KeyType {
+    string algorithm = 1;
+}
+
+message Key {
+    string key =1;
+    string type = 2;
 }
 
 message TransactionBatch {

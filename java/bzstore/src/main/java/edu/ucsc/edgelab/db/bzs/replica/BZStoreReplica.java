@@ -31,4 +31,14 @@ public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
     public void forwardROT(Bzs.ROTransaction request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
         super.forwardROT(request, responseObserver);
     }
+
+    @Override
+    public void getPrivateKey(Bzs.KeyType request, StreamObserver<Bzs.Key> responseObserver) {
+
+    }
+
+    @Override
+    public void getPublicKey(Bzs.KeyType request, StreamObserver<Bzs.Key> responseObserver) {
+
+    }
 }
