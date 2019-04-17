@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LockManager {
     private static final Map<String,Long> LOCKS = new ConcurrentHashMap<>();
 
-    private static boolean isLocked(String key) {
+    public static boolean isLocked(String key) {
         return LOCKS.containsKey(key);
     }
 

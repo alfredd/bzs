@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ClusterGrpc;
+import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 
 public class ClusterService extends ClusterGrpc.ClusterImplBase {
@@ -28,6 +29,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         if (!serializable) {
             performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
         } else {
+            LockManager.acquireLocks(request);
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
             Bzs.TransactionBatch batch = createTransactionBatch(request, operation);
             Bzs.TransactionBatchResponse batchResponse = processor.getBFTClient().performCommitPrepare(batch);
@@ -76,6 +78,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.COMMITTED;
         Bzs.TransactionStatus failureStatus = Bzs.TransactionStatus.ABORTED;
         performOperationandSendResponse(request, responseObserver, operation, transactionStatus, failureStatus);
+        LockManager.releaseLocks(request);
     }
 
     private void performOperationandSendResponse(Bzs.Transaction request,
