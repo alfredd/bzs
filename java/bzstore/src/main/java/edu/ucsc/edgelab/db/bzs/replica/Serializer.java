@@ -45,7 +45,6 @@ public class Serializer {
             if (readConflicts(readHistory))
                 return false;
         }
-//        LOGGER.info("Read map: "+readMap.toString());
         // Handling case 2 from the table in the google doc
         for (Bzs.Write writeOperation : t.getWriteOperationsList()) {
             String key = writeOperation.getKey();

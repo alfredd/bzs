@@ -2,43 +2,48 @@ package edu.ucsc.edgelab.db.bzs.data;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LockManager {
-    private static final Map<String,Long> LOCKED = new ConcurrentHashMap<>();
-    private static final Map<String, List<Bzs.Transaction>> LOCK_LIST = new ConcurrentHashMap<>();
+    private static final Map<String,Long> LOCKS = new ConcurrentHashMap<>();
 
     private static boolean isLocked(String key) {
-        return LOCKED.containsKey(key);
+        return LOCKS.containsKey(key);
     }
 
     private static boolean unlock(String key) {
         if (isLocked(key)) {
-            LOCKED.remove(key);
+            LOCKS.remove(key);
         }
         return isLocked(key);
     }
 
     private static boolean lock(String key) {
         if (!isLocked(key)) {
-            LOCKED.put(key,System.currentTimeMillis());
+            LOCKS.put(key,System.currentTimeMillis());
         }
         return isLocked(key);
     }
 
-    public boolean checkLocks(Bzs.Transaction t) {
-        boolean locked = true;
+    public void  releaseLocks(Bzs.Transaction t) {
         for (int i =0 ;i<t.getWriteOperationsCount();i++) {
-
+            unlock(t.getWriteOperations(i).getKey());
         }
-        return locked;
+        for (int i =0; i<t.getReadHistoryCount();i++) {
+            unlock(t.getReadHistory(i).getKey());
+        }
     }
 
-    public boolean addToLockQueue(Bzs.Transaction t) {
-        boolean canLock=true;
 
-        return canLock;
+    public void  acquireLocks(Bzs.Transaction t) {
+        for (int i =0 ;i<t.getWriteOperationsCount();i++) {
+            lock(t.getWriteOperations(i).getKey());
+        }
+        for (int i =0; i<t.getReadHistoryCount();i++) {
+            lock(t.getReadHistory(i).getKey());
+        }
     }
+
+
 }
