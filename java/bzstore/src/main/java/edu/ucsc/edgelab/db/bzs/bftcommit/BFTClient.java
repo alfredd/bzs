@@ -25,8 +25,6 @@ public class BFTClient {
     }
 
     public Bzs.TransactionBatchResponse performCommitPrepare(Bzs.TransactionBatch batch) {
-//        LOGGER.info("Received transaction batch to perform commit consensus.");
-
         try {
             byte[] reply = sendBytesToBFTServer(batch.toByteArray());
             return Bzs.TransactionBatchResponse.parseFrom(reply);
@@ -43,14 +41,6 @@ public class BFTClient {
         byte[] reply;
         reply = serviceProxy.invokeOrdered(data);
         return reply;//Bzs.TransactionBatchResponse.parseFrom(reply);
-/*        try {
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
-        } catch (Exception e ) {
-            LOGGER.log(Level.WARNING, "Could not parse response. Might be due to consensus failure. Transaction will be aborted.");
-        }
-        LOGGER.info("Commit consensus FAILED for transaction. Returning NULL.");
-        return null;*/
     }
 
 
@@ -88,12 +78,18 @@ public class BFTClient {
     }
 
     public int performDbCommit(Bzs.TransactionBatchResponse batchResponse) {
-//        Bzs.BFTCommit commitData = Bzs.BFTCommit.newBuilder().addAllTransactions(batchResponse.getResponsesList()).build();
-//        Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setBftCommit(commitData).setID(batchResponse.getID()).build();
         Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder()
                 .setID(batchResponse.getID())
                 .setOperation(Bzs.Operation.BFT_COMMIT)
                 .build();
+        return dbCommit(batch);
+    }
+
+    public int dbCommit(Bzs.TransactionBatch batch) {
+        return sendBytesToBftServer(batch);
+    }
+
+    private int sendBytesToBftServer(Bzs.TransactionBatch batch) {
         byte[] reply = sendBytesToBFTServer(batch.toByteArray());
         int id=-10;
         try {
@@ -102,5 +98,9 @@ public class BFTClient {
             LOGGER.warning("Could not get correct commit replicaID from response.");
         }
         return id;
+    }
+
+    public int abort(Bzs.TransactionBatch batch) {
+        return sendBytesToBftServer(batch);
     }
 }
