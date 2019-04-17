@@ -2,7 +2,6 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ClusterGrpc;
-import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 
 public class ClusterService extends ClusterGrpc.ClusterImplBase {
@@ -12,7 +11,6 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private Integer clusterID;
     private boolean amILeader;
     private Serializer serializer = new Serializer();
-    private LockManager lockManager;
 
 
     public ClusterService(Integer clusterID, Integer replicaID, TransactionProcessor processor, boolean isLeader) {
@@ -20,7 +18,6 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         this.replicaID = replicaID;
         this.amILeader = isLeader;
         this.processor = processor;
-        lockManager = new LockManager();
     }
 
     @Override
