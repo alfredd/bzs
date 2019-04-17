@@ -90,4 +90,9 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
         super.readOperation(request, responseObserver);
     }
+
+    @Override
+    public void abort(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+
+    }
 }
