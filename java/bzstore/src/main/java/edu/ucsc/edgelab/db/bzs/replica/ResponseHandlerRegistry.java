@@ -20,12 +20,6 @@ public class ResponseHandlerRegistry {
         remoteRequestRegistry = new LinkedHashMap<>();
     }
 
-
-    public void addToRegistry(final TransactionID tid, Bzs.Transaction transaction,
-                              StreamObserver<Bzs.TransactionResponse> responseObserver) {
-
-    }
-
     @Deprecated
     public void addToRegistry(final int epochNumber, final int sequenceNumber, Bzs.Transaction transaction,
                               StreamObserver<Bzs.TransactionResponse> responseObserver) {
