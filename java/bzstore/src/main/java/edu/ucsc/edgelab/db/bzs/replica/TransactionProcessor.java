@@ -97,11 +97,13 @@ public class TransactionProcessor {
             return;
         }
         sequenceNumber += 1;
-        responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
             // TODO: Create a remote transaction processor class.
             remoteTransactionProcessor.prepareAsync(tid, request);
+            responseHandlerRegistry.addToRemoteRegistry(tid,request, responseObserver);
+        } else {
+            responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
         }
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
@@ -134,9 +136,9 @@ public class TransactionProcessor {
             sequenceNumber = 0;
             serializer.resetEpoch();
             // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
-            Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getTransactions(epoch);
+            Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getLocalTransactions(epoch);
             Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
-                    responseHandlerRegistry.getTransactionObservers(epoch);
+                    responseHandlerRegistry.getLocalTransactionObservers(epoch);
             long startTime = 0;
             int transactionCount = 0;
             int processed = 0;
@@ -177,7 +179,7 @@ public class TransactionProcessor {
 
             long endTime = System.currentTimeMillis();
 
-            responseHandlerRegistry.clearEpochHistory(epoch);
+            responseHandlerRegistry.clearLocalHistory(epoch);
             if (benchmarkExecutor != null) {
                 benchmarkExecutor.logTransactionDetails(
                         epochNumber,
