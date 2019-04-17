@@ -27,7 +27,7 @@ message TransactionBatch {
     repeated Transaction transactions = 1;
     repeated ROTransaction rotransaction = 2;
     //    BFTCommit bftCommit = 3;
-    int32 ID = 3;
+    string ID = 3;
     Operation operation = 4;
 }
 
@@ -35,7 +35,7 @@ message TransactionBatchResponse {
     repeated TransactionResponse responses = 1;
     repeated ROTransactionResponse readresponses = 2;
     //    BFTCommitResponse bftCommitResponse = 3;
-    int32 ID = 3;
+    string ID = 3;
     Operation operation = 4;
 }
 

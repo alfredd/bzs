@@ -208,13 +208,13 @@ public class TransactionProcessor {
         }
     }
 
-    Bzs.TransactionBatch getTransactionBatch(int epochNumber, Collection<Bzs.Transaction> transactions) {
+    Bzs.TransactionBatch getTransactionBatch(Integer epochNumber, Collection<Bzs.Transaction> transactions) {
         Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
 
         for (Bzs.Transaction transaction : transactions) {
             batchBuilder.addTransactions(transaction);
         }
-        batchBuilder.setID(epochNumber).setOperation(Bzs.Operation.BFT_PREPARE);
+        batchBuilder.setID(epochNumber.toString()).setOperation(Bzs.Operation.BFT_PREPARE);
         return batchBuilder.build();
     }
 

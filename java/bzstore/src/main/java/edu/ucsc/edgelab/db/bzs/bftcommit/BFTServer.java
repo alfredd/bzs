@@ -21,7 +21,7 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     private Logger logger = Logger.getLogger(BFTServer.class.getName());
 
-    private Map<Integer, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
+    private Map<String, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
 //    private Integer count;
 
     public BFTServer(int id) {
@@ -46,7 +46,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getTransactionsCount() > 0) {
                 Serializer serializer = new Serializer();
-                int epochId = transactionBatch.getID();
+                String epochId = transactionBatch.getID();
                 logger.info("Processing transaction batch: "+epochId);
 
                 for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
@@ -111,7 +111,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 reply = batchResponse.toByteArray();
 
             } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_COMMIT)) {
-                int id = transactionBatch.getID();
+                String id = transactionBatch.getID();
                 if (!tbrCache.containsKey(id)) {
                     logger.log(Level.WARNING, "Transactions are not present in cache for replicaID: " + id + ". Transaction " +
                             "will abort.");

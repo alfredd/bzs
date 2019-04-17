@@ -13,10 +13,6 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private boolean amILeader;
     private Serializer serializer = new Serializer();
 
-    private BFTClient bftClient;
-
-    public ClusterService() {
-    }
 
     public ClusterService(Integer clusterID, Integer replicaID, TransactionProcessor processor, boolean isLeader) {
         this.clusterID = clusterID;
@@ -33,15 +29,26 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         if (!serializable) {
             sendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
         } else {
-            Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().addTransactions(request).build();
+            Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
+            Bzs.TransactionBatch batch = createTransactionBatch(request, operation);
             Bzs.TransactionBatchResponse batchResponse = processor.getBFTClient().performCommitPrepare(batch);
             if (batchResponse == null) {
-                sendResponse(transactionID,responseObserver,null, Bzs.TransactionStatus.ABORTED);
+                sendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
             } else {
                 response = batchResponse.getResponses(0);
-                sendResponse(transactionID,responseObserver,response, Bzs.TransactionStatus.PREPARED);
+                sendResponse(transactionID, responseObserver, response, Bzs.TransactionStatus.PREPARED);
             }
         }
+    }
+
+    public Bzs.TransactionBatch createTransactionBatch(Bzs.Transaction request, Bzs.Operation operation) {
+
+        return Bzs.TransactionBatch
+                .newBuilder()
+                .addTransactions(request)
+                .setOperation(operation)
+                .setID(request.getTransactionID())
+                .build();
     }
 
     public void sendResponse(String transactionID,
@@ -65,7 +72,10 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void commit(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
-        super.commit(request, responseObserver);
+        Bzs.TransactionBatch batch = createTransactionBatch(request, Bzs.Operation.BFT_COMMIT);
+        int status = processor.getBFTClient().dbCommit(batch);
+        sendResponse(request.getTransactionID(), responseObserver, null,
+                status < 0 ? Bzs.TransactionStatus.ABORTED : Bzs.TransactionStatus.COMMITTED);
     }
 
     @Override

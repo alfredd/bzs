@@ -94,6 +94,10 @@ public class BFTClient {
                 .setID(batchResponse.getID())
                 .setOperation(Bzs.Operation.BFT_COMMIT)
                 .build();
+        return dbCommit(batch);
+    }
+
+    public int dbCommit(Bzs.TransactionBatch batch) {
         byte[] reply = sendBytesToBFTServer(batch.toByteArray());
         int id=-10;
         try {
