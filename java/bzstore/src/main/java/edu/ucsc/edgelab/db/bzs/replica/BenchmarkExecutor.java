@@ -45,7 +45,7 @@ public class BenchmarkExecutor implements Runnable {
 
             for (String word : line)
                 if (word != null)
-                    if(hashmod(word, 3) == clusterID)
+                    if(hashmod(word, Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
                         words.add(word);
         }
         scanner.close();
