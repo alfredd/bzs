@@ -2,7 +2,6 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ClusterGrpc;
-import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 
@@ -30,16 +29,17 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         String transactionID = request.getTransactionID();
         boolean serializable = serializer.serialize(request);
         if (!serializable) {
-            sendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
+            performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
         } else {
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
             Bzs.TransactionBatch batch = createTransactionBatch(request, operation);
             Bzs.TransactionBatchResponse batchResponse = processor.getBFTClient().performCommitPrepare(batch);
             if (batchResponse == null) {
-                sendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
+                performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
             } else {
                 response = batchResponse.getResponses(0);
-                sendResponse(transactionID, responseObserver, response, Bzs.TransactionStatus.PREPARED);
+                performOperationandSendResponse(transactionID, responseObserver, response,
+                        Bzs.TransactionStatus.PREPARED);
             }
         }
     }
@@ -54,10 +54,10 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 .build();
     }
 
-    public void sendResponse(String transactionID,
-                             StreamObserver<Bzs.TransactionResponse> responseObserver,
-                             Bzs.TransactionResponse templateResponse,
-                             Bzs.TransactionStatus transactionStatus) {
+    public void performOperationandSendResponse(String transactionID,
+                                                StreamObserver<Bzs.TransactionResponse> responseObserver,
+                                                Bzs.TransactionResponse templateResponse,
+                                                Bzs.TransactionStatus transactionStatus) {
         Bzs.TransactionResponse response;
         Bzs.TransactionResponse.Builder builder;
         if (templateResponse == null)
@@ -75,14 +75,26 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void commit(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
-        Bzs.TransactionBatch batch = createTransactionBatch(request, Bzs.Operation.BFT_COMMIT);
+        Bzs.Operation operation = Bzs.Operation.BFT_COMMIT;
+        Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.COMMITTED;
+        Bzs.TransactionStatus failureStatus = Bzs.TransactionStatus.ABORTED;
+        performOperationandSendResponse(request, responseObserver, operation, transactionStatus, failureStatus);
+    }
+
+    private void performOperationandSendResponse(Bzs.Transaction request,
+                                                 StreamObserver<Bzs.TransactionResponse> responseObserver,
+                                                 Bzs.Operation operation,
+                                                 Bzs.TransactionStatus transactionStatus,
+                                                 Bzs.TransactionStatus failureStatus) {
+        Bzs.TransactionBatch batch = createTransactionBatch(request, operation);
         int status = processor.getBFTClient().dbCommit(batch);
-        sendResponse(request.getTransactionID(), responseObserver, null,
-                status < 0 ? Bzs.TransactionStatus.ABORTED : Bzs.TransactionStatus.COMMITTED);
+        performOperationandSendResponse(request.getTransactionID(), responseObserver, null,
+                status < 0 ? failureStatus : transactionStatus);
     }
 
     /**
      * May have to be removed.
+     *
      * @param request
      * @param responseObserver
      */
@@ -93,6 +105,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void abort(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
-
+        performOperationandSendResponse(request, responseObserver, Bzs.Operation.BFT_ABORT,
+                Bzs.TransactionStatus.ABORTED, Bzs.TransactionStatus.FAILURE);
     }
 }

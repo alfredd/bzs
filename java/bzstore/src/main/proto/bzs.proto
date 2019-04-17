@@ -53,6 +53,7 @@ enum TransactionStatus {
     ABORTED = 1;
     PREPARED = 2;
     TIMEOUT = 3;
+    FAILURE = 4;
 }
 
 enum OperationStatus {
@@ -67,6 +68,7 @@ enum OperationStatus {
 enum Operation {
     BFT_PREPARE = 0;
     BFT_COMMIT = 1;
+    BFT_ABORT = 2;
 }
 
 message Write {
