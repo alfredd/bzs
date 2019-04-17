@@ -12,6 +12,8 @@ public class LockManager {
         return LOCKS.containsKey(key);
     }
 
+    private LockManager() {}
+
     private static boolean unlock(String key) {
         if (isLocked(key)) {
             LOCKS.remove(key);
@@ -26,7 +28,7 @@ public class LockManager {
         return isLocked(key);
     }
 
-    public void  releaseLocks(Bzs.Transaction t) {
+    public static void  releaseLocks(Bzs.Transaction t) {
         for (int i =0 ;i<t.getWriteOperationsCount();i++) {
             unlock(t.getWriteOperations(i).getKey());
         }
@@ -36,7 +38,7 @@ public class LockManager {
     }
 
 
-    public void  acquireLocks(Bzs.Transaction t) {
+    public static void  acquireLocks(Bzs.Transaction t) {
         for (int i =0 ;i<t.getWriteOperationsCount();i++) {
             lock(t.getWriteOperations(i).getKey());
         }
