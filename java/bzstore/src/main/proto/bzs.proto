@@ -52,6 +52,7 @@ enum TransactionStatus {
     COMMITTED = 0;
     ABORTED = 1;
     PREPARED = 2;
+    TIMEOUT = 3;
 }
 
 enum OperationStatus {
