@@ -22,9 +22,9 @@ public class RSAKeyPairGenerator {
         public RSAKeyPairGenerator() {
         }
 
-        public void run(int id, int size) throws Exception {
+        public void run(int id) throws Exception {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(size);
+            keyGen.initialize(512);
             KeyPair kp = keyGen.generateKeyPair();
             PublicKey puk = kp.getPublic();
             PrivateKey prk = kp.getPrivate();
@@ -50,7 +50,7 @@ public class RSAKeyPairGenerator {
 
         public static void main(String[] args) {
             try {
-                (new RSAKeyPairGenerator()).run(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+                (new RSAKeyPairGenerator()).run(Integer.parseInt(args[0]));
             } catch (Exception var2) {
                 System.out.println(var2.getMessage());
                 System.err.println("Use: RSAKeyPairGenerator <id> <key size>");
