@@ -100,13 +100,14 @@ public class TransactionProcessor {
         }
         sequenceNumber += 1;
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
+        Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
             // TODO: Create a remote transaction processor class.
-            LockManager.acquireLocks(request);
-            remoteTransactionProcessor.prepareAsync(tid, request);
-            responseHandlerRegistry.addToRemoteRegistry(tid, request, responseObserver);
+            LockManager.acquireLocks(transaction);
+            remoteTransactionProcessor.prepareAsync(tid, transaction);
+            responseHandlerRegistry.addToRemoteRegistry(tid, transaction, responseObserver);
         } else {
-            responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
+            responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, transaction, responseObserver);
         }
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
@@ -127,8 +128,10 @@ public class TransactionProcessor {
         if (status.equals(Bzs.TransactionStatus.ABORTED)) {
             sendResponseToClient(tid, status, t);
         } else {
-            if (preparedRemoteList.contains(tid.getEpochNumber()))
+            if (preparedRemoteList.contains(tid.getEpochNumber())) {
+
                 remoteTransactionProcessor.commitAsync(tid, t);
+            }
         }
     }
 

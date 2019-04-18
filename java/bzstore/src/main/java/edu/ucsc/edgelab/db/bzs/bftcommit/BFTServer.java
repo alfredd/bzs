@@ -75,7 +75,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                         responseBuilder.addWriteResponses(writeResponse);
 
                     }
-                    responseBuilder.setStatus(Bzs.TransactionStatus.COMMITTED);
+                    responseBuilder.setStatus(Bzs.TransactionStatus.COMMITTED).setTransactionID(transaction.getTransactionID());
                     response = responseBuilder.build();
                     batchResponseBuilder.addResponses(response);
                 }
