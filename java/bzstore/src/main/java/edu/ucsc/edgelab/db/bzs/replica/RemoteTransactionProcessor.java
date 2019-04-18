@@ -29,8 +29,8 @@ public class RemoteTransactionProcessor {
      * 1. Create a new thread for each tid
      * 2. Get remote cluster ID
      * 3. create a map of transaction=>clusterid=>status of prepare message
-     * 4. once responses of remoteOperationObserver messages start coming back, update the transaction status.
-     * 5. Once all responses are received call processor.remoteOperationObserver(tid)
+     * 4. once responses of prepareOperationObserver messages start coming back, update the transaction status.
+     * 5. Once all responses are received call processor.prepareOperationObserver(tid)
      * This is done by the @{@link PrepareProcessor}
      *
      * @param tid

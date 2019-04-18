@@ -35,7 +35,7 @@ class PrepareProcessor extends RemoteOpProcessor {
             joinAllThreads(abortThreads);
             transactionStatus = Bzs.TransactionStatus.ABORTED;
         }
-        responseObserver.remoteOperationObserver(tid, transactionStatus);
+        responseObserver.prepareOperationObserver(tid, transactionStatus);
     }
 
 }

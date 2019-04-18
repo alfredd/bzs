@@ -44,6 +44,15 @@ public class ResponseHandlerRegistry {
         remoteRequestHandlerRegistry.remove(epochNumber);
     }
 
+    public void removeRemoteTransactions(int epochNumber, int sequenceNumber) {
+        Map<Integer, Bzs.Transaction> tMap = remoteRequestRegistry.remove(epochNumber);
+        if (tMap!=null)
+            tMap.remove(sequenceNumber);
+        Map<Integer, StreamObserver<Bzs.TransactionResponse>> oMap = remoteRequestHandlerRegistry.remove(epochNumber);
+        if (oMap!=null)
+            oMap.remove(sequenceNumber);
+    }
+
     public Map<Integer, Bzs.Transaction> getLocalTransactions(int epochNumber) {
 
         return requestRegistry.get(epochNumber);
@@ -57,8 +66,12 @@ public class ResponseHandlerRegistry {
         return remoteRequestRegistry.get(epochNumber);
     }
 
-    public Map<Integer, StreamObserver<Bzs.TransactionResponse>> getRemoteTransactionObservers(int epochNumber) {
-        return remoteRequestHandlerRegistry.get(epochNumber);
+    public StreamObserver<Bzs.TransactionResponse> getRemoteTransactionObserver(int epochNumber, int sequenceNumber) {
+        Map<Integer, StreamObserver<Bzs.TransactionResponse>> observerMap =
+                remoteRequestHandlerRegistry.get(epochNumber);
+        if (observerMap!=null )
+            return observerMap.get(sequenceNumber);
+        return null;
     }
 
     public Bzs.Transaction getTransaction(int epochNumber, int sequenceNumber) {

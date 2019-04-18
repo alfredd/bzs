@@ -37,7 +37,7 @@ public class CommitProcessor extends RemoteOpProcessor {
             joinAllThreads(abortThreads);
             transactionStatus = Bzs.TransactionStatus.ABORTED;
         }
-        responseObserver.remoteOperationObserver(tid, transactionStatus);
+        responseObserver.commitOperationObserver(tid, transactionStatus);
     }
 
     @Override

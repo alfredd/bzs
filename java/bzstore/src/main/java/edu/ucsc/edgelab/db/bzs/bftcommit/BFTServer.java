@@ -8,7 +8,6 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,14 +18,18 @@ import java.util.logging.Logger;
 
 public class BFTServer extends DefaultSingleRecoverable {
 
+    private final Integer replicaID;
+    private final boolean checkLocks;
     private Logger logger = Logger.getLogger(BFTServer.class.getName());
 
     private Map<String, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
 //    private Integer count;
 
-    public BFTServer(int id) {
+    public BFTServer(int id, boolean isLeader) {
         logger.info("Starting BFT-Smart Server.");
 //        count = 0;
+        this.replicaID = id;
+        this.checkLocks = isLeader;
         new ServiceReplica(id, this, this);
         logger.info("Started: BFT-Smart Server.");
 
@@ -45,7 +48,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             Bzs.TransactionBatchResponse.Builder batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
             if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getTransactionsCount() > 0) {
-                Serializer serializer = new Serializer();
+                Serializer serializer = new Serializer(!checkLocks);
                 String epochId = transactionBatch.getID();
                 logger.info("Processing transaction batch: "+epochId);
 

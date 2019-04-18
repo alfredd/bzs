@@ -17,7 +17,7 @@ public class BftBPServer extends BFTServer {
     private Map<Integer, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
 
     public BftBPServer(int id) {
-        super(id);
+        super(id, true);
     }
 
     @Override

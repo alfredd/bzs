@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
@@ -25,7 +26,8 @@ public class TransactionProcessor {
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
-    private Map<TransactionID, Bzs.TransactionStatus> transactionStatus;
+    private Map<TransactionID, Bzs.TransactionStatus> transactionRemoteStatus;
+    private Set<Integer> preparedRemoteList;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
@@ -36,7 +38,7 @@ public class TransactionProcessor {
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
-        transactionStatus = new LinkedHashMap<>();
+        transactionRemoteStatus = new LinkedHashMap<>();
     }
 
     private void initMaxBatchSize() {
@@ -100,8 +102,9 @@ public class TransactionProcessor {
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
             // TODO: Create a remote transaction processor class.
+            LockManager.acquireLocks(request);
             remoteTransactionProcessor.prepareAsync(tid, request);
-            responseHandlerRegistry.addToRemoteRegistry(tid,request, responseObserver);
+            responseHandlerRegistry.addToRemoteRegistry(tid, request, responseObserver);
         } else {
             responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, request, responseObserver);
         }
@@ -113,15 +116,40 @@ public class TransactionProcessor {
 
     /**
      * Callback from @{@link RemoteTransactionProcessor}
+     *
      * @param tid
      * @param status
      */
-    void remoteOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
-        this.transactionStatus.put(tid,status);
+    void prepareOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
+        this.transactionRemoteStatus.put(tid, status);
+        Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
+
         if (status.equals(Bzs.TransactionStatus.ABORTED)) {
-            LOGGER.log(Level.WARNING, "Aborting transaction "+tid);
+            sendResponseToClient(tid, status, t);
+        } else {
+            if (preparedRemoteList.contains(tid.getEpochNumber()))
+                remoteTransactionProcessor.commitAsync(tid, t);
         }
     }
+
+    void commitOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
+        this.transactionRemoteStatus.put(tid, status);
+        Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
+        sendResponseToClient(tid, status, t);
+    }
+
+    private void sendResponseToClient(TransactionID tid, Bzs.TransactionStatus status, Bzs.Transaction t) {
+        StreamObserver<Bzs.TransactionResponse> r =
+                responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
+        LOGGER.log(Level.WARNING, "Aborting transaction " + tid);
+
+        Bzs.TransactionResponse response = Bzs.TransactionResponse.newBuilder().setStatus(status).build();
+        r.onNext(response);
+        r.onCompleted();
+        responseHandlerRegistry.removeRemoteTransactions(tid.getEpochNumber(), tid.getSequenceNumber());
+        LockManager.releaseLocks(t);
+    }
+
 
     void resetEpoch(boolean isTimedEpochReset) {
         // Increment Epoch number and reset sequence number.
@@ -130,13 +158,16 @@ public class TransactionProcessor {
             if (isTimedEpochReset && seqNumber < maxBatchSize) {
                 return;
             }
-            final int epoch = epochNumber;
+            final Integer epoch = epochNumber;
             serializer.resetEpoch();
             epochNumber += 1;
             sequenceNumber = 0;
             serializer.resetEpoch();
             // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
             Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getLocalTransactions(epoch);
+
+            Map<Integer, Bzs.Transaction> remoteTransactions = responseHandlerRegistry.getRemoteTransactions(epoch);
+
             Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers =
                     responseHandlerRegistry.getLocalTransactionObservers(epoch);
             long startTime = 0;
@@ -151,7 +182,15 @@ public class TransactionProcessor {
                 LOGGER.info("Processing transaction batch in epoch: " + epoch);
 
                 LOGGER.info("Performing BFT Commit");
-                Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch, transactions.values());
+                Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
+                Bzs.TransactionBatch transactionRemoteBatch = getTransactionBatch(epoch.toString() + "r",
+                        remoteTransactions.values());
+
+
+                Bzs.TransactionBatchResponse remoteBatchResponse = performPrepare(transactionRemoteBatch);
+                if (remoteBatchResponse != null)
+                    preparedRemoteList.add(epoch);
+
                 Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
                 if (batchResponse == null) {
                     failed = transactionCount;
@@ -210,18 +249,18 @@ public class TransactionProcessor {
         }
     }
 
-    Bzs.TransactionBatch getTransactionBatch(Integer epochNumber, Collection<Bzs.Transaction> transactions) {
+    Bzs.TransactionBatch getTransactionBatch(String id, Collection<Bzs.Transaction> transactions) {
         Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
 
         for (Bzs.Transaction transaction : transactions) {
             batchBuilder.addTransactions(transaction);
         }
-        batchBuilder.setID(epochNumber.toString()).setOperation(Bzs.Operation.BFT_PREPARE);
+        batchBuilder.setID(id.toString()).setOperation(Bzs.Operation.BFT_PREPARE);
         return batchBuilder.build();
     }
 
     public BFTClient getBFTClient() {
-        return  bftClient;
+        return bftClient;
     }
 }
 

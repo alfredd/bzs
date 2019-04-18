@@ -18,6 +18,6 @@ public class BFTCommitServerSpawnUp {
 //            }
 //        }
         //new BFTServer(Integer.parseInt(args[0]), new BpTree());
-        new BFTServer( 3);
+        new BFTServer( 3, true);
     }
 }

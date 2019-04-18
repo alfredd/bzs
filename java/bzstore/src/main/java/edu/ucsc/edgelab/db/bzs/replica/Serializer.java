@@ -14,10 +14,17 @@ import java.util.logging.Logger;
 public class Serializer {
 
     public static final Logger LOGGER = Logger.getLogger(Serializer.class.getName());
+    private boolean checkLocks = true;
 
     private List<Bzs.Transaction> epochList = new LinkedList<>();
     // Keeping track of current object changes to the epochList.
     private HashMap<String, Long> readMap = new HashMap<>();
+
+    public  Serializer() {}
+
+    public Serializer(boolean checkLocks) {
+        this.checkLocks = checkLocks;
+    }
 
     public void resetEpoch() {
         epochList.clear();
@@ -35,7 +42,7 @@ public class Serializer {
             readMap.put(c.getKey(), Long.valueOf(data.version));
         }
         // Handling case 2 and 3 from the table in the google doc
-        if (readMap.get(c.getKey()) > c.getVersion() && LockManager.isLocked(c.getKey())) {
+        if (readMap.get(c.getKey()) > c.getVersion() && checkLocks && LockManager.isLocked(c.getKey())) {
             return true;
         }
         return false;

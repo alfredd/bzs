@@ -35,6 +35,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
             Bzs.TransactionBatchResponse batchResponse = processor.getBFTClient().performCommitPrepare(batch);
             if (batchResponse == null) {
                 performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
+                LockManager.releaseLocks(request);
             } else {
                 response = batchResponse.getResponses(0);
                 performOperationandSendResponse(transactionID, responseObserver, response,
