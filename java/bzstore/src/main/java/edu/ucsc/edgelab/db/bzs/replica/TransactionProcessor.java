@@ -138,6 +138,10 @@ public class TransactionProcessor {
         sendResponseToClient(tid, status, t);
     }
 
+    public void abortOperationObserver(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
+
+    }
+
     private void sendResponseToClient(TransactionID tid, Bzs.TransactionStatus status, Bzs.Transaction t) {
         StreamObserver<Bzs.TransactionResponse> r =
                 responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
@@ -262,5 +266,7 @@ public class TransactionProcessor {
     public BFTClient getBFTClient() {
         return bftClient;
     }
+
+
 }
 
