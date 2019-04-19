@@ -123,29 +123,33 @@ public class TransactionProcessor {
      * @param status
      */
     void prepareOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
-        this.remotePreparedList.add(tid);
-        int remaining = remotePreparedList.indexOf(tid);
-        for (int i =0;i<remaining;i++) {
-            TransactionID tid2 = remotePreparedList.get(i);
-            Bzs.Transaction transaction = responseHandlerRegistry.getTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
-            processRemoteCommits(tid2,transaction);
-        }
+        synchronized (this) {
 
-        Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
-
-        boolean executionDone=false;
-        if (status.equals(Bzs.TransactionStatus.ABORTED)) {
-            sendResponseToClient(tid, status, t);
-        } else {
-            if (preparedRemoteList.containsKey(tid)) {
-                processRemoteCommits(tid, t);
-                executionDone=true;
+            this.remotePreparedList.add(tid);
+            int remaining = remotePreparedList.indexOf(tid);
+            for (int i =0;i<remaining;i++) {
+                TransactionID tid2 = remotePreparedList.get(i);
+                Bzs.Transaction transaction = responseHandlerRegistry.getTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
+                processRemoteCommits(tid2,transaction);
             }
+
+            Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
+
+            boolean executionDone=false;
+            if (status.equals(Bzs.TransactionStatus.ABORTED)) {
+                sendResponseToClient(tid, status, t);
+            } else {
+                if (preparedRemoteList.containsKey(tid)) {
+                    processRemoteCommits(tid, t);
+                    executionDone=true;
+                }
+            }
+            if (executionDone) {
+                remaining+=1;
+            }
+            for (int i =0;i<remaining;i++)
+                remotePreparedList.remove(i);
         }
-        if (executionDone)
-            remaining+=1;
-        for (int i =0;i<remaining;i++)
-            remotePreparedList.remove(i);
     }
 
     private void processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
