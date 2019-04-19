@@ -3,3 +3,4 @@
 *.iml
 java/bzstore/config*
 java/bzstore/oldReports*
+java/merkle-btree*
