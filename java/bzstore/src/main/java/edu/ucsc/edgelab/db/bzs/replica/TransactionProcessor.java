@@ -7,9 +7,7 @@ import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +26,7 @@ public class TransactionProcessor {
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
-    private Map<TransactionID, Bzs.TransactionStatus> transactionRemoteStatus;
+    private List<TransactionID> remotePreparedList;
     private Map<TransactionID, Bzs.TransactionBatchResponse> preparedRemoteList;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
@@ -40,7 +38,7 @@ public class TransactionProcessor {
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
-        transactionRemoteStatus = new LinkedHashMap<>();
+        remotePreparedList = new LinkedList<>();
         preparedRemoteList = new LinkedHashMap<>();
     }
 
@@ -125,35 +123,54 @@ public class TransactionProcessor {
      * @param status
      */
     void prepareOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
-        this.transactionRemoteStatus.put(tid, status);
+        this.remotePreparedList.add(tid);
+        int remaining = remotePreparedList.indexOf(tid);
+        for (int i =0;i<remaining;i++) {
+            TransactionID tid2 = remotePreparedList.get(i);
+            Bzs.Transaction transaction = responseHandlerRegistry.getTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
+            processRemoteCommits(tid2,transaction);
+        }
+
         Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
 
+        boolean executionDone=false;
         if (status.equals(Bzs.TransactionStatus.ABORTED)) {
             sendResponseToClient(tid, status, t);
         } else {
             if (preparedRemoteList.containsKey(tid)) {
-                int commitResponse = bftClient.performDbCommit(preparedRemoteList.get(tid));
-                if (commitResponse < 0) {
-                    remoteTransactionProcessor.abortAsync(tid, t);
-                    LockManager.releaseLocks(t);
-                } else
-                    remoteTransactionProcessor.commitAsync(tid, t);
+                processRemoteCommits(tid, t);
+                executionDone=true;
             }
         }
+        if (executionDone)
+            remaining+=1;
+        for (int i =0;i<remaining;i++)
+            remotePreparedList.remove(i);
+    }
+
+    private void processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
+        int commitResponse = bftClient.performDbCommit(preparedRemoteList.get(tid));
+        if (commitResponse < 0) {
+            remoteTransactionProcessor.abortAsync(tid, t);
+            LockManager.releaseLocks(t);
+        } else
+            remoteTransactionProcessor.commitAsync(tid, t);
     }
 
     void commitOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
-        this.transactionRemoteStatus.put(tid, status);
+//        this.remotePreparedList.add(tid);
         Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
         if (!status.equals(Bzs.TransactionStatus.COMMITTED))
             remoteTransactionProcessor.abortAsync(tid, t);
         sendResponseToClient(tid, status, t);
         LockManager.releaseLocks(t);
+
     }
 
     public void abortOperationObserver(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
         Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
         LockManager.releaseLocks(t);
+        remotePreparedList.remove(tid);
     }
 
     private void sendResponseToClient(TransactionID tid, Bzs.TransactionStatus status, Bzs.Transaction t) {
