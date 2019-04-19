@@ -39,6 +39,7 @@ public class ResponseHandlerRegistry {
         requestRegistry.remove(epochNumber);
         requestHandlerRegistry.remove(epochNumber);
     }
+
     public void clearRemoteHistory(int epochNumber) {
         remoteRequestRegistry.remove(epochNumber);
         remoteRequestHandlerRegistry.remove(epochNumber);
@@ -46,10 +47,10 @@ public class ResponseHandlerRegistry {
 
     public void removeRemoteTransactions(int epochNumber, int sequenceNumber) {
         Map<Integer, Bzs.Transaction> tMap = remoteRequestRegistry.remove(epochNumber);
-        if (tMap!=null)
+        if (tMap != null)
             tMap.remove(sequenceNumber);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> oMap = remoteRequestHandlerRegistry.remove(epochNumber);
-        if (oMap!=null)
+        if (oMap != null)
             oMap.remove(sequenceNumber);
     }
 
@@ -61,6 +62,7 @@ public class ResponseHandlerRegistry {
     public Map<Integer, StreamObserver<Bzs.TransactionResponse>> getLocalTransactionObservers(int epochNumber) {
         return requestHandlerRegistry.get(epochNumber);
     }
+
     public Map<Integer, Bzs.Transaction> getRemoteTransactions(int epochNumber) {
 
         return remoteRequestRegistry.get(epochNumber);
@@ -69,21 +71,22 @@ public class ResponseHandlerRegistry {
     public StreamObserver<Bzs.TransactionResponse> getRemoteTransactionObserver(int epochNumber, int sequenceNumber) {
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> observerMap =
                 remoteRequestHandlerRegistry.get(epochNumber);
-        if (observerMap!=null )
+        if (observerMap != null)
             return observerMap.get(sequenceNumber);
         return null;
     }
 
     public Bzs.Transaction getTransaction(int epochNumber, int sequenceNumber) {
         Map<Integer, Bzs.Transaction> transactions = getLocalTransactions(epochNumber);
-        if (transactions!=null)
+        if (transactions != null)
             return transactions.get(sequenceNumber);
         return null;
     }
 
     public StreamObserver<Bzs.TransactionResponse> getStreamObserver(int epochNumber, int sequenceNumber) {
-        Map<Integer, StreamObserver<Bzs.TransactionResponse>> streamObservers = getLocalTransactionObservers(epochNumber);
-        if (streamObservers!=null)
+        Map<Integer, StreamObserver<Bzs.TransactionResponse>> streamObservers =
+                getLocalTransactionObservers(epochNumber);
+        if (streamObservers != null)
             return streamObservers.get(sequenceNumber);
         return null;
     }

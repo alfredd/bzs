@@ -50,6 +50,10 @@ public class RemoteTransactionProcessor {
         runProcessor(new CommitProcessor(clusterID, replicaID, tid, request, clusterConnector));
     }
 
+    public void abortAsync(final TransactionID tid, final Bzs.Transaction request) {
+        runProcessor(new AbortProcessor(clusterID,replicaID,tid,request,clusterConnector));
+    }
+
     public void setObserver(TransactionProcessor transactionProcessor) {
         this.processor = transactionProcessor;
     }

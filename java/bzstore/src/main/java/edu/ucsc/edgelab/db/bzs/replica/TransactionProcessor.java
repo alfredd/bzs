@@ -27,7 +27,7 @@ public class TransactionProcessor {
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
     private Map<TransactionID, Bzs.TransactionStatus> transactionRemoteStatus;
-    private Set<Integer> preparedRemoteList;
+    private Map<TransactionID, Bzs.TransactionBatchResponse> preparedRemoteList;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
@@ -39,6 +39,7 @@ public class TransactionProcessor {
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
         transactionRemoteStatus = new LinkedHashMap<>();
+        preparedRemoteList = new LinkedHashMap<>();
     }
 
     private void initMaxBatchSize() {
@@ -128,9 +129,13 @@ public class TransactionProcessor {
         if (status.equals(Bzs.TransactionStatus.ABORTED)) {
             sendResponseToClient(tid, status, t);
         } else {
-            if (preparedRemoteList.contains(tid.getEpochNumber())) {
-
-                remoteTransactionProcessor.commitAsync(tid, t);
+            if (preparedRemoteList.containsKey(tid)) {
+                int commitResponse = bftClient.performDbCommit(preparedRemoteList.get(tid));
+                if (commitResponse < 0) {
+                    remoteTransactionProcessor.abortAsync(tid, t);
+                    LockManager.releaseLocks(t);
+                } else
+                    remoteTransactionProcessor.commitAsync(tid, t);
             }
         }
     }
@@ -138,11 +143,15 @@ public class TransactionProcessor {
     void commitOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
         this.transactionRemoteStatus.put(tid, status);
         Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
+        if (!status.equals(Bzs.TransactionStatus.COMMITTED))
+            remoteTransactionProcessor.abortAsync(tid, t);
         sendResponseToClient(tid, status, t);
+        LockManager.releaseLocks(t);
     }
 
     public void abortOperationObserver(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
-
+        Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
+        LockManager.releaseLocks(t);
     }
 
     private void sendResponseToClient(TransactionID tid, Bzs.TransactionStatus status, Bzs.Transaction t) {
@@ -190,13 +199,23 @@ public class TransactionProcessor {
 
                 LOGGER.info("Performing BFT Commit");
                 Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
-                Bzs.TransactionBatch transactionRemoteBatch = getTransactionBatch(epoch.toString() + "r",
-                        remoteTransactions.values());
 
+                for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
 
-                Bzs.TransactionBatchResponse remoteBatchResponse = performPrepare(transactionRemoteBatch);
-                if (remoteBatchResponse != null)
-                    preparedRemoteList.add(epoch);
+                    Bzs.TransactionBatchResponse remoteBatchResponse =
+                            performPrepare(Bzs.TransactionBatch.newBuilder()
+                                    .addTransactions(entrySet.getValue())
+                                    .setOperation(Bzs.Operation.BFT_PREPARE)
+                                    .setID(entrySet.getValue().getTransactionID())
+                                    .build());
+                    if (remoteBatchResponse != null) {
+                        for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
+                            preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()),
+                                    remoteBatchResponse);
+                        }
+                    }
+                }
+
 
                 Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
                 if (batchResponse == null) {
