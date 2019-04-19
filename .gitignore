@@ -1,4 +1,5 @@
-.idea
+*.idea
 *target
 *.iml
 java/bzstore/config*
+java/bzstore/oldReports*
