@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
+import merklebtree.MerkleBTree;
 
 import java.io.IOException;
 import java.util.*;
@@ -312,6 +313,22 @@ public class TransactionProcessor {
         return bftClient;
     }
 
+    public static void main(String[] args) throws IOException {
+        MerkleBTree tree = new MerkleBTree();
+        int maxlen = 120;
+        byte[][] retHashes = new byte[maxlen][];
+        Optional<byte[]>[] rootHashes = new Optional[maxlen];
+        for(Integer i = 0; i< maxlen; i++) {
+            byte[] rawkey = ("K"+i).getBytes();
+            byte[] rawvalue = ("V"+i).getBytes();
+            rootHashes[i]= tree.root.hash;
+
+            retHashes[i]=tree.put(rawkey,rawvalue);
+        }
+        System.out.println(rootHashes[0].equals(rootHashes[2]));
+        tree.get("K64".getBytes());
+
+    }
 
 }
 
