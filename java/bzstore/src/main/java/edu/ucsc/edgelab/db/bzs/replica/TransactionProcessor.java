@@ -144,8 +144,8 @@ public class TransactionProcessor {
                     executionDone=true;
                 }
             }
-            if (executionDone) {
-                remaining+=1;
+            if (!executionDone) {
+                remaining-=1;
             }
             for (int i =0;i<remaining;i++)
                 remotePreparedList.remove(i);
