@@ -68,7 +68,7 @@ public class TransactionProcessor {
         remoteTransactionProcessor.setObserver(this);
         Timer interClusterConnectorTimer = new Timer("IntraClusterPKIAccessor", true);
         clusterKeysAccessor = new ClusterKeysAccessor(clusterID);
-        interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 0, 150* 1000 * 10);
+        interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 15, 150* 1000 * 10);
     }
 
     public void initLocalDatabase() {
