@@ -6,6 +6,7 @@ function setup_workspace() {
     sleep 1
     cp -rf ../../../library/config .
     cp -f ../../../library/bin/BFT-SMaRt.jar .
+    cp -f ../../merkle-btree/target/merkle-b-tree-1.0-SNAPSHOT.jar .
     # Un-comment the next line if mvn is present and you want to build bzstore
     cp -rf ../target/bzstore-1.0-SNAPSHOT-jar-with-dependencies.jar .
 }
@@ -32,15 +33,15 @@ then
         echo "Maven is not installed. Install mvn to continue"
         exit 1
     fi
-    cd ..
+    cd ../..
     echo "Building bzstore"
-    mvn clean install
+    mvn clean install -DskipTests
         if [[ "$?" != "0" ]]
     then
         echo "Maven build failed. Rebuild again after fixing errors."
         exit 1
     fi
-    cd scripts
+    cd -
     setup_workspace
 else
     echo "Usage: $0 setup|install|clean"
