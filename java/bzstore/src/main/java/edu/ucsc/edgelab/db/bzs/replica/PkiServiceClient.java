@@ -32,6 +32,10 @@ public class PkiServiceClient {
         blockingStub = PKIServiceGrpc.newBlockingStub(channel);
     }
 
+    public boolean isConnected() {
+        return !channel.isTerminated();
+    }
+
     public void shutdown() throws InterruptedException {
         log.log(Level.FINE, "Shutting down forwarding client instance.");
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);

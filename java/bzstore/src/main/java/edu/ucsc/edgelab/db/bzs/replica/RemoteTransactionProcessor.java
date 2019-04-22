@@ -18,10 +18,10 @@ public class RemoteTransactionProcessor {
         this.clusterID = clusterID;
         this.replicaID = replicaID;
 
-        Timer epochTimer = new Timer("TimedEpochMaintainer", true);
         Integer epochTimeInMS = getEpochTimeInMS();
         clusterConnector = new ClusterConnector(this.clusterID);
-        epochTimer.scheduleAtFixedRate(clusterConnector, 0, epochTimeInMS * 1000 * 10);
+        Timer interClusterConnectorTimer = new Timer("InterClusterConnector", true);
+        interClusterConnectorTimer.scheduleAtFixedRate(clusterConnector, 0, epochTimeInMS * 1000 * 10);
     }
 
     /**

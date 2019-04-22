@@ -31,6 +31,7 @@ public class TransactionProcessor {
     private RemoteTransactionProcessor remoteTransactionProcessor;
     private List<TransactionID> remotePreparedList;
     private Map<TransactionID, Bzs.TransactionBatchResponse> preparedRemoteList;
+    private ClusterKeysAccessor clusterKeysAccessor;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
@@ -65,6 +66,9 @@ public class TransactionProcessor {
         epochManager.startEpochMaintenance();
         initLocalDatabase();
         remoteTransactionProcessor.setObserver(this);
+        Timer interClusterConnectorTimer = new Timer("IntraClusterPKIAccessor", true);
+        clusterKeysAccessor = new ClusterKeysAccessor(clusterID);
+        interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 0, 150* 1000 * 10);
     }
 
     public void initLocalDatabase() {

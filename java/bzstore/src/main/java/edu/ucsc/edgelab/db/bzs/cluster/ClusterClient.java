@@ -1,6 +1,5 @@
 package edu.ucsc.edgelab.db.bzs.cluster;
 
-import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
 import java.util.Map;

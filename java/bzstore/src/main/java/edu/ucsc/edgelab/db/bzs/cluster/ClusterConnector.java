@@ -1,6 +1,5 @@
 package edu.ucsc.edgelab.db.bzs.cluster;
 
-import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 
 import java.io.IOException;
@@ -53,7 +52,7 @@ public class ClusterConnector extends TimerTask {
         }
     }
 
-    private void createClient(BZStoreProperties properties, int i) {
+    protected void createClient(BZStoreProperties properties, int i) {
         if (properties == null) {
             try {
                 properties = new BZStoreProperties();
