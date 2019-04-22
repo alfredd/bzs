@@ -6,6 +6,8 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 import merklebtree.MerkleBTree;
+import merklebtree.RAMStorage;
+import merklebtree.TreeNode;
 
 import java.io.IOException;
 import java.util.*;
@@ -326,8 +328,23 @@ public class TransactionProcessor {
             retHashes[i]=tree.put(rawkey,rawvalue);
         }
         System.out.println(rootHashes[0].equals(rootHashes[2]));
-        tree.get("K64".getBytes());
 
+        TreeNode.Nodes nodes = new TreeNode.Nodes();
+        byte[] value = tree.get("K65".getBytes(), nodes);
+        byte[] valueHash = RAMStorage.hash("V65".getBytes());
+
+        System.out.println("Size root hash: "+ nodes.root.length+", hash"+Arrays.toString(nodes.root));
+        System.out.println("Size value hash: "+ valueHash.length+", hash"+Arrays.toString(valueHash));
+        System.out.println(new String(value)+". Hash list size: "+nodes.nodeHash.size());
+        System.out.println(Arrays.toString(rootHashes[rootHashes.length-1].get()));
+        for (int i =0;i<nodes.nodeHash.size();i++) {
+            byte[] treenodeBytes = nodes.nodeHash.get(i);
+
+            System.out.println("Size of node hash: "+treenodeBytes.length+", "+Arrays.toString(treenodeBytes));
+
+            System.out.println("Length of value Hash: " + valueHash.length
+                    + ", length of node value hash: " + treenodeBytes.length);
+        }
     }
 
 }
