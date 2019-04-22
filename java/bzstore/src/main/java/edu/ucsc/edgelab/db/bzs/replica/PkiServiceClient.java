@@ -2,7 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ForwardingClient;
-import edu.ucsc.edgelab.db.bzs.ReplicaGrpc;
+import edu.ucsc.edgelab.db.bzs.PKIServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -17,7 +17,7 @@ public class PkiServiceClient {
 
     private final ManagedChannel channel;
 
-    private final ReplicaGrpc.ReplicaBlockingStub blockingStub;
+    private final PKIServiceGrpc.PKIServiceBlockingStub blockingStub;
 
     private static final Logger log = Logger.getLogger(ForwardingClient.class.getName());
 
@@ -29,7 +29,7 @@ public class PkiServiceClient {
 
     private PkiServiceClient(ManagedChannel channel) {
         this.channel = channel;
-        blockingStub = ReplicaGrpc.newBlockingStub(channel);
+        blockingStub = PKIServiceGrpc.newBlockingStub(channel);
     }
 
     public void shutdown() throws InterruptedException {

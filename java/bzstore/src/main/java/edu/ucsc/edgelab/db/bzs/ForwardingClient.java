@@ -42,16 +42,4 @@ public class ForwardingClient {
     public Bzs.ROTransactionResponse forwardROTranaction (Bzs.ROTransaction roTransaction) {
         return blockingStub.forwardROT(roTransaction);
     }
-
-    public String getPublicKey() {
-        Bzs.KeyType request = Bzs.KeyType.newBuilder().build();
-        Bzs.Key response = blockingStub.getPublicKey(request);
-        return response.getKey();
-    }
-
-    public String getPrivateKey() {
-        Bzs.KeyType request = Bzs.KeyType.newBuilder().build();
-        Bzs.Key response = blockingStub.getPrivateKey(request);
-        return response.getKey();
-    }
 }

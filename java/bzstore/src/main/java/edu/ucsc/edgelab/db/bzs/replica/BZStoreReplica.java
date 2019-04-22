@@ -2,8 +2,6 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ReplicaGrpc;
-import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
-import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import io.grpc.stub.StreamObserver;
 
 import java.util.logging.Logger;
@@ -34,17 +32,4 @@ public class BZStoreReplica extends ReplicaGrpc.ReplicaImplBase {
         super.forwardROT(request, responseObserver);
     }
 
-    @Override
-    public void getPrivateKey(Bzs.KeyType request, StreamObserver<Bzs.Key> responseObserver) {
-        Bzs.Key resultKey = Bzs.Key.newBuilder().setKey(RSAKeyUtil.getPrivateKey(replicaID)).build();
-        responseObserver.onNext(resultKey);
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void getPublicKey(Bzs.KeyType request, StreamObserver<Bzs.Key> responseObserver) {
-        Bzs.Key resultKey = Bzs.Key.newBuilder().setKey(RSAKeyUtil.getPublicKey(replicaID)).build();
-        responseObserver.onNext(resultKey);
-        responseObserver.onCompleted();
-    }
 }
