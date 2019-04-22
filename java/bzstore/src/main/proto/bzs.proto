@@ -24,6 +24,11 @@ service Replica {
     rpc GetPrivateKey (KeyType) returns (Key);    // Possible interface to retrieve digital signatures from nodes.
 }
 
+service PKIService {
+    rpc GetPublicKey (KeyType) returns (Key);    // Possible interface to retrieve digital signatures from nodes.
+    rpc GetPrivateKey (KeyType) returns (Key);    // Possible interface to retrieve digital signatures from nodes
+}
+
 message KeyType {
     string algorithm = 1;
 }
