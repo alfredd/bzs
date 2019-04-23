@@ -12,26 +12,32 @@ import java.util.logging.Logger;
 
 public class MerkleBTreeManager {
 
-    private Logger log = Logger.getLogger(MerkleBTreeManager.class.getName());
+    private static Logger log = Logger.getLogger(MerkleBTreeManager.class.getName());
 
-    private LinkedList<TreeNode> merkleTreeSnapshots;
-    private MerkleBTree merkleBTree;
+    private static LinkedList<TreeNode> merkleTreeSnapshots = new LinkedList<>();
+    private static MerkleBTree merkleBTree = new MerkleBTree();
 
-    public MerkleBTreeManager() {
-        merkleTreeSnapshots = new LinkedList<>();
-        merkleBTree = new MerkleBTree();
-    }
 
-    public void append(TreeNode root) {
+    private static void append(TreeNode root) {
         merkleTreeSnapshots.add(root);
     }
 
-    public TreeNode getLatest() {
+    public static TreeNode getLatest() {
         return merkleTreeSnapshots.peekLast();
     }
 
+    public static TreeNode.Nodes getHash(String key) {
+        TreeNode.Nodes nodes = new TreeNode.Nodes();
+        try {
+            merkleBTree.get(key.getBytes(),nodes);
+            return nodes;
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Could not get hashes for key: "+key, e);
+        }
+        return null;
+    }
 
-    public Bzs.MerkleTree insert(String key, Bzs.DBData data, boolean storeMBTreeSnapshot) {
+    public static Bzs.MerkleTree insert(String key, Bzs.DBData data, boolean storeMBTreeSnapshot) {
         if (storeMBTreeSnapshot) {
             storeMerkleTreeSnapShot();
         }
@@ -48,7 +54,7 @@ public class MerkleBTreeManager {
         }
     }
 
-    private void storeMerkleTreeSnapShot() {
+    public static void storeMerkleTreeSnapShot() {
         append(merkleBTree.root);
     }
 
