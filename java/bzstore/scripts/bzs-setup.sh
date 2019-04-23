@@ -5,6 +5,7 @@ function setup_workspace() {
     echo "Setting up workspace."
     sleep 1
     cp -rf ../../../library/config .
+    cp -rf ../../../library/lib/*.jar .
     cp -f ../../../library/bin/BFT-SMaRt.jar .
     cp -f ../../merkle-btree/target/merkle-b-tree-1.0-SNAPSHOT.jar .
     # Un-comment the next line if mvn is present and you want to build bzstore

@@ -68,7 +68,7 @@ public class TransactionProcessor {
         remoteTransactionProcessor.setObserver(this);
         Timer interClusterConnectorTimer = new Timer("IntraClusterPKIAccessor", true);
         clusterKeysAccessor = new ClusterKeysAccessor(clusterID);
-        interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 15, 150* 1000 * 10);
+        interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 15, 150 * 1000 * 10);
     }
 
     public void initLocalDatabase() {
@@ -134,27 +134,28 @@ public class TransactionProcessor {
 
             this.remotePreparedList.add(tid);
             int remaining = remotePreparedList.indexOf(tid);
-            for (int i =0;i<remaining;i++) {
+            for (int i = 0; i < remaining; i++) {
                 TransactionID tid2 = remotePreparedList.get(i);
-                Bzs.Transaction transaction = responseHandlerRegistry.getTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
-                processRemoteCommits(tid2,transaction);
+                Bzs.Transaction transaction = responseHandlerRegistry.getTransaction(tid2.getEpochNumber(),
+                        tid2.getSequenceNumber());
+                processRemoteCommits(tid2, transaction);
             }
 
             Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
 
-            boolean executionDone=false;
+            boolean executionDone = false;
             if (status.equals(Bzs.TransactionStatus.ABORTED)) {
                 sendResponseToClient(tid, status, t);
             } else {
                 if (preparedRemoteList.containsKey(tid)) {
                     processRemoteCommits(tid, t);
-                    executionDone=true;
+                    executionDone = true;
                 }
             }
             if (!executionDone) {
-                remaining-=1;
+                remaining -= 1;
             }
-            for (int i =0;i<remaining;i++)
+            for (int i = 0; i < remaining; i++)
                 remotePreparedList.remove(i);
         }
     }
@@ -230,21 +231,22 @@ public class TransactionProcessor {
                 LOGGER.info("Performing BFT Commit");
                 Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
 
-                for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
+                if (remoteTransactions !=null && remoteTransactions.size() > 0)
+                    for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
 
-                    Bzs.TransactionBatchResponse remoteBatchResponse =
-                            performPrepare(Bzs.TransactionBatch.newBuilder()
-                                    .addTransactions(entrySet.getValue())
-                                    .setOperation(Bzs.Operation.BFT_PREPARE)
-                                    .setID(entrySet.getValue().getTransactionID())
-                                    .build());
-                    if (remoteBatchResponse != null) {
-                        for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
-                            preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()),
-                                    remoteBatchResponse);
+                        Bzs.TransactionBatchResponse remoteBatchResponse =
+                                performPrepare(Bzs.TransactionBatch.newBuilder()
+                                        .addTransactions(entrySet.getValue())
+                                        .setOperation(Bzs.Operation.BFT_PREPARE)
+                                        .setID(entrySet.getValue().getTransactionID())
+                                        .build());
+                        if (remoteBatchResponse != null) {
+                            for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
+                                preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()),
+                                        remoteBatchResponse);
+                            }
                         }
                     }
-                }
 
 
                 Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
@@ -324,12 +326,12 @@ public class TransactionProcessor {
         int maxlen = 120;
         byte[][] retHashes = new byte[maxlen][];
         Optional<byte[]>[] rootHashes = new Optional[maxlen];
-        for(Integer i = 0; i< maxlen; i++) {
-            byte[] rawkey = ("K"+i).getBytes();
-            byte[] rawvalue = ("V"+i).getBytes();
-            rootHashes[i]= tree.root.hash;
+        for (Integer i = 0; i < maxlen; i++) {
+            byte[] rawkey = ("K" + i).getBytes();
+            byte[] rawvalue = ("V" + i).getBytes();
+            rootHashes[i] = tree.root.hash;
 
-            retHashes[i]=tree.put(rawkey,rawvalue);
+            retHashes[i] = tree.put(rawkey, rawvalue);
         }
         System.out.println(rootHashes[0].equals(rootHashes[2]));
 
@@ -337,14 +339,14 @@ public class TransactionProcessor {
         byte[] value = tree.get("K65".getBytes(), nodes);
         byte[] valueHash = RAMStorage.hash("V65".getBytes());
 
-        System.out.println("Size root hash: "+ nodes.root.length+", hash"+Arrays.toString(nodes.root));
-        System.out.println("Size value hash: "+ valueHash.length+", hash"+Arrays.toString(valueHash));
-        System.out.println(new String(value)+". Hash list size: "+nodes.nodeHash.size());
-        System.out.println(Arrays.toString(rootHashes[rootHashes.length-1].get()));
-        for (int i =0;i<nodes.nodeHash.size();i++) {
+        System.out.println("Size root hash: " + nodes.root.length + ", hash" + Arrays.toString(nodes.root));
+        System.out.println("Size value hash: " + valueHash.length + ", hash" + Arrays.toString(valueHash));
+        System.out.println(new String(value) + ". Hash list size: " + nodes.nodeHash.size());
+        System.out.println(Arrays.toString(rootHashes[rootHashes.length - 1].get()));
+        for (int i = 0; i < nodes.nodeHash.size(); i++) {
             byte[] treenodeBytes = nodes.nodeHash.get(i);
 
-            System.out.println("Size of node hash: "+treenodeBytes.length+", "+Arrays.toString(treenodeBytes));
+            System.out.println("Size of node hash: " + treenodeBytes.length + ", " + Arrays.toString(treenodeBytes));
 
             System.out.println("Length of value Hash: " + valueHash.length
                     + ", length of node value hash: " + treenodeBytes.length);
