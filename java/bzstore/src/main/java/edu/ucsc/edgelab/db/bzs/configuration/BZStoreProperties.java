@@ -23,7 +23,7 @@ public class BZStoreProperties {
 
         bzsProperties = new Properties();
         String pathname = System.getProperty("user.dir") + "/" + CONFIG_PROPERTIES;
-        LOGGER.info("Properties path: " + pathname);
+//        LOGGER.info("Properties path: " + pathname);
         bzsProperties.load(
                 new FileInputStream(
                         new File(

@@ -60,6 +60,7 @@ public class TransactionProcessor {
     }
 
     public void initTransactionProcessor() {
+        LOGGER.info("Initializing Transaction Processor for server: "+ clusterID +" "+ replicaID);
         initMaxBatchSize();
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
