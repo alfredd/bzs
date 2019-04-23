@@ -31,8 +31,10 @@ public class MerkleBTreeManager {
     }
 
 
-    public Bzs.MerkleTree insert(String key, Bzs.DBData data) {
-        append(merkleBTree.root);
+    public Bzs.MerkleTree insert(String key, Bzs.DBData data, boolean storeMBTreeSnapshot) {
+        if (storeMBTreeSnapshot) {
+            storeMerkleTreeSnapShot();
+        }
         try {
             byte[] rootHash = merkleBTree.put(key.getBytes(), data.toByteArray());
 
@@ -41,9 +43,13 @@ public class MerkleBTreeManager {
                     .build();
             return tree;
         } catch (IOException e) {
-            log.log(Level.WARNING,"Could not create Merkle tree node. "+e.getLocalizedMessage(),e);
+            log.log(Level.WARNING, "Could not create Merkle tree node. " + e.getLocalizedMessage(), e);
             return null;
         }
+    }
+
+    private void storeMerkleTreeSnapShot() {
+        append(merkleBTree.root);
     }
 
 }
