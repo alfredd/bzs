@@ -35,7 +35,7 @@ public class BenchmarkExecutor implements Runnable {
         BZStoreProperties properties = new BZStoreProperties();
         //String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
         String dataFile = "data.txt";
-        String fileName = System.getProperty("user.dir") + "/"+dataFile;
+        String fileName = System.getProperty("user.dir") + "/" + dataFile;
         LOGGER.info("Data File path: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
@@ -45,7 +45,8 @@ public class BenchmarkExecutor implements Runnable {
 
             for (String word : line)
                 if (word != null)
-                    if(hashmod(word, Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
+                    if (hashmod(word,
+                            Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
                         words.add(word);
         }
         scanner.close();
@@ -196,8 +197,8 @@ public class BenchmarkExecutor implements Runnable {
 
     }
 
-    public static Integer hashmod(String key, int totalCluster){
-        return  key.hashCode() % totalCluster;
+    public static Integer hashmod(String key, int totalCluster) {
+        return key.hashCode() % totalCluster;
     }
 
 }

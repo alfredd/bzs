@@ -156,8 +156,12 @@ public class TransactionProcessor {
             if (!executionDone) {
                 remaining -= 1;
             }
+            List<TransactionID> removeTidList = new LinkedList<>();
+
             for (int i = 0; i < remaining; i++)
-                remotePreparedList.remove(i);
+                removeTidList.add(remotePreparedList.get(i));
+            for (int i = 0; i < remaining; i++)
+                remotePreparedList.remove(removeTidList.get(i));
         }
     }
 
