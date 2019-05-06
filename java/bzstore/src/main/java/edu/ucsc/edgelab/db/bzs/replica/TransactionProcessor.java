@@ -72,7 +72,7 @@ public class TransactionProcessor {
         interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 15, 150 * 1000 * 10);
     }
 
-    public void initLocalDatabase() {
+    private void initLocalDatabase() {
         try {
             benchmarkExecutor = new BenchmarkExecutor(clusterID, this);
             new Thread(benchmarkExecutor).start();
@@ -81,7 +81,7 @@ public class TransactionProcessor {
         }
     }
 
-    public void startBftClient() {
+    private void startBftClient() {
         if (bftClient == null && replicaID != null)
             bftClient = new BFTClient(replicaID);
     }
