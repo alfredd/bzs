@@ -327,7 +327,7 @@ public class TransactionProcessor {
     }
 
     public static void main(String[] args) throws IOException {
-        MerkleBTree tree = new MerkleBTree();
+/*        MerkleBTree tree = new MerkleBTree();
         int maxlen = 120;
         byte[][] retHashes = new byte[maxlen][];
         Optional<byte[]>[] rootHashes = new Optional[maxlen];
@@ -355,7 +355,7 @@ public class TransactionProcessor {
 
             System.out.println("Length of value Hash: " + valueHash.length
                     + ", length of node value hash: " + treenodeBytes.length);
-        }
+        }*/
     }
 
 }

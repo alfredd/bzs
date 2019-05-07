@@ -51,6 +51,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                     transactionBatch.getTransactionsCount() > 0) {
                 Serializer serializer = new Serializer(!checkLocks);
                 String epochId = transactionBatch.getID();
+                Integer versionNumber = Integer.decode(epochId.split(":")[0]);
                 logger.info("Processing transaction batch: " + epochId);
 
                 for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
@@ -71,7 +72,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                         Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
                                 .setKey(key)
                                 .setValue(writeOp.getValue())
-                                .setVersion(bzStoreData.version + 1)
+                                .setVersion(versionNumber)
                                 .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
                         responseBuilder.addWriteResponses(writeResponse);
 
@@ -85,35 +86,6 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(epochId, batchResponse);
                 reply = batchResponse.toByteArray();
-            } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
-                    transactionBatch.getRotransactionCount() > 0) {
-
-                for (int i = 0; i < transactionBatch.getRotransactionCount(); i++) {
-                    Bzs.ROTransaction roTransaction = transactionBatch.getRotransaction(i);
-
-                    Bzs.ROTransactionResponse.Builder roTransactionResponseBuilder =
-                            Bzs.ROTransactionResponse.newBuilder();
-
-                    for (Bzs.Read readOp : roTransaction.getReadOperationsList()) {
-                        BZStoreData storeData = getBzStoreData(readOp.getKey());
-                        Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
-                                .setKey(readOp.getKey())
-                                .setValue(storeData.value)
-                                .setVersion(storeData.version)
-                                .setStatus(
-                                        readOp.getKey() == null ? Bzs.OperationStatus.INVALID :
-                                                Bzs.OperationStatus.SUCCESS
-                                )
-                                .setResponseDigest(storeData.digest).buildPartial();
-                        roTransactionResponseBuilder.addReadResponses(response);
-                    }
-                    batchResponseBuilder.addReadresponses(roTransactionResponseBuilder.build());
-                }
-                batchResponse = batchResponseBuilder.build();
-
-                logger.info("Completed generating response for transaction batch.");
-                reply = batchResponse.toByteArray();
-
             } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_COMMIT)) {
                 String id = transactionBatch.getID();
                 if (!tbrCache.containsKey(id)) {
@@ -134,9 +106,10 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 writeResponse.getVersion(),
                                 writeResponse.getResponseDigest());
                         try {
-                            BZDatabaseController.commit(writeResponse.getKey(), data);
-                            committedKeys.add(writeResponse.getKey());
-                            MerkleBTreeManager.insert(writeResponse.getKey(),
+                            String key = writeResponse.getKey();
+                            BZDatabaseController.commit(key, data);
+                            committedKeys.add(key);
+                            MerkleBTreeManager.insert(key,
                                     Bzs.DBData.newBuilder()
                                             .setValue(data.value)
                                             .setVersion(data.version)
