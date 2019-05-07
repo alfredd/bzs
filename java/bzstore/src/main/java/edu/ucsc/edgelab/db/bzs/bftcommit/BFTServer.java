@@ -6,6 +6,7 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
+import edu.ucsc.edgelab.db.bzs.data.MerkleBTreeManager;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 
@@ -50,7 +51,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                     transactionBatch.getTransactionsCount() > 0) {
                 Serializer serializer = new Serializer(!checkLocks);
                 String epochId = transactionBatch.getID();
-                logger.info("Processing transaction batch: "+epochId);
+                logger.info("Processing transaction batch: " + epochId);
 
                 for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
                     Bzs.Transaction transaction = transactionBatch.getTransactions(transactionIndex);
@@ -84,7 +85,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(epochId, batchResponse);
                 reply = batchResponse.toByteArray();
-            } else if ( transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
+            } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getRotransactionCount() > 0) {
 
                 for (int i = 0; i < transactionBatch.getRotransactionCount(); i++) {
@@ -116,7 +117,8 @@ public class BFTServer extends DefaultSingleRecoverable {
             } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_COMMIT)) {
                 String id = transactionBatch.getID();
                 if (!tbrCache.containsKey(id)) {
-                    logger.log(Level.WARNING, "Transactions are not present in cache for replicaID: " + id + ". Transaction " +
+                    logger.log(Level.WARNING, "Transactions are not present in cache for replicaID: " + id + ". " +
+                            "Transaction " +
                             "will abort.");
                     return getRandomBytes();
                 }
@@ -134,6 +136,12 @@ public class BFTServer extends DefaultSingleRecoverable {
                         try {
                             BZDatabaseController.commit(writeResponse.getKey(), data);
                             committedKeys.add(writeResponse.getKey());
+                            MerkleBTreeManager.insert(writeResponse.getKey(),
+                                    Bzs.DBData.newBuilder()
+                                            .setValue(data.value)
+                                            .setVersion(data.version)
+                                            .build(),
+                                    true);
 
                         } catch (InvalidCommitException e) {
 //                            logger.log(Level.WARNING, "Commit failed for transaction: " + response.toString() + ". " +
@@ -156,7 +164,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 if (tbrCache.containsKey(id)) {
                     Bzs.TransactionBatchResponse storedBatch = tbrCache.remove(id);
                     logger.log(Level.INFO, "Transaction abort received for: " + id + ". Transaction " +
-                            "will be aborted. Transaction details: "+storedBatch.toString());
+                            "will be aborted. Transaction details: " + storedBatch.toString());
                 }
                 reply = ByteBuffer.allocate(4).putInt(1).array();
             } else {
