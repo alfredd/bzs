@@ -198,7 +198,7 @@ public class BenchmarkExecutor implements Runnable {
     }
 
     public static Integer hashmod(String key, int totalCluster) {
-        return key.hashCode() % totalCluster;
+        return Math.abs(key.hashCode()) % totalCluster;
     }
 
 }

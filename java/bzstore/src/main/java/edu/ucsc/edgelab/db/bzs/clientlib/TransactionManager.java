@@ -11,6 +11,8 @@ public class TransactionManager {
         builder = Bzs.Transaction.newBuilder();
     }
 
+
+
     public void setReadHistory(String responseKey, String responseValue, long responseVersion, String digest) {
         Bzs.ReadHistory history = Bzs.ReadHistory.newBuilder()
                 .setKey(responseKey)
@@ -29,6 +31,12 @@ public class TransactionManager {
 
     public void write(String key, String value) {
         Bzs.Write write = Bzs.Write.newBuilder().setKey(key).setValue(value).build();
+        transaction = builder.addWriteOperations(write).build();
+//        logTransaction();
+    }
+
+    public void write(String key, String value, Integer clusterId) {
+        Bzs.Write write = Bzs.Write.newBuilder().setKey(key).setValue(value).setClusterID(clusterId).build();
         transaction = builder.addWriteOperations(write).build();
 //        logTransaction();
     }

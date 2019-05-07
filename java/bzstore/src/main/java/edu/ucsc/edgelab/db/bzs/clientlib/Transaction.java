@@ -2,8 +2,10 @@ package edu.ucsc.edgelab.db.bzs.clientlib;
 
 import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
+import edu.ucsc.edgelab.db.bzs.replica.BenchmarkExecutor;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,7 +35,6 @@ public class Transaction extends TransactionManager implements TransactionInterf
 
     @Override
     public BZStoreData read(String key) {
-
         long startTime = System.currentTimeMillis();
         Bzs.Read read = Bzs.Read.newBuilder().setKey(key).build();
         Bzs.ReadResponse response = client.read(read);
@@ -48,7 +49,6 @@ public class Transaction extends TransactionManager implements TransactionInterf
         LOGGER.info("Read operation processed in "+duration+" msecs");
         return data;
     }
-
 
     @Override
     public void commit() throws CommitAbortedException {
