@@ -3,7 +3,13 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ClusterGrpc;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
+import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import io.grpc.stub.StreamObserver;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
@@ -12,6 +18,8 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private Integer clusterID;
     private boolean amILeader;
     private Serializer serializer = new Serializer();
+    private Map<String, String> transactionIDMap = new LinkedHashMap<>();
+    public static final Logger log = Logger.getLogger(ClusterService.class.getName());
 
 
     public ClusterService(Integer clusterID, Integer replicaID, TransactionProcessor processor, boolean isLeader) {
@@ -31,8 +39,17 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         } else {
             LockManager.acquireLocks(request);
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
-            Bzs.TransactionBatch batch = createTransactionBatch(request, operation);
-            Bzs.TransactionBatchResponse batchResponse = processor.getBFTClient().performCommitPrepare(batch);
+            int epochNumber = processor.getEpochNumber();
+            String newTransactionID = epochNumber + ":" + request.getTransactionID();
+            transactionIDMap.put(transactionID,newTransactionID);
+            Bzs.TransactionBatch batch = null;
+            Bzs.TransactionBatchResponse batchResponse = null;
+            try {
+                batch = createTransactionBatch(request, operation);
+                batchResponse = processor.getBFTClient().performCommitPrepare(batch);
+            } catch (InvalidCommitException e) {
+                log.log(Level.WARNING, e.getLocalizedMessage());
+            }
             if (batchResponse == null) {
                 performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
                 LockManager.releaseLocks(request);
@@ -44,13 +61,17 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         }
     }
 
-    public Bzs.TransactionBatch createTransactionBatch(Bzs.Transaction request, Bzs.Operation operation) {
+    public Bzs.TransactionBatch createTransactionBatch(Bzs.Transaction request, Bzs.Operation operation) throws InvalidCommitException {
 
+        String transactionID = transactionIDMap.get(request.getTransactionID());
+        if (transactionID==null) {
+            throw new InvalidCommitException("No mapping found for "+request.getTransactionID());
+        }
         return Bzs.TransactionBatch
                 .newBuilder()
                 .addTransactions(request)
                 .setOperation(operation)
-                .setID(request.getTransactionID())
+                .setID(transactionID)
                 .build();
     }
 
@@ -65,6 +86,12 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         else
             builder = Bzs.TransactionResponse.newBuilder(templateResponse);
 
+        sendResponse(transactionID, responseObserver, transactionStatus, builder);
+    }
+
+    private void sendResponse(String transactionID, StreamObserver<Bzs.TransactionResponse> responseObserver,
+                              Bzs.TransactionStatus transactionStatus, Bzs.TransactionResponse.Builder builder) {
+        Bzs.TransactionResponse response;
         response = builder
                 .setStatus(transactionStatus)
                 .setTransactionID(transactionID)
@@ -87,10 +114,16 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                                                  Bzs.Operation operation,
                                                  Bzs.TransactionStatus transactionStatus,
                                                  Bzs.TransactionStatus failureStatus) {
-        Bzs.TransactionBatch batch = createTransactionBatch(request, operation);
-        int status = processor.getBFTClient().dbCommit(batch);
-        performOperationandSendResponse(request.getTransactionID(), responseObserver, null,
-                status < 0 ? failureStatus : transactionStatus);
+        Bzs.TransactionBatch batch = null;
+        try {
+            batch = createTransactionBatch(request, operation);
+            int status = processor.getBFTClient().dbCommit(batch);
+            performOperationandSendResponse(request.getTransactionID(), responseObserver, null,
+                    status < 0 ? failureStatus : transactionStatus);
+        } catch (InvalidCommitException e) {
+            log.log(Level.WARNING, e.getLocalizedMessage());
+            sendResponse(request.getTransactionID(), responseObserver, Bzs.TransactionStatus.ABORTED, Bzs.TransactionResponse.newBuilder());
+        }
     }
 
     /**

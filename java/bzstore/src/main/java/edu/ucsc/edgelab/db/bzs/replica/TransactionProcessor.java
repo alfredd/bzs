@@ -5,9 +5,6 @@ import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
-import merklebtree.MerkleBTree;
-import merklebtree.RAMStorage;
-import merklebtree.TreeNode;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,11 +17,13 @@ public class TransactionProcessor {
     private Integer maxBatchSize;
     private Serializer serializer;
     private int sequenceNumber;
+
     private int epochNumber;
+
     private ResponseHandlerRegistry responseHandlerRegistry;
     private LocalDataVerifier localDataVerifier;
-
     private static final Logger LOGGER = Logger.getLogger(TransactionProcessor.class.getName());
+
     private Integer replicaID;
     private BenchmarkExecutor benchmarkExecutor;
     private BFTClient bftClient = null;
@@ -32,7 +31,6 @@ public class TransactionProcessor {
     private List<TransactionID> remotePreparedList;
     private Map<TransactionID, Bzs.TransactionBatchResponse> preparedRemoteList;
     private ClusterKeysAccessor clusterKeysAccessor;
-
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
         this.clusterID = clusterId;
@@ -84,6 +82,10 @@ public class TransactionProcessor {
     private void startBftClient() {
         if (bftClient == null && replicaID != null)
             bftClient = new BFTClient(replicaID);
+    }
+
+    public int getEpochNumber() {
+        return epochNumber;
     }
 
     public void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
@@ -158,10 +160,12 @@ public class TransactionProcessor {
             }
             List<TransactionID> removeTidList = new LinkedList<>();
 
-            for (int i = 0; i < remaining; i++)
-                removeTidList.add(remotePreparedList.get(i));
-            for (int i = 0; i < remaining; i++)
-                remotePreparedList.remove(removeTidList.get(i));
+            synchronized (remotePreparedList) {
+                for (int i = 0; i < remaining; i++)
+                    removeTidList.add(remotePreparedList.get(i));
+                for (int i = 0; i < remaining; i++)
+                    remotePreparedList.remove(removeTidList.get(i));
+            }
         }
     }
 
