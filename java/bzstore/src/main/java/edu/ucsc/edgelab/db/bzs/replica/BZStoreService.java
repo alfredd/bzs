@@ -71,7 +71,6 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     @Override
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
         Bzs.OperationStatus status = Bzs.OperationStatus.SUCCESS;
-        ;
         String key = request.getKey();
         Integer cid = request.getClusterID();
         Integer rid = request.getReplicaID();
