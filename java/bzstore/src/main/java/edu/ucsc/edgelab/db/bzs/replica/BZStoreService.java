@@ -86,7 +86,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 data = readClient.read(key);
                 readClient.close();
             } catch (Exception e) {
-                log.severe(e.getLocalizedMessage());
+                log.log(Level.SEVERE, e.getLocalizedMessage(),e);
                 data = new BZStoreData();
                 status = Bzs.OperationStatus.FAILED;
             }
