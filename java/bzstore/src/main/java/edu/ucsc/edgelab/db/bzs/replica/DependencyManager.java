@@ -4,9 +4,29 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DependencyManager {
-    private Map<Integer, Integer> dependencyMap;
+    private Map<Integer, Integer> dependencyMap = new LinkedHashMap<>();
 
-    public DependencyManager() {
-        dependencyMap = new LinkedHashMap<>();
+    public void add(Integer clusterID, Integer epochNumber) {
+        dependencyMap.put(clusterID, epochNumber);
+    }
+
+}
+
+
+class Timestamp implements Comparable{
+    private Map<Integer, Integer> timestamp = new LinkedHashMap<>();
+
+    public void add(Integer clusterID, Integer epochNumber) {
+        timestamp.put(clusterID, epochNumber);
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 }
