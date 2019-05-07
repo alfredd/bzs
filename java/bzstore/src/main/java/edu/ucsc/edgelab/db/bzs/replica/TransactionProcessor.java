@@ -31,6 +31,7 @@ public class TransactionProcessor {
     private List<TransactionID> remotePreparedList;
     private Map<TransactionID, Bzs.TransactionBatchResponse> preparedRemoteList;
     private ClusterKeysAccessor clusterKeysAccessor;
+
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
         this.clusterID = clusterId;
@@ -58,7 +59,7 @@ public class TransactionProcessor {
     }
 
     public void initTransactionProcessor() {
-        LOGGER.info("Initializing Transaction Processor for server: "+ clusterID +" "+ replicaID);
+        LOGGER.info("Initializing Transaction Processor for server: " + clusterID + " " + replicaID);
         initMaxBatchSize();
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
@@ -160,12 +161,10 @@ public class TransactionProcessor {
             }
             List<TransactionID> removeTidList = new LinkedList<>();
 
-            synchronized (remotePreparedList) {
-                for (int i = 0; i < remaining; i++)
-                    removeTidList.add(remotePreparedList.get(i));
-                for (int i = 0; i < remaining; i++)
-                    remotePreparedList.remove(removeTidList.get(i));
-            }
+            for (int i = 0; i < remaining; i++)
+                removeTidList.add(remotePreparedList.get(i));
+            for (int i = 0; i < remaining; i++)
+                remotePreparedList.remove(removeTidList.get(i));
         }
     }
 
@@ -240,7 +239,7 @@ public class TransactionProcessor {
                 LOGGER.info("Performing BFT Commit");
                 Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
 
-                if (remoteTransactions !=null && remoteTransactions.size() > 0)
+                if (remoteTransactions != null && remoteTransactions.size() > 0)
                     for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
 
                         Bzs.TransactionBatchResponse remoteBatchResponse =
