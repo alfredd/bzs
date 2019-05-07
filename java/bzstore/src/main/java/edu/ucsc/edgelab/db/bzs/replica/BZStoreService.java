@@ -71,7 +71,6 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     @Override
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
         Bzs.OperationStatus status = Bzs.OperationStatus.SUCCESS;
-        ;
         String key = request.getKey();
         Integer cid = request.getClusterID();
         Integer rid = request.getReplicaID();
@@ -87,7 +86,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 data = readClient.read(key);
                 readClient.close();
             } catch (Exception e) {
-                log.severe(e.getLocalizedMessage());
+                log.log(Level.SEVERE, e.getLocalizedMessage(),e);
                 data = new BZStoreData();
                 status = Bzs.OperationStatus.FAILED;
             }

@@ -24,13 +24,14 @@ public class BZStoreProperties {
         bzsProperties = new Properties();
         String pathname = System.getProperty("user.dir") + "/" + CONFIG_PROPERTIES;
 //        LOGGER.info("Properties path: " + pathname);
-        bzsProperties.load(
-                new FileInputStream(
-                        new File(
-                                pathname
-                        )
-                )
-        );
+        FileInputStream inStream = null;
+        try {
+            inStream = new FileInputStream(new File(pathname));
+            bzsProperties.load(inStream);
+        } finally {
+            if (inStream != null)
+                inStream.close();
+        }
     }
 
     public String getProperty(final Integer clusterID, final Integer replicaID, Configuration property) throws UnknownConfiguration {
