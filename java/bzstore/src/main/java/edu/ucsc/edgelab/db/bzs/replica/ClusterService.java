@@ -18,7 +18,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private Integer clusterID;
     private boolean amILeader;
     private Serializer serializer = new Serializer();
-    private Map<String, String> transactionIDMap = new LinkedHashMap<>();
+    private Map<String, EpochTransactionID> transactionIDMap = new LinkedHashMap<>();
     public static final Logger log = Logger.getLogger(ClusterService.class.getName());
 
 
@@ -40,8 +40,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
             LockManager.acquireLocks(request);
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
             int epochNumber = processor.getEpochNumber();
-            String newTransactionID = epochNumber + ":" + request.getTransactionID();
-            transactionIDMap.put(transactionID,newTransactionID);
+            transactionIDMap.put(transactionID,new EpochTransactionID(epochNumber,request.getTransactionID()));
             Bzs.TransactionBatch batch = null;
             Bzs.TransactionBatchResponse batchResponse = null;
             try {
@@ -63,15 +62,15 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     public Bzs.TransactionBatch createTransactionBatch(Bzs.Transaction request, Bzs.Operation operation) throws InvalidCommitException {
 
-        String transactionID = transactionIDMap.get(request.getTransactionID());
-        if (transactionID==null) {
+        EpochTransactionID epochTransactionID = transactionIDMap.get(request.getTransactionID());
+        if (epochTransactionID==null) {
             throw new InvalidCommitException("No mapping found for "+request.getTransactionID());
         }
         return Bzs.TransactionBatch
                 .newBuilder()
                 .addTransactions(request)
                 .setOperation(operation)
-                .setID(transactionID)
+                .setID(epochTransactionID.getTransactionID())
                 .build();
     }
 
@@ -95,6 +94,8 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         response = builder
                 .setStatus(transactionStatus)
                 .setTransactionID(transactionID)
+                // call to map is potentially troublesome here
+                .setEpochNumber(transactionIDMap.get(transactionID).getEpochNumber())
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -142,5 +143,23 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         LockManager.releaseLocks(request);
         performOperationandSendResponse(request, responseObserver, Bzs.Operation.BFT_ABORT,
                 Bzs.TransactionStatus.ABORTED, Bzs.TransactionStatus.FAILURE);
+    }
+}
+
+
+class EpochTransactionID {
+    private int epochNumber;
+    private String transactionID;
+
+    public EpochTransactionID(int epochNumber, String transactionID) {
+        this.epochNumber = epochNumber;
+        this.transactionID = transactionID;
+    }
+
+    public int getEpochNumber() {
+        return epochNumber;
+    }
+    public String getTransactionID() {
+        return epochNumber+":"+transactionID;
     }
 }
