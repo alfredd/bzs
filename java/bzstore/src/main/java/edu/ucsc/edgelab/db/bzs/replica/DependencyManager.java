@@ -1,13 +1,19 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DependencyManager {
-    private Map<Integer, Timestamp> dependencyMap = new LinkedHashMap<>();
+    private DependencyManager() {}
 
-    public void add(Integer clusterID, Timestamp clusterTimestamp) {
+    private static Map<Integer, Timestamp> dependencyMap = new ConcurrentHashMap<>();
+
+    public static void add(Integer clusterID, Timestamp clusterTimestamp) {
         dependencyMap.put(clusterID, clusterTimestamp);
+    }
+
+    public static Timestamp getEpochTimestamp (Integer epochNumber) {
+        return dependencyMap.get(epochNumber);
     }
 
 }
