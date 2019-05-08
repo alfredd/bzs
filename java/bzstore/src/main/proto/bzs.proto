@@ -140,6 +140,7 @@ message Transaction {
     repeated Write writeOperations = 2;
     string transactionID = 3;
     int32 epochNumber = 4;
+    VectorClock clock = 5;
 }
 
 message TransactionResponse {
@@ -147,6 +148,7 @@ message TransactionResponse {
     repeated WriteResponse writeResponses = 2;
     string transactionID = 3;
     int32 epochNumber = 4;
+    VectorClock clock = 5;
 }
 
 message DBData {
@@ -157,4 +159,13 @@ message DBData {
 message MerkleTree {
     bytes root =1;
     repeated bytes nodes =2;
+}
+
+message VectorClock {
+    repeated Timestamp timestamps = 1;
+}
+
+message Timestamp {
+    int32 clusterID = 1;
+    int32 epochNumber = 2;
 }
