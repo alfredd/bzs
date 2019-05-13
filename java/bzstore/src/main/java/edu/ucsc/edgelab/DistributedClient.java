@@ -44,13 +44,17 @@ public class DistributedClient {
 
     public BZStoreData read(String key) {
         int clusterId = hashmod(key, total_clusters);
-        BZStoreClient CurrClient = clientHashMap.get(clusterId);
+        BZStoreClient CurrClient = clientHashMap.get(0);
         transaction.setClient(CurrClient);
+        LOGGER.info("Executing read on cluster: "+0);
+
         return transaction.read(key, clusterId);
     }
 
     public void write(String key, String value) {
         int clusterId = hashmod(key, total_clusters);
+        transaction.setClient(clientHashMap.get(clusterId));
+        LOGGER.info("Executing write on cluster: "+clusterId);
         transaction.write(key, value, clusterId);
     }
 
@@ -81,10 +85,10 @@ public class DistributedClient {
             LOGGER.log(Level.INFO, e.getMessage());
         }
         dclient.createNewTransactions();
-        String key = "Kansas";
+        String key = "Guinea";
         BZStoreData data = dclient.read(key);
-        System.out.println("Data from db: "+data);
-        dclient.write(key, "Random Value 1");
+        LOGGER.info("Data from db: "+data);
+        dclient.write(key, "Random Value 2");
         dclient.commit();
     }
 

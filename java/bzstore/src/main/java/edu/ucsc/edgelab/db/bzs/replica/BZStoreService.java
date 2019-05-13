@@ -96,8 +96,8 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
         Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
                 .setKey(key)
-                .setClusterID(clusterID)
-                .setReplicaID(replicaID)
+                .setClusterID(cid)
+                .setReplicaID(rid)
                 .setResponseDigest(data.digest)
                 .setValue(data.value)
                 .setVersion(data.version)
