@@ -13,12 +13,14 @@ public class TransactionManager {
 
 
 
-    public void setReadHistory(String responseKey, String responseValue, long responseVersion, String digest) {
+    public void setReadHistory(String responseKey, String responseValue, long responseVersion, String digest,
+                               Integer clusterId) {
         Bzs.ReadHistory history = Bzs.ReadHistory.newBuilder()
                 .setKey(responseKey)
                 .setValue(responseValue)
                 .setVersion(responseVersion)
                 .setResponseDigest(digest)
+                .setClusterID(clusterId)
                 .build();
         transaction = builder.addReadHistory(history).build();
 

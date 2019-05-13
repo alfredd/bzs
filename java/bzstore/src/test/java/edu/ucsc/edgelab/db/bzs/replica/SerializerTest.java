@@ -6,7 +6,6 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.junit.Ignore;
-import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
@@ -82,7 +81,7 @@ public class SerializerTest {
 
 
         Transaction t2 = new Transaction();
-        t2.setReadHistory("x", "10", 1, "1");
+        t2.setReadHistory("x", "10", 1, "1", 0);
         t2.write("x", "10" + 45);
         t2.write("z", "5");
         Bzs.Transaction tr2 = t2.getTransaction();
@@ -111,7 +110,7 @@ public class SerializerTest {
         BZStoreData data = BZDatabaseController.getlatest("x");
 
         Transaction t2 = new Transaction();
-        t2.setReadHistory("x", data.value, data.version, data.digest);
+        t2.setReadHistory("x", data.value, data.version, data.digest, 0);
         t2.write("x", "10" + 45);
         t2.write("z", "5");
         Bzs.Transaction tr2 = t2.getTransaction();

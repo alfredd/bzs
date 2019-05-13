@@ -53,8 +53,8 @@ public class DistributedClient {
 
     public void write(String key, String value) {
         int clusterId = hashmod(key, total_clusters);
-        transaction.setClient(clientHashMap.get(clusterId));
-        LOGGER.info("Executing write on cluster: "+clusterId);
+        transaction.setClient(clientHashMap.get(0));
+        LOGGER.info("Executing write on cluster: "+0);
         transaction.write(key, value, clusterId);
     }
 
