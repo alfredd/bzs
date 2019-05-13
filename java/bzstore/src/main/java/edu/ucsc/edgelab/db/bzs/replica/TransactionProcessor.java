@@ -288,8 +288,7 @@ public class TransactionProcessor {
                             processed = transactionCount;
                             for (int i = 0; i < transactions.size(); i++) {
                                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
-                                Bzs.TransactionResponse transactionResponse =
-                                        batchResponse.getResponses(i);
+                                Bzs.TransactionResponse transactionResponse = batchResponse.getResponses(i);
                                 responseObserver.onNext(transactionResponse);
                                 responseObserver.onCompleted();
                             }

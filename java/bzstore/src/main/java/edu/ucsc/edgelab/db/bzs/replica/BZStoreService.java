@@ -103,6 +103,8 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 .setVersion(data.version)
                 .setStatus(status)
                 .build();
+
+        log.info("Read response: "+response.toString());
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
