@@ -172,12 +172,18 @@ public class TransactionProcessor {
     }
 
     private void processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
-        int commitResponse = bftClient.performDbCommit(preparedRemoteList.get(tid));
-        if (commitResponse < 0) {
-            remoteTransactionProcessor.abortAsync(tid, t);
-            LockManager.releaseLocks(t);
+        Bzs.TransactionBatchResponse batchResponse = preparedRemoteList.get(tid);
+        LOGGER.info("Processing remote commits: Tid: " + tid + ". Transaction : " + t);
+        if (batchResponse != null) {
+            int commitResponse = bftClient.performDbCommit(batchResponse);
+            if (commitResponse < 0) {
+                remoteTransactionProcessor.abortAsync(tid, t);
+                LockManager.releaseLocks(t);
+            } else {
+                remoteTransactionProcessor.commitAsync(tid, t);
+            }
         } else
-            remoteTransactionProcessor.commitAsync(tid, t);
+            LOGGER.info("Local prepare not completed for transaction: Tid: " + tid + ". Transaction : " + t);
     }
 
     void commitOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
@@ -262,8 +268,9 @@ public class TransactionProcessor {
                     }
                 }
 
-                if (transactions!=null ) {
-                    Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
+                if (transactions != null) {
+                    Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(),
+                            transactions.values());
                     LOGGER.info("Processing transaction batch: " + transactionBatch.toString());
 
                     Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
