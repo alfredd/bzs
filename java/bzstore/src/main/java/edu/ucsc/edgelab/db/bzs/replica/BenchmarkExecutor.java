@@ -98,8 +98,8 @@ public class BenchmarkExecutor implements Runnable {
             e.printStackTrace();
         }
         started = true;
-        int n = 12000;
-        int m = 15;
+        int n = 2;
+        int m = 20;
         this.totalCount = n * m;
         this.processed = 0;
         sendNTransactions(n, m);

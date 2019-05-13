@@ -38,6 +38,7 @@ public class EpochManager {
         TimedEpochMaintainer epochMaintainer = new TimedEpochMaintainer();
         epochMaintainer.setProcessor(transactionProcessor);
         Timer epochTimer = new Timer("TimedEpochMaintainer", true);
+        LOGGER.info(String.format("Timer rate = %dms and delay %dms", epochTimeInMS, epochTimeInMS));
         epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
     }
 }

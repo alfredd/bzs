@@ -98,6 +98,7 @@ public class TransactionProcessor {
 
         MetaInfo metaInfo = localDataVerifier.getMetaInfo(request);
 
+        LOGGER.info("Transaction received: " + request);
         if (!serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
@@ -114,11 +115,13 @@ public class TransactionProcessor {
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
+            LOGGER.info("Transaction contains remote operations");
             // TODO: Create a remote transaction processor class.
             LockManager.acquireLocks(transaction);
             remoteTransactionProcessor.prepareAsync(tid, transaction);
             responseHandlerRegistry.addToRemoteRegistry(tid, transaction, responseObserver);
         } else {
+            LOGGER.info("Transaction contains only local operations");
             responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, transaction, responseObserver);
         }
         final int seqNum = sequenceNumber;
@@ -135,7 +138,7 @@ public class TransactionProcessor {
      */
     void prepareOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
         synchronized (this) {
-
+            LOGGER.info(String.format("Resetting epoch: %d, sequence numbers: %d", epochNumber, sequenceNumber));
             this.remotePreparedList.add(tid);
             int remaining = remotePreparedList.indexOf(tid);
             for (int i = 0; i < remaining; i++) {
@@ -210,9 +213,10 @@ public class TransactionProcessor {
         // Increment Epoch number and reset sequence number.
         synchronized (this) {
             final int seqNumber = sequenceNumber;
-            if (isTimedEpochReset && seqNumber < maxBatchSize) {
+            if (!isTimedEpochReset && !(seqNumber < maxBatchSize)) {
                 return;
             }
+//            LOGGER.info("Epoch number: " + epochNumber + " , Sequence number: "+sequenceNumber);
             final Integer epoch = epochNumber;
             serializer.resetEpoch();
             epochNumber += 1;
@@ -230,7 +234,7 @@ public class TransactionProcessor {
             int processed = 0;
             int failed = 0;
             int bytesProcessed = 0;
-            if (transactions != null && transactions.size() > 0) {
+            if ((transactions != null && transactions.size() > 0) || (remoteTransactions != null && remoteTransactions.size() > 0)) {
                 startTime = System.currentTimeMillis();
                 transactionCount = transactions.size();
 
@@ -238,7 +242,7 @@ public class TransactionProcessor {
 
                 LOGGER.info("Performing BFT Commit");
                 Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
-
+                LOGGER.info("Processing transaction batch: " + transactionBatch);
                 if (remoteTransactions != null && remoteTransactions.size() > 0)
                     for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
 

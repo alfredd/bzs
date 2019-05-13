@@ -1,9 +1,7 @@
 package edu.ucsc.edgelab;
 
 import edu.ucsc.edgelab.db.bzs.BZStoreClient;
-import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.Transaction;
-import edu.ucsc.edgelab.db.bzs.clientlib.TransactionManager;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
@@ -20,52 +18,52 @@ public class DistributedClient {
     private static final Logger LOGGER = Logger.getLogger(DistributedClient.class.getName());
     int total_clusters;
     Transaction transaction;
-    DistributedClient(){
+
+    DistributedClient() {
         try {
-            properties  = new BZStoreProperties();
-        }
-        catch (IOException e){
+            properties = new BZStoreProperties();
+        } catch (IOException e) {
             LOGGER.log(Level.INFO, e.getMessage());
 
         }
 
         total_clusters = Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count));
-        for(int i = 0; i < total_clusters; i++){
+        for (int i = 0; i < total_clusters; i++) {
             int leader_id = Integer.parseInt(properties.getProperty(i, BZStoreProperties.Configuration.leader));
             String leader_host = properties.getProperty(i, leader_id, BZStoreProperties.Configuration.host);
-            int leader_port = Integer.parseInt(properties.getProperty(i, leader_id, BZStoreProperties.Configuration.port));
+            int leader_port = Integer.parseInt(properties.getProperty(i, leader_id,
+                    BZStoreProperties.Configuration.port));
             clientHashMap.put(i, new BZStoreClient(leader_host, leader_port));
         }
 
     }
 
-    public void createNewTransactions(){
+    public void createNewTransactions() {
         transaction = new Transaction();
     }
 
-    public BZStoreData read(String key){
+    public BZStoreData read(String key) {
         int clusterId = hashmod(key, total_clusters);
         BZStoreClient CurrClient = clientHashMap.get(clusterId);
         transaction.setClient(CurrClient);
         return transaction.read(key);
     }
 
-    public void write(String key, String value){
+    public void write(String key, String value) {
         int clusterId = hashmod(key, total_clusters);
         transaction.write(key, value, clusterId);
     }
 
-    public void commit(){
-        try{
+    public void commit() {
+        try {
             transaction.commit();
-        }
-        catch (CommitAbortedException e){
-            LOGGER.log(Level.INFO,e.getMessage());
+        } catch (CommitAbortedException e) {
+            LOGGER.log(Level.INFO, e.getMessage());
         }
     }
 
-    public static void main(String args[]){
-        DistributedClient Dclient = new DistributedClient();
+    public static void main(String args[]) {
+        DistributedClient dclient = new DistributedClient();
         String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/" + dataFile;
         File file = new File(fileName);
@@ -79,10 +77,15 @@ public class DistributedClient {
                         words.add(word);
                     }
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             LOGGER.log(Level.INFO, e.getMessage());
         }
+        dclient.createNewTransactions();
+        String key = "Singapore";
+        BZStoreData data = dclient.read(key);
+        System.out.println("Data from db: "+data);
+        dclient.write(key, "Random Value 1");
+        dclient.commit();
     }
 
     public static Integer hashmod(String key, int totalCluster) {
