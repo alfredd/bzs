@@ -236,14 +236,13 @@ public class TransactionProcessor {
             int bytesProcessed = 0;
             if ((transactions != null && transactions.size() > 0) || (remoteTransactions != null && remoteTransactions.size() > 0)) {
                 startTime = System.currentTimeMillis();
-                transactionCount = transactions.size();
+                if (transactions != null)
+                    transactionCount += transactions.size();
 
                 LOGGER.info("Processing transaction batch in epoch: " + epoch);
 
                 LOGGER.info("Performing BFT Commit");
-                Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
-                LOGGER.info("Processing transaction batch: " + transactionBatch.toString());
-                if (remoteTransactions != null && remoteTransactions.size() > 0)
+                if (remoteTransactions != null) {
                     for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
 
                         Bzs.TransactionBatch remoteBatch = Bzs.TransactionBatch.newBuilder()
@@ -251,7 +250,7 @@ public class TransactionProcessor {
                                 .setOperation(Bzs.Operation.BFT_PREPARE)
                                 .setID(entrySet.getValue().getTransactionID())
                                 .build();
-                        LOGGER.info("Sending prepare message for remote batch: "+remoteBatch.toString());
+                        LOGGER.info("Sending prepare message for remote batch: " + remoteBatch.toString());
                         Bzs.TransactionBatchResponse remoteBatchResponse =
                                 performPrepare(remoteBatch);
                         if (remoteBatchResponse != null) {
@@ -261,31 +260,36 @@ public class TransactionProcessor {
                             }
                         }
                     }
+                }
 
+                if (transactions!=null ) {
+                    Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
+                    LOGGER.info("Processing transaction batch: " + transactionBatch.toString());
 
-                Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
-                if (batchResponse == null) {
-                    failed = transactionCount;
-                    sendFailureNotifications(transactions, responseObservers);
-                } else {
-
-                    int commitResponseID = bftClient.performDbCommit(batchResponse);
-                    if (commitResponseID < 0) {
+                    Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
+                    if (batchResponse == null) {
                         failed = transactionCount;
-                        LOGGER.info("DB COMMIT Consensus failed: " + commitResponseID);
                         sendFailureNotifications(transactions, responseObservers);
                     } else {
-                        processed = transactionCount;
-                        for (int i = 0; i < transactions.size(); i++) {
-                            StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
-                            Bzs.TransactionResponse transactionResponse =
-                                    batchResponse.getResponses(i);
-                            responseObserver.onNext(transactionResponse);
-                            responseObserver.onCompleted();
+
+                        int commitResponseID = bftClient.performDbCommit(batchResponse);
+                        if (commitResponseID < 0) {
+                            failed = transactionCount;
+                            LOGGER.info("DB COMMIT Consensus failed: " + commitResponseID);
+                            sendFailureNotifications(transactions, responseObservers);
+                        } else {
+                            processed = transactionCount;
+                            for (int i = 0; i < transactions.size(); i++) {
+                                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
+                                Bzs.TransactionResponse transactionResponse =
+                                        batchResponse.getResponses(i);
+                                responseObserver.onNext(transactionResponse);
+                                responseObserver.onCompleted();
+                            }
                         }
                     }
+                    bytesProcessed = transactionBatch.toByteArray().length;
                 }
-                bytesProcessed = transactionBatch.toByteArray().length;
             }
 
             long endTime = System.currentTimeMillis();
