@@ -242,16 +242,18 @@ public class TransactionProcessor {
 
                 LOGGER.info("Performing BFT Commit");
                 Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
-                LOGGER.info("Processing transaction batch: " + transactionBatch);
+                LOGGER.info("Processing transaction batch: " + transactionBatch.toString());
                 if (remoteTransactions != null && remoteTransactions.size() > 0)
                     for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
 
+                        Bzs.TransactionBatch remoteBatch = Bzs.TransactionBatch.newBuilder()
+                                .addTransactions(entrySet.getValue())
+                                .setOperation(Bzs.Operation.BFT_PREPARE)
+                                .setID(entrySet.getValue().getTransactionID())
+                                .build();
+                        LOGGER.info("Sending prepare message for remote batch: "+remoteBatch.toString());
                         Bzs.TransactionBatchResponse remoteBatchResponse =
-                                performPrepare(Bzs.TransactionBatch.newBuilder()
-                                        .addTransactions(entrySet.getValue())
-                                        .setOperation(Bzs.Operation.BFT_PREPARE)
-                                        .setID(entrySet.getValue().getTransactionID())
-                                        .build());
+                                performPrepare(remoteBatch);
                         if (remoteBatchResponse != null) {
                             for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
                                 preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()),
