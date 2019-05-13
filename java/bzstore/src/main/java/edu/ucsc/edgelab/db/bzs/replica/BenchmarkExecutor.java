@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 public class BenchmarkExecutor implements Runnable {
 
+    private final Integer clusterID;
     private List<String> wordList = new LinkedList<>();
     private int transactionCount = 0;
     private int transactionsCompleted = 0;
@@ -31,7 +32,7 @@ public class BenchmarkExecutor implements Runnable {
 
     public BenchmarkExecutor(Integer clusterID, TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
-
+        this.clusterID = clusterID;
         BZStoreProperties properties = new BZStoreProperties();
         //String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
         String dataFile = "data.txt";
@@ -81,7 +82,7 @@ public class BenchmarkExecutor implements Runnable {
         for (int i = 0; i < writeCount; i++) {
             int keyIndex = random.nextInt(wordList.size());
             int valueIndex = random.nextInt(wordList.size());
-            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex));
+            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex), clusterID);
         }
         return transactionManager.getTransaction();
     }

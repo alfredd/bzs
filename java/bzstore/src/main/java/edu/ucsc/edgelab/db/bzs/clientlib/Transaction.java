@@ -37,17 +37,7 @@ public class Transaction extends TransactionManager implements TransactionInterf
     public BZStoreData read(String key) {
         long startTime = System.currentTimeMillis();
         Bzs.Read read = Bzs.Read.newBuilder().setKey(key).build();
-        Bzs.ReadResponse response = client.read(read);
-        BZStoreData data = new BZStoreData();
-        String responseKey = response.getKey();
-        data.value = response.getValue();
-        data.digest = response.getResponseDigest();
-        data.version = response.getVersion();
-        setReadHistory(responseKey, data.value, data.version, data.digest);
-        long duration = System.currentTimeMillis() - startTime;
-
-        LOGGER.info("Read operation processed in "+duration+" msecs");
-        return data;
+        return getBzStoreDataFromCluster(startTime, read);
     }
 
     @Override
@@ -78,5 +68,25 @@ public class Transaction extends TransactionManager implements TransactionInterf
                         e);
             }
         }
+    }
+
+    public BZStoreData read(String key, int clusterId) {
+        long startTime = System.currentTimeMillis();
+        Bzs.Read read = Bzs.Read.newBuilder().setKey(key).setClusterID(clusterId).build();
+        return getBzStoreDataFromCluster(startTime, read);
+    }
+
+    private BZStoreData getBzStoreDataFromCluster(long startTime, Bzs.Read read) {
+        Bzs.ReadResponse response = client.read(read);
+        BZStoreData data = new BZStoreData();
+        String responseKey = response.getKey();
+        data.value = response.getValue();
+        data.digest = response.getResponseDigest();
+        data.version = response.getVersion();
+        setReadHistory(responseKey, data.value, data.version, data.digest);
+        long duration = System.currentTimeMillis() - startTime;
+
+        LOGGER.info("Read operation processed in " + duration + " msecs");
+        return data;
     }
 }

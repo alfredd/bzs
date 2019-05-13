@@ -46,7 +46,7 @@ public class DistributedClient {
         int clusterId = hashmod(key, total_clusters);
         BZStoreClient CurrClient = clientHashMap.get(clusterId);
         transaction.setClient(CurrClient);
-        return transaction.read(key);
+        return transaction.read(key, clusterId);
     }
 
     public void write(String key, String value) {
@@ -81,7 +81,7 @@ public class DistributedClient {
             LOGGER.log(Level.INFO, e.getMessage());
         }
         dclient.createNewTransactions();
-        String key = "Singapore";
+        String key = "Kansas";
         BZStoreData data = dclient.read(key);
         System.out.println("Data from db: "+data);
         dclient.write(key, "Random Value 1");
