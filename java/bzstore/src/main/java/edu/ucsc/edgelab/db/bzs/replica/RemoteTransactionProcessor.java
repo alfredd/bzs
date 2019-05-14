@@ -24,7 +24,7 @@ public class RemoteTransactionProcessor {
         Integer epochTimeInMS = getEpochTimeInMS();
         clusterConnector = new ClusterConnector(this.clusterID);
         Timer interClusterConnectorTimer = new Timer("InterClusterConnector", true);
-        interClusterConnectorTimer.scheduleAtFixedRate(clusterConnector, 0, epochTimeInMS * 1000 * 10);
+        interClusterConnectorTimer.scheduleAtFixedRate(clusterConnector, epochTimeInMS* 500, epochTimeInMS * 1000 * 10);
     }
 
     /**
