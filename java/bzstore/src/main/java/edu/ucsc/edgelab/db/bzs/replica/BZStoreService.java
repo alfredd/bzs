@@ -84,7 +84,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 remote = ServerInfo.getReplicaInfo(cid, rid);
                 Transaction readClient = new Transaction();
                 readClient.setClient(remote.host, remote.port);
-                data = readClient.read(key);
+                data = readClient.read(request);
                 readClient.close();
             } catch (Exception e) {
                 log.log(Level.SEVERE, e.getLocalizedMessage(),e);

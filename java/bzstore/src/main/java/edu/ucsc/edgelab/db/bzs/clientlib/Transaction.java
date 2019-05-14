@@ -74,7 +74,16 @@ public class Transaction extends TransactionManager implements TransactionInterf
         return getBzStoreDataFromCluster(startTime, read);
     }
 
-    private BZStoreData getBzStoreDataFromCluster(long startTime, Bzs.Read read) {
+    public BZStoreData read (Bzs.Read read) {
+        Bzs.ReadResponse response = client.read(read);
+        BZStoreData data = new BZStoreData();
+        data.value = response.getValue();
+        data.digest = response.getResponseDigest();
+        data.version = response.getVersion();
+        return data;
+    }
+
+    public BZStoreData getBzStoreDataFromCluster(long startTime, Bzs.Read read) {
         Bzs.ReadResponse response = client.read(read);
         BZStoreData data = new BZStoreData();
         String responseKey = response.getKey();
