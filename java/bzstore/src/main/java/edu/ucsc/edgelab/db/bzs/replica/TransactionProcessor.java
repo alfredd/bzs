@@ -99,7 +99,7 @@ public class TransactionProcessor {
         MetaInfo metaInfo = localDataVerifier.getMetaInfo(request);
 
         LOGGER.info("Transaction received: " + request);
-        if (!serializer.serialize(request)) {
+        if ((metaInfo.localRead || metaInfo.localWrite )&& !serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
                     Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
