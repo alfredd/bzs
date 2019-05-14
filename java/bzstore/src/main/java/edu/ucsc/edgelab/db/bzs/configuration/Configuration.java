@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class Configuration {
 
-    public static final int WAIT_TIMEOUT = 300;
+    public static final int WAIT_TIMEOUT = 800;
     private static final int DEFAULT_EPOCH_TIME_IN_MS = 50;
 
     public static ServerInfo getLeaderInfo(Integer clusterID) throws IOException, UnknownConfiguration {
