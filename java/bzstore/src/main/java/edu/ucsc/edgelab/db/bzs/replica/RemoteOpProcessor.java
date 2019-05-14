@@ -7,6 +7,7 @@ import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public abstract class RemoteOpProcessor implements Runnable {
     protected final Integer cid;
@@ -16,8 +17,10 @@ public abstract class RemoteOpProcessor implements Runnable {
     protected TransactionProcessor responseObserver;
     protected String transactionID;
     protected Bzs.Transaction remoteTransaction;
-    //    private Bzs.Transaction transaction;
-    Map<Integer, Bzs.TransactionResponse> remoteResponses = new ConcurrentHashMap<>();
+    protected Map<Integer, Bzs.TransactionResponse> remoteResponses = new ConcurrentHashMap<>();
+
+    public static final Logger LOG = Logger.getLogger(RemoteOpProcessor.class.getName());
+
 
     public RemoteOpProcessor(Integer cid, Integer rid, TransactionID tid, Bzs.Transaction transaction,
                              ClusterConnector clusterConnector) {

@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.cluster;
 import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ClusterGrpc;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -40,28 +41,28 @@ public class ClusterServiceClient {
     public Bzs.TransactionResponse commit(Bzs.Transaction transaction) {
         log.log(Level.FINE, "Beginning transaction commit for : " + transaction.toString());
 
-        Bzs.TransactionResponse response = blockingStub.commit(transaction);
+        Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commit(transaction);
         log.log(Level.FINE, "Transaction completed with status: " + response.getStatus().name());
         return response;
     }
 
     public Bzs.ReadResponse read(Bzs.Read readOperation) {
         log.log(Level.FINE, "Beginning read operation for : " + readOperation.toString());
-        Bzs.ReadResponse response = blockingStub.readOperation(readOperation);
+        Bzs.ReadResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).readOperation(readOperation);
         log.log(Level.FINE, String.format("Read version %d of key: %s.", response.getVersion(), response.getKey()));
         return response;
     }
 
     public Bzs.TransactionResponse abort(Bzs.Transaction transaction) {
         log.log(Level.FINE, "Beginning RO-transaction commit for : " + transaction.toString());
-        Bzs.TransactionResponse response = blockingStub.abort(transaction);
+        Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).abort(transaction);
         log.log(Level.FINE, "RO-transaction completed with status: " + response.getStatus().name());
         return response;
     }
 
     public Bzs.TransactionResponse prepare(Bzs.Transaction transaction) {
         log.log(Level.FINE, "Beginning RO-transaction commit for : " + transaction.toString());
-        Bzs.TransactionResponse response = blockingStub.commitPrepare(transaction);
+        Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commitPrepare(transaction);
         log.log(Level.FINE, "RO-transaction completed with status: " + response.getStatus().name());
         return response;
     }
