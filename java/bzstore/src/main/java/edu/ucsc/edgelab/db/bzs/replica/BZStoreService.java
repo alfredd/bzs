@@ -75,8 +75,9 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         Integer cid = request.getClusterID();
         Integer rid = request.getReplicaID();
         BZStoreData data;
-
+        log.info("Received read reqeust: "+request.toString());
         if (cid != clusterID) {
+            log.info("Read request is from another cluster ("+cid+")");
             // Get Key from specific node.
             ServerInfo remote;
             try {
@@ -94,6 +95,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
             data = BZDatabaseController.getlatest(key);
         }
 
+        log.info("Read response from cluster "+cid+": "+data);
         Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
                 .setKey(key)
                 .setClusterID(cid)
@@ -104,7 +106,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 .setStatus(status)
                 .build();
 
-        log.info("Read response: "+response.toString());
+        log.info("Read response to client: "+response.toString());
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
