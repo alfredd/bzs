@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 
 import java.util.Timer;
+import java.util.logging.Logger;
 
 import static edu.ucsc.edgelab.db.bzs.replica.EpochManager.getEpochTimeInMS;
 
@@ -13,6 +14,8 @@ public class RemoteTransactionProcessor {
     public Integer replicaID;
     private TransactionProcessor processor;
     private ClusterConnector clusterConnector;
+
+    public static final Logger LOG = Logger.getLogger(RemoteTransactionProcessor.class.getName());
 
     public RemoteTransactionProcessor(Integer clusterID, Integer replicaID) {
         this.clusterID = clusterID;
@@ -37,7 +40,7 @@ public class RemoteTransactionProcessor {
      * @param request
      */
     public void prepareAsync(final TransactionID tid, final Bzs.Transaction request) {
-
+        LOG.info("Executing remote transaction PREPARE with tid: "+ tid.toString()+", Transaction request: "+request);
         runProcessor(new PrepareProcessor(tid, request, clusterID, replicaID, clusterConnector));
     }
 
@@ -47,10 +50,12 @@ public class RemoteTransactionProcessor {
     }
 
     public void commitAsync(final TransactionID tid, final Bzs.Transaction request) {
+        LOG.info("Executing remote transaction COMMIT with tid: "+ tid.toString()+", Transaction request: "+request);
         runProcessor(new CommitProcessor(clusterID, replicaID, tid, request, clusterConnector));
     }
 
     public void abortAsync(final TransactionID tid, final Bzs.Transaction request) {
+        LOG.info("Executing remote transaction ABORT with tid: "+ tid.toString()+", Transaction request: "+request);
         runProcessor(new AbortProcessor(clusterID,replicaID,tid,request,clusterConnector));
     }
 
