@@ -30,6 +30,7 @@ public class TransactionProcessor {
     private RemoteTransactionProcessor remoteTransactionProcessor;
     private List<TransactionID> remotePreparedList;
     private Map<TransactionID, Bzs.TransactionBatchResponse> preparedRemoteList;
+    private Set<TransactionID> remoteOnlyTid = new LinkedHashSet<>();
     private ClusterKeysAccessor clusterKeysAccessor;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
@@ -99,7 +100,7 @@ public class TransactionProcessor {
         MetaInfo metaInfo = localDataVerifier.getMetaInfo(request);
 
         LOGGER.info("Transaction received: " + request);
-        if ((metaInfo.localRead || metaInfo.localWrite )&& !serializer.serialize(request)) {
+        if ((metaInfo.localRead || metaInfo.localWrite) && !serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
                     Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
@@ -115,13 +116,15 @@ public class TransactionProcessor {
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
+            remoteOnlyTid.add(tid);
             LOGGER.info("Transaction contains remote operations");
-            // TODO: Create a remote transaction processor class.
             LockManager.acquireLocks(transaction);
             remoteTransactionProcessor.prepareAsync(tid, transaction);
             responseHandlerRegistry.addToRemoteRegistry(tid, transaction, responseObserver);
-        } else {
+        }
+        if (metaInfo.localRead || metaInfo.localWrite) {
             LOGGER.info("Transaction contains only local operations");
+            remoteOnlyTid.remove(tid);
             responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, transaction, responseObserver);
         }
         final int seqNum = sequenceNumber;
@@ -138,7 +141,17 @@ public class TransactionProcessor {
      */
     void prepareOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
         synchronized (this) {
-            LOGGER.info(String.format("Resetting epoch: %d, sequence numbers: %d", epochNumber, sequenceNumber));
+            LOGGER.info("Starting remote prepared processing for tid: "+tid);
+            if (remoteOnlyTid.contains(tid)) {
+                Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(),
+                        tid.getSequenceNumber());
+                if (t !=null) {
+                    remoteTransactionProcessor.commitAsync(tid, t);
+                    responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(),tid.getSequenceNumber());
+                } else
+                    LOGGER.log(Level.WARNING, "Could not process remote-only transaction: "+tid);
+                return;
+            }
             this.remotePreparedList.add(tid);
             int remaining = remotePreparedList.indexOf(tid);
             for (int i = 0; i < remaining; i++) {
@@ -168,6 +181,7 @@ public class TransactionProcessor {
                 removeTidList.add(remotePreparedList.get(i));
             for (int i = 0; i < remaining; i++)
                 remotePreparedList.remove(removeTidList.get(i));
+            LOGGER.info("Completed remote prepared processing for tid: "+tid);
         }
     }
 
@@ -223,6 +237,7 @@ public class TransactionProcessor {
                 return;
             }
 //            LOGGER.info("Epoch number: " + epochNumber + " , Sequence number: "+sequenceNumber);
+//            LOGGER.info(String.format("Resetting epoch: %d, sequence numbers: %d", epochNumber, sequenceNumber));
             final Integer epoch = epochNumber;
             serializer.resetEpoch();
             epochNumber += 1;

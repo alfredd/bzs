@@ -83,6 +83,13 @@ public class ResponseHandlerRegistry {
         return null;
     }
 
+    public Bzs.Transaction getRemoteTransaction(int epochNumber, int sequenceNumber) {
+        Map<Integer, Bzs.Transaction> transactions = getRemoteTransactions(epochNumber);
+        if (transactions != null)
+            return transactions.get(sequenceNumber);
+        return null;
+    }
+
     public StreamObserver<Bzs.TransactionResponse> getStreamObserver(int epochNumber, int sequenceNumber) {
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> streamObservers =
                 getLocalTransactionObservers(epochNumber);
