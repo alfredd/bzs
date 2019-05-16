@@ -6,13 +6,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LockManager {
-    private static final Map<String,Long> LOCKS = new ConcurrentHashMap<>();
+    private static final Map<String, Long> LOCKS = new ConcurrentHashMap<>();
 
     public static boolean isLocked(String key) {
         return LOCKS.containsKey(key);
     }
 
-    private LockManager() {}
+    private LockManager() {
+    }
 
     private static boolean unlock(String key) {
         if (isLocked(key)) {
@@ -23,27 +24,33 @@ public class LockManager {
 
     private static boolean lock(String key) {
         if (!isLocked(key)) {
-            LOCKS.put(key,System.currentTimeMillis());
+            LOCKS.put(key, System.currentTimeMillis());
         }
         return isLocked(key);
     }
 
-    public static void  releaseLocks(Bzs.Transaction t) {
-        for (int i =0 ;i<t.getWriteOperationsCount();i++) {
-            unlock(t.getWriteOperations(i).getKey());
-        }
-        for (int i =0; i<t.getReadHistoryCount();i++) {
-            unlock(t.getReadHistory(i).getKey());
+    public static void releaseLocks(Bzs.Transaction t) {
+        if (t != null) {
+
+            for (int i = 0; i < t.getWriteOperationsCount(); i++) {
+                unlock(t.getWriteOperations(i).getKey());
+            }
+            for (int i = 0; i < t.getReadHistoryCount(); i++) {
+                unlock(t.getReadHistory(i).getKey());
+            }
         }
     }
 
 
-    public static void  acquireLocks(Bzs.Transaction t) {
-        for (int i =0 ;i<t.getWriteOperationsCount();i++) {
-            lock(t.getWriteOperations(i).getKey());
-        }
-        for (int i =0; i<t.getReadHistoryCount();i++) {
-            lock(t.getReadHistory(i).getKey());
+    public static void acquireLocks(Bzs.Transaction t) {
+        if (t != null) {
+
+            for (int i = 0; i < t.getWriteOperationsCount(); i++) {
+                lock(t.getWriteOperations(i).getKey());
+            }
+            for (int i = 0; i < t.getReadHistoryCount(); i++) {
+                lock(t.getReadHistory(i).getKey());
+            }
         }
     }
 
