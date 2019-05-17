@@ -17,7 +17,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private Integer replicaID;
     private Integer clusterID;
     private boolean amILeader;
-    private Serializer serializer = new Serializer();
+    private Serializer serializer;
     private Map<String, EpochTransactionID> transactionIDMap = new LinkedHashMap<>();
     public static final Logger log = Logger.getLogger(ClusterService.class.getName());
 
@@ -27,6 +27,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         this.replicaID = replicaID;
         this.amILeader = isLeader;
         this.processor = processor;
+        serializer = new Serializer(clusterID);
     }
 
     @Override

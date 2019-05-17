@@ -21,10 +21,12 @@ public class Serializer {
     private HashMap<String, Long> readMap = new HashMap<>();
     private Integer clusterID;
 
-    public  Serializer() {}
-
     public Serializer(boolean checkLocks) {
         this.checkLocks = checkLocks;
+    }
+
+    public Serializer(Integer clusterID) {
+        this.clusterID = clusterID;
     }
 
     public void resetEpoch() {
@@ -70,9 +72,5 @@ public class Serializer {
 
     public List<Bzs.Transaction> getEpochList() {
         return epochList;
-    }
-
-    public void setClusterID(Integer clusterID) {
-        this.clusterID = clusterID;
     }
 }
