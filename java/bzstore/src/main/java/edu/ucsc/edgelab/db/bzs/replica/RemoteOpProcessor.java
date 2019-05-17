@@ -17,7 +17,7 @@ public abstract class RemoteOpProcessor implements Runnable {
     protected TransactionProcessor responseObserver;
     protected String transactionID;
     protected Bzs.Transaction remoteTransaction;
-    protected Map<Integer, Bzs.TransactionResponse> remoteResponses = new LinkedHashMap<>();
+    protected Map<Integer, Bzs.TransactionResponse> remoteResponses = new ConcurrentHashMap<>();
 
     public static final Logger LOG = Logger.getLogger(RemoteOpProcessor.class.getName());
 
@@ -62,6 +62,13 @@ public abstract class RemoteOpProcessor implements Runnable {
             t.start();
             remoteThreads.add(t);
         }
+        for (Thread t : remoteThreads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         return remoteThreads;
     }
 
@@ -75,6 +82,7 @@ public abstract class RemoteOpProcessor implements Runnable {
         for (int i = 0; i < remoteTransaction.getWriteOperationsCount(); i++) {
             cidSet.add(remoteTransaction.getWriteOperations(i).getClusterID());
         }
+        LOG.info("Set of CIDs to which the request will be sent: "+ cidSet);
         return cidSet;
     }
 }

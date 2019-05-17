@@ -8,11 +8,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Must refactor at some point.
  */
 public class CommitProcessor extends RemoteOpProcessor {
+
+    public static final Logger LOG = Logger.getLogger(CommitProcessor.class.getName());
+
     public CommitProcessor(Integer cid, Integer rid, TransactionID tid, Bzs.Transaction transaction,
                            ClusterConnector clusterConnector) {
         super(cid, rid, tid, transaction, clusterConnector);
@@ -25,6 +29,7 @@ public class CommitProcessor extends RemoteOpProcessor {
 
         joinAllThreads(remoteThreads);
         boolean prepared = true;
+        LOG.info("Remote responses size: "+ remoteResponses.size());
         for (Map.Entry<Integer, Bzs.TransactionResponse> entrySet : remoteResponses.entrySet()) {
             prepared = prepared && entrySet.getValue().getStatus().equals(Bzs.TransactionStatus.COMMITTED);
             if (!prepared)
