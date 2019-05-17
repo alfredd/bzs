@@ -219,9 +219,9 @@ public class TransactionProcessor {
     private void sendResponseToClient(TransactionID tid, Bzs.TransactionStatus status, Bzs.Transaction t) {
         StreamObserver<Bzs.TransactionResponse> r =
                 responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
-        LOGGER.log(Level.WARNING, "Aborting transaction " + tid);
 
         Bzs.TransactionResponse response = Bzs.TransactionResponse.newBuilder().setStatus(status).build();
+        LOGGER.log(Level.INFO, "Transaction completed with TID" + tid+", status: "+status +", response to client: "+response);
         r.onNext(response);
         r.onCompleted();
         responseHandlerRegistry.removeRemoteTransactions(tid.getEpochNumber(), tid.getSequenceNumber());
