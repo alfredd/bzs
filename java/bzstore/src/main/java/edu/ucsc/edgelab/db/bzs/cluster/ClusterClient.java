@@ -3,10 +3,13 @@ package edu.ucsc.edgelab.db.bzs.cluster;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ClusterClient {
 
     private Map<Integer, ClusterServiceClient> clients;
+
+    public static final Logger LOG = Logger.getLogger(ClusterClient.class.getName());
 
     public ClusterClient(Map<Integer, ClusterServiceClient> clients) {
         this.clients = clients;
@@ -27,6 +30,7 @@ public class ClusterClient {
     public Bzs.TransactionResponse commit(Bzs.Transaction transaction, Integer clusterID) {
         if (this.clients.containsKey(clusterID))
             return getClusterServiceClient(clusterID).commit(transaction);
+        LOG.info("Cluster client for cluster ID: "+clusterID+", not found");
         return null;
     }
 

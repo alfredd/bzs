@@ -39,10 +39,10 @@ public class ClusterServiceClient {
     }
 
     public Bzs.TransactionResponse commit(Bzs.Transaction transaction) {
-        log.log(Level.FINE, "Beginning transaction commit for : " + transaction.toString());
+        log.log(Level.INFO, "Beginning transaction commit for : " + transaction.toString());
 
         Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commit(transaction);
-        log.log(Level.FINE, "Transaction completed with status: " + response.getStatus().name());
+        log.log(Level.INFO, "Transaction completed with status: " + response.getStatus().name());
         return response;
     }
 
@@ -61,9 +61,9 @@ public class ClusterServiceClient {
     }
 
     public Bzs.TransactionResponse prepare(Bzs.Transaction transaction) {
-        log.log(Level.FINE, "Beginning RO-transaction commit for : " + transaction.toString());
+        log.log(Level.INFO, "Beginning RO-transaction commit for : " + transaction.toString());
         Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commitPrepare(transaction);
-        log.log(Level.FINE, "RO-transaction completed with status: " + response.getStatus().name());
+        log.log(Level.INFO, "RO-transaction completed with status: " + response.getStatus().name());
         return response;
     }
 }
