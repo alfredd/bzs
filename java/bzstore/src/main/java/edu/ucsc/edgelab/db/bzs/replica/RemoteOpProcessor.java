@@ -77,12 +77,19 @@ public abstract class RemoteOpProcessor implements Runnable {
         Set<Integer> cidSet = new HashSet<>();
 
         for (int i = 0; i < remoteTransaction.getReadHistoryCount(); i++) {
-            cidSet.add(remoteTransaction.getReadHistory(i).getClusterID());
+            int clusterID = remoteTransaction.getReadHistory(i).getClusterID();
+            addToCidSet(cidSet, clusterID);
         }
         for (int i = 0; i < remoteTransaction.getWriteOperationsCount(); i++) {
-            cidSet.add(remoteTransaction.getWriteOperations(i).getClusterID());
+            int clusterID = remoteTransaction.getWriteOperations(i).getClusterID();
+            addToCidSet(cidSet,clusterID);
         }
-        LOG.info("Set of CIDs to which the request will be sent: "+ cidSet);
+        LOG.info("Set of CIDs to which the request will be sent: " + cidSet);
         return cidSet;
+    }
+
+    private void addToCidSet(Set<Integer> cidSet, int clusterID) {
+        if (clusterID != this.cid)
+            cidSet.add(clusterID);
     }
 }

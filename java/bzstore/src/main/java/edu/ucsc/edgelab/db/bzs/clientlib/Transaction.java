@@ -51,7 +51,7 @@ public class Transaction extends TransactionManager implements TransactionInterf
             throw new CommitAbortedException("Transaction was aborted"+response.toString());
         } else {
             if (response.getStatus().equals(Bzs.TransactionStatus.COMMITTED)) {
-                LOGGER.info("Transaction committed.");
+                LOGGER.info("Transaction committed. Transaction Response: "+response.toString());
             }
         }
     }
