@@ -19,6 +19,7 @@ public class Serializer {
     private List<Bzs.Transaction> epochList = new LinkedList<>();
     // Keeping track of current object changes to the epochList.
     private HashMap<String, Long> readMap = new HashMap<>();
+    private Integer clusterID;
 
     public  Serializer() {}
 
@@ -50,7 +51,7 @@ public class Serializer {
 
     public boolean serialize(Bzs.Transaction t) {
         for (Bzs.ReadHistory readHistory : t.getReadHistoryList()) {
-            if (readConflicts(readHistory))
+            if (readHistory.getClusterID() == this.clusterID && readConflicts(readHistory))
                 return false;
         }
         // Handling case 2 from the table in the google doc
@@ -69,5 +70,9 @@ public class Serializer {
 
     public List<Bzs.Transaction> getEpochList() {
         return epochList;
+    }
+
+    public void setClusterID(Integer clusterID) {
+        this.clusterID = clusterID;
     }
 }
