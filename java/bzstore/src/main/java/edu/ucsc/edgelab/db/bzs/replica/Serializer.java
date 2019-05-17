@@ -19,6 +19,7 @@ public class Serializer {
     private List<Bzs.Transaction> epochList = new LinkedList<>();
     // Keeping track of current object changes to the epochList.
     private HashMap<String, Long> readMap = new HashMap<>();
+
     private Integer clusterID;
 
     public Serializer(boolean checkLocks) {
@@ -32,6 +33,10 @@ public class Serializer {
     public void resetEpoch() {
         epochList.clear();
         readMap.clear();
+    }
+
+    public void setClusterID(Integer clusterID) {
+        this.clusterID = clusterID;
     }
 
     public boolean readConflicts(Bzs.ReadHistory c) {

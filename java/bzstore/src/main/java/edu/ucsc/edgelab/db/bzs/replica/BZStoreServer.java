@@ -92,7 +92,7 @@ public class BZStoreServer {
             logger.info("Shutting down.");
             BZStoreServer.this.stop();
         }));
-        BFTServer bftServer = new BFTServer(replicaID, isLeader);
+        BFTServer bftServer = new BFTServer(clusterID, replicaID, isLeader);
     }
 
     private boolean amITheLeader(ServerInfo leaderInfo) {

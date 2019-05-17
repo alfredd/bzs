@@ -21,17 +21,19 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     private final Integer replicaID;
     private final boolean checkLocks;
+    private final Integer clusterID;
     private Logger logger = Logger.getLogger(BFTServer.class.getName());
 
     private Map<String, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
 //    private Integer count;
 
-    public BFTServer(int id, boolean isLeader) {
+    public BFTServer(Integer clusterID, int replicaID, boolean isLeader) {
         logger.info("Starting BFT-Smart Server.");
 //        count = 0;
-        this.replicaID = id;
+        this.replicaID = replicaID;
+        this.clusterID = clusterID;
         this.checkLocks = isLeader;
-        new ServiceReplica(id, this, this);
+        new ServiceReplica(replicaID, this, this);
         logger.info("Started: BFT-Smart Server.");
 
     }
@@ -50,6 +52,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getTransactionsCount() > 0) {
                 Serializer serializer = new Serializer(!checkLocks);
+                serializer.setClusterID(clusterID);
                 String epochId = transactionBatch.getID();
                 Integer versionNumber = Integer.decode(epochId.split(":")[0]);
                 logger.info("Processing transaction batch: " + epochId);
