@@ -42,7 +42,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
             LockManager.acquireLocks(request);
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
             int epochNumber = processor.getEpochNumber();
-            transactionIDMap.put(transactionID,new EpochTransactionID(epochNumber,request.getTransactionID()));
+            transactionIDMap.put(transactionID, new EpochTransactionID(epochNumber, request.getTransactionID()));
 
             Bzs.TransactionBatchResponse batchResponse = null;
             if (metaInfo.localWrite) {
@@ -56,13 +56,8 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 }
             } else {
                 if (metaInfo.localRead) {
-                    Bzs.TransactionResponse readResponse = Bzs.TransactionResponse.newBuilder()
-                            .setEpochNumber(epochNumber)
-                            .setTransactionID(transactionID)
-                            .setStatus(Bzs.TransactionStatus.PREPARED)
-                            .build();
-                    responseObserver.onNext(readResponse);
-                    responseObserver.onCompleted();
+                    Bzs.TransactionStatus status = Bzs.TransactionStatus.PREPARED;
+                    sendResponse(responseObserver, transactionID, epochNumber, status);
                     return;
                 }
             }
@@ -77,11 +72,27 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         }
     }
 
+    private void sendResponse(StreamObserver<Bzs.TransactionResponse> responseObserver, String transactionID,
+                              int epochNumber, Bzs.TransactionStatus status) {
+        Bzs.TransactionResponse readResponse = getTransactionResponse(transactionID, epochNumber, status);
+        responseObserver.onNext(readResponse);
+        responseObserver.onCompleted();
+    }
+
+    private Bzs.TransactionResponse getTransactionResponse(String transactionID, int epochNumber,
+                                                           Bzs.TransactionStatus status) {
+        return Bzs.TransactionResponse.newBuilder()
+                .setEpochNumber(epochNumber)
+                .setTransactionID(transactionID)
+                .setStatus(status)
+                .build();
+    }
+
     public Bzs.TransactionBatch createTransactionBatch(Bzs.Transaction request, Bzs.Operation operation) throws InvalidCommitException {
 
         EpochTransactionID epochTransactionID = transactionIDMap.get(request.getTransactionID());
-        if (epochTransactionID==null) {
-            throw new InvalidCommitException("No mapping found for "+request.getTransactionID());
+        if (epochTransactionID == null) {
+            throw new InvalidCommitException("No mapping found for " + request.getTransactionID());
         }
         return Bzs.TransactionBatch
                 .newBuilder()
@@ -123,8 +134,23 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         Bzs.Operation operation = Bzs.Operation.BFT_COMMIT;
         Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.COMMITTED;
         Bzs.TransactionStatus failureStatus = Bzs.TransactionStatus.ABORTED;
-        performOperationandSendResponse(request, responseObserver, operation, transactionStatus, failureStatus);
-        LockManager.releaseLocks(request);
+        MetaInfo metaInfo = new LocalDataVerifier(clusterID).getMetaInfo(request);
+        log.info("Committing transaction request: " + request);
+        try {
+            if (metaInfo.localWrite) {
+                performOperationandSendResponse(request, responseObserver, operation, transactionStatus, failureStatus);
+            } else {
+                if (metaInfo.localRead) {
+                    log.info("Transaction request applies only to local reads");
+                    Bzs.TransactionStatus status = Bzs.TransactionStatus.PREPARED;
+                    String transactionID = request.getTransactionID();
+                    int epochNumber = transactionIDMap.get(transactionID).getEpochNumber();
+                    sendResponse(responseObserver, transactionID, epochNumber, status);
+                }
+            }
+        } finally {
+            LockManager.releaseLocks(request);
+        }
     }
 
     private void performOperationandSendResponse(Bzs.Transaction request,
@@ -140,7 +166,8 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                     status < 0 ? failureStatus : transactionStatus);
         } catch (InvalidCommitException e) {
             log.log(Level.WARNING, e.getLocalizedMessage());
-            sendResponse(request.getTransactionID(), responseObserver, Bzs.TransactionStatus.ABORTED, Bzs.TransactionResponse.newBuilder());
+            sendResponse(request.getTransactionID(), responseObserver, Bzs.TransactionStatus.ABORTED,
+                    Bzs.TransactionResponse.newBuilder());
         }
     }
 
@@ -176,7 +203,8 @@ class EpochTransactionID {
     public int getEpochNumber() {
         return epochNumber;
     }
+
     public String getTransactionID() {
-        return epochNumber+":"+transactionID;
+        return epochNumber + ":" + transactionID;
     }
 }
