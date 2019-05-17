@@ -33,7 +33,7 @@ public class SerializerTest {
             Bzs.Transaction t2 = Bzs.Transaction.newBuilder().addReadHistory(h2).build();
 
             BZDatabaseController.commit(testKey, obj1);
-            Serializer s1 = new Serializer();
+            Serializer s1 = new Serializer(0);
             //
             s1.resetEpoch();
             assertTrue(s1.serialize(t1) == true);
@@ -73,7 +73,7 @@ public class SerializerTest {
         t1.write("y", "1");
         t1.write("z", "3");
         Bzs.Transaction tr1 = t1.getTransaction();
-        Serializer serializer = new Serializer();
+        Serializer serializer = new Serializer(0);
         assertTrue(serializer.serialize(tr1));
         BZDatabaseController.commit("x", new BZStoreData("10", 1, "1"));
         BZDatabaseController.commit("y", new BZStoreData("1", 1, "2"));
@@ -100,7 +100,7 @@ public class SerializerTest {
         t1.write("y", "1");
         t1.write("z", "3");
         Bzs.Transaction tr1 = t1.getTransaction();
-        Serializer serializer = new Serializer();
+        Serializer serializer = new Serializer(0);
         assertTrue(serializer.serialize(tr1));
         BZDatabaseController.commit("x", new BZStoreData("10",  "1"));
         BZDatabaseController.commit("y", new BZStoreData("1",  "2"));
