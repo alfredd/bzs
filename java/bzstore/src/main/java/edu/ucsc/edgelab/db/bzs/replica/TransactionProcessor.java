@@ -141,15 +141,15 @@ public class TransactionProcessor {
      */
     void prepareOperationObserver(TransactionID tid, Bzs.TransactionStatus status) {
         synchronized (this) {
-            LOGGER.info("Starting remote prepared processing for tid: "+tid);
+            LOGGER.info("Starting remote prepared processing for tid: " + tid);
             if (remoteOnlyTid.contains(tid)) {
                 Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(),
                         tid.getSequenceNumber());
-                if (t !=null) {
+                if (t != null) {
                     remoteTransactionProcessor.commitAsync(tid, t);
-                    responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(),tid.getSequenceNumber());
+                    responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
                 } else
-                    LOGGER.log(Level.WARNING, "Could not process remote-only transaction: "+tid);
+                    LOGGER.log(Level.WARNING, "Could not process remote-only transaction: " + tid);
                 return;
             }
             this.remotePreparedList.add(tid);
@@ -181,7 +181,7 @@ public class TransactionProcessor {
                 removeTidList.add(remotePreparedList.get(i));
             for (int i = 0; i < remaining; i++)
                 remotePreparedList.remove(removeTidList.get(i));
-            LOGGER.info("Completed remote prepared processing for tid: "+tid);
+            LOGGER.info("Completed remote prepared processing for tid: " + tid);
         }
     }
 
@@ -221,7 +221,8 @@ public class TransactionProcessor {
                 responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
 
         Bzs.TransactionResponse response = Bzs.TransactionResponse.newBuilder().setStatus(status).build();
-        LOGGER.log(Level.INFO, "Transaction completed with TID" + tid+", status: "+status +", response to client: "+response);
+        LOGGER.log(Level.INFO, "Transaction completed with TID" + tid + ", status: " + status + ", response to " +
+                "client: " + (response == null ? "null" : response.toString()));
         r.onNext(response);
         r.onCompleted();
         responseHandlerRegistry.removeRemoteTransactions(tid.getEpochNumber(), tid.getSequenceNumber());
