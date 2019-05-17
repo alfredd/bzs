@@ -17,7 +17,7 @@ public abstract class RemoteOpProcessor implements Runnable {
     protected TransactionProcessor responseObserver;
     protected String transactionID;
     protected Bzs.Transaction remoteTransaction;
-    protected Map<Integer, Bzs.TransactionResponse> remoteResponses = new ConcurrentHashMap<>();
+    protected Map<Integer, Bzs.TransactionResponse> remoteResponses = new LinkedHashMap<>();
 
     public static final Logger LOG = Logger.getLogger(RemoteOpProcessor.class.getName());
 
