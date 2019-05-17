@@ -85,10 +85,13 @@ public class DistributedClient {
             LOGGER.log(Level.INFO, e.getMessage());
         }
         dclient.createNewTransactions();
-        String key = "Guinea";
+        String key = "Azerbaijan";
         BZStoreData data = dclient.read(key);
         LOGGER.info("Data from db: "+data);
-        dclient.write(key, "Random Value 2");
+        String key2 = "Minnesota";
+        data = dclient.read(key2);
+        LOGGER.info("Data from db: "+data);
+        dclient.write(key, "Random Value 6");
         dclient.commit();
     }
 

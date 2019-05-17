@@ -33,6 +33,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     @Override
     public void commitPrepare(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         Bzs.TransactionResponse response;
+        MetaInfo metaInfo = new LocalDataVerifier(clusterID).getMetaInfo(request);
         String transactionID = request.getTransactionID();
         boolean serializable = serializer.serialize(request);
         if (!serializable) {
@@ -42,13 +43,28 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
             int epochNumber = processor.getEpochNumber();
             transactionIDMap.put(transactionID,new EpochTransactionID(epochNumber,request.getTransactionID()));
-            Bzs.TransactionBatch batch = null;
+
             Bzs.TransactionBatchResponse batchResponse = null;
-            try {
-                batch = createTransactionBatch(request, operation);
-                batchResponse = processor.getBFTClient().performCommitPrepare(batch);
-            } catch (InvalidCommitException e) {
-                log.log(Level.WARNING, e.getLocalizedMessage());
+            if (metaInfo.localWrite) {
+
+                Bzs.TransactionBatch batch = null;
+                try {
+                    batch = createTransactionBatch(request, operation);
+                    batchResponse = processor.getBFTClient().performCommitPrepare(batch);
+                } catch (InvalidCommitException e) {
+                    log.log(Level.WARNING, e.getLocalizedMessage());
+                }
+            } else {
+                if (metaInfo.localRead) {
+                    Bzs.TransactionResponse readResponse = Bzs.TransactionResponse.newBuilder()
+                            .setEpochNumber(epochNumber)
+                            .setTransactionID(transactionID)
+                            .setStatus(Bzs.TransactionStatus.PREPARED)
+                            .build();
+                    responseObserver.onNext(readResponse);
+                    responseObserver.onCompleted();
+                    return;
+                }
             }
             if (batchResponse == null) {
                 performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
