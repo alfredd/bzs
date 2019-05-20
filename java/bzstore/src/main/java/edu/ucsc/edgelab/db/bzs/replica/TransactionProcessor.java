@@ -123,7 +123,7 @@ public class TransactionProcessor {
             responseHandlerRegistry.addToRemoteRegistry(tid, transaction, responseObserver);
         }
         if ( metaInfo.localWrite) {
-            LOGGER.info("Transaction contains only local operations");
+            LOGGER.info("Transaction contains local write operations");
             remoteOnlyTid.remove(tid);
             responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, transaction, responseObserver);
         }
