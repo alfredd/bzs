@@ -305,7 +305,12 @@ public class TransactionProcessor {
                         } else {
                             processed = transactionCount;
                             for (int i = 0; i < transactions.size(); i++) {
-                                StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
+                                Bzs.Transaction t = transactions.get(i);
+                                TransactionID tid = TransactionID.getTransactionID(t.getTransactionID());
+                                StreamObserver<Bzs.TransactionResponse> responseObserver = responseHandlerRegistry
+                                        .getRemoteTransactionObserver(
+                                                tid.getEpochNumber(),tid.getSequenceNumber()
+                                        );//responseObservers.get(i + 1);
                                 LOGGER.info("Response observer is NULL? "+ (responseObserver==null));
                                 Bzs.TransactionResponse transactionResponse = batchResponse.getResponses(i);
                                 responseObserver.onNext(transactionResponse);
