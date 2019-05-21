@@ -37,7 +37,9 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         String transactionID = request.getTransactionID();
         boolean serializable = serializer.serialize(request);
         if (!serializable) {
-            performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
+            sendResponseToCluster(request.getTransactionID(), responseObserver, Bzs.TransactionStatus.ABORTED,
+                    Bzs.TransactionResponse.newBuilder(), 0);
+            performOperationAndSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
         } else {
             LockManager.acquireLocks(request);
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
@@ -62,11 +64,11 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 }
             }
             if (batchResponse == null) {
-                performOperationandSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
+                performOperationAndSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
                 LockManager.releaseLocks(request);
             } else {
                 response = batchResponse.getResponses(0);
-                performOperationandSendResponse(transactionID, responseObserver, response,
+                performOperationAndSendResponse(transactionID, responseObserver, response,
                         Bzs.TransactionStatus.PREPARED);
             }
         }
@@ -102,7 +104,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 .build();
     }
 
-    public void performOperationandSendResponse(String transactionID,
+    public void performOperationAndSendResponse(String transactionID,
                                                 StreamObserver<Bzs.TransactionResponse> responseObserver,
                                                 Bzs.TransactionResponse templateResponse,
                                                 Bzs.TransactionStatus transactionStatus) {
@@ -119,11 +121,18 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private void sendResponse(String transactionID, StreamObserver<Bzs.TransactionResponse> responseObserver,
                               Bzs.TransactionStatus transactionStatus, Bzs.TransactionResponse.Builder builder) {
         Bzs.TransactionResponse response;
+        int epochNumber = transactionIDMap.get(transactionID).getEpochNumber();
+        sendResponseToCluster(transactionID, responseObserver, transactionStatus, builder, epochNumber);
+    }
+
+    private void sendResponseToCluster(String transactionID, StreamObserver<Bzs.TransactionResponse> responseObserver
+            , Bzs.TransactionStatus transactionStatus, Bzs.TransactionResponse.Builder builder, int epochNumber) {
+        Bzs.TransactionResponse response;
         response = builder
                 .setStatus(transactionStatus)
                 .setTransactionID(transactionID)
                 // call to map is potentially troublesome here
-                .setEpochNumber(transactionIDMap.get(transactionID).getEpochNumber())
+                .setEpochNumber(epochNumber)
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -138,7 +147,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         log.info("Committing transaction request: " + request);
         try {
             if (metaInfo.localWrite) {
-                performOperationandSendResponse(request, responseObserver, operation, transactionStatus, failureStatus);
+                sendResponse(request, responseObserver, operation, transactionStatus, failureStatus);
             } else {
                 if (metaInfo.localRead) {
                     log.info("Transaction request applies only to local reads");
@@ -153,16 +162,16 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         }
     }
 
-    private void performOperationandSendResponse(Bzs.Transaction request,
-                                                 StreamObserver<Bzs.TransactionResponse> responseObserver,
-                                                 Bzs.Operation operation,
-                                                 Bzs.TransactionStatus transactionStatus,
-                                                 Bzs.TransactionStatus failureStatus) {
+    private void sendResponse(Bzs.Transaction request,
+                              StreamObserver<Bzs.TransactionResponse> responseObserver,
+                              Bzs.Operation operation,
+                              Bzs.TransactionStatus transactionStatus,
+                              Bzs.TransactionStatus failureStatus) {
         Bzs.TransactionBatch batch = null;
         try {
             batch = createTransactionBatch(request, operation);
             int status = processor.getBFTClient().dbCommit(batch);
-            performOperationandSendResponse(request.getTransactionID(), responseObserver, null,
+            performOperationAndSendResponse(request.getTransactionID(), responseObserver, null,
                     status < 0 ? failureStatus : transactionStatus);
         } catch (InvalidCommitException e) {
             log.log(Level.WARNING, e.getLocalizedMessage());
@@ -185,7 +194,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     @Override
     public void abort(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         LockManager.releaseLocks(request);
-        performOperationandSendResponse(request, responseObserver, Bzs.Operation.BFT_ABORT,
+        sendResponse(request, responseObserver, Bzs.Operation.BFT_ABORT,
                 Bzs.TransactionStatus.ABORTED, Bzs.TransactionStatus.FAILURE);
     }
 }
