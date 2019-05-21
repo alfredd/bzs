@@ -65,6 +65,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 "Returning random bytes. Could not serialize the transaction: " + transaction.toString());
                         return getRandomBytes();
                     }
+                    logger.info("Transaction is serializable. Processing BFT prepare: "+transaction);
                     Bzs.TransactionResponse response;
                     Bzs.TransactionResponse.Builder responseBuilder = Bzs.TransactionResponse.newBuilder();
                     for (int i = 0; i < transaction.getWriteOperationsCount(); i++) {
@@ -88,6 +89,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponseBuilder.setID(epochId);
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(epochId, batchResponse);
+                logger.info("Response prepared: "+batchResponse.toString());
                 reply = batchResponse.toByteArray();
             } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_COMMIT)) {
                 String id = transactionBatch.getID();
