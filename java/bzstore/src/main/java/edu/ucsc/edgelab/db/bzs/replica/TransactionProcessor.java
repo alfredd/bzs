@@ -112,7 +112,6 @@ public class TransactionProcessor {
             }
             return;
         }
-        sequenceNumber += 1;
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
@@ -127,6 +126,7 @@ public class TransactionProcessor {
             remoteOnlyTid.remove(tid);
             responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, transaction, responseObserver);
         }
+        sequenceNumber += 1;
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
             new Thread(() -> resetEpoch(false)).start();
@@ -307,8 +307,9 @@ public class TransactionProcessor {
                             LOGGER.info("Transactions.size = "+transactions.size());
                             int i =0;
 //                            for (int i = 0; i < transactions.size(); i++) {
-                            for (Bzs.Transaction t : transactions.values()) {
-                                ++i;
+                            for (;i<transactions.size();) {
+                                Bzs.Transaction t = transactions.get(i);
+
                                 LOGGER.info("Transaction i = "+i);
 //                                Bzs.Transaction t = transactions.get(i);
                                 if (t==null) {
@@ -325,6 +326,7 @@ public class TransactionProcessor {
                                 Bzs.TransactionResponse transactionResponse = batchResponse.getResponses(i);
                                 responseObserver.onNext(transactionResponse);
                                 responseObserver.onCompleted();
+                                ++i;
                             }
                         }
                     }
