@@ -62,13 +62,6 @@ public abstract class RemoteOpProcessor implements Runnable {
             t.start();
             remoteThreads.add(t);
         }
-        for (Thread t : remoteThreads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
         return remoteThreads;
     }
 

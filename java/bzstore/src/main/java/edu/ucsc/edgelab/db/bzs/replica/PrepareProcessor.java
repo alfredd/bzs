@@ -4,12 +4,15 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.MessageType;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 class PrepareProcessor extends RemoteOpProcessor {
 
+    public static final Logger log = Logger.getLogger(PrepareProcessor.class.getName());
 
     public PrepareProcessor(TransactionID tid, Bzs.Transaction transaction, Integer cid, Integer rid,
                             ClusterConnector c) {
@@ -19,22 +22,30 @@ class PrepareProcessor extends RemoteOpProcessor {
     @Override
     public void run() {
         Set<Integer> remoteCIDs = getListOfClusterIDs();
+        log.info("Sending prepare message for TID: "+tid+" to cluster: "+ remoteCIDs);
         List<Thread> remoteThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Prepare);
 
         joinAllThreads(remoteThreads);
-        boolean prepared = true;
-        for (Map.Entry<Integer, Bzs.TransactionResponse> entrySet : remoteResponses.entrySet()) {
-            prepared = prepared && entrySet.getValue().getStatus().equals(Bzs.TransactionStatus.PREPARED);
-            if (!prepared)
-                break;
-        }
 
         Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.PREPARED;
-        if (!prepared) {
-            List<Thread> abortThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Abort);
-            joinAllThreads(abortThreads);
-            transactionStatus = Bzs.TransactionStatus.ABORTED;
+        Set<Integer> abortCIDs = new HashSet<>();
+        for (Map.Entry<Integer, Bzs.TransactionResponse> entrySet : remoteResponses.entrySet()) {
+            boolean prepared =  entrySet.getValue().getStatus().equals(Bzs.TransactionStatus.PREPARED);
+            if (prepared) {
+                abortCIDs.add(entrySet.getKey());
+            }
+            else {
+
+                transactionStatus = Bzs.TransactionStatus.ABORTED;
+
+            }
         }
+
+        if (transactionStatus.equals(Bzs.TransactionStatus.ABORTED) && abortCIDs.size()>0) {
+            List<Thread> abortThreads = sendMessageToClusterLeaders(abortCIDs, MessageType.Abort);
+            joinAllThreads(abortThreads);
+        }
+        log.info("Transaction prepare completed with status : "+transactionStatus+ ", for  TID: "+tid);
         responseObserver.prepareOperationObserver(tid, transactionStatus);
     }
 
