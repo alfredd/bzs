@@ -42,7 +42,7 @@ public class ClusterServiceClient {
         log.log(Level.INFO, "Beginning transaction commit for : " + transaction.toString());
 
         Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commit(transaction);
-        log.log(Level.INFO, "Transaction completed with status: " + response.getStatus().name());
+        log.log(Level.INFO, "Transaction committed with status: " + response.getStatus().name());
         return response;
     }
 
@@ -54,16 +54,16 @@ public class ClusterServiceClient {
     }
 
     public Bzs.TransactionResponse abort(Bzs.Transaction transaction) {
-        log.log(Level.FINE, "Beginning RO-transaction commit for : " + transaction.toString());
+        log.log(Level.FINE, "Beginning Abort for : " + transaction.toString());
         Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).abort(transaction);
-        log.log(Level.FINE, "RO-transaction completed with status: " + response.getStatus().name());
+        log.log(Level.FINE, "Abort completed with status: " + response.getStatus().name());
         return response;
     }
 
     public Bzs.TransactionResponse prepare(Bzs.Transaction transaction) {
-        log.log(Level.INFO, "Beginning RO-transaction commit for : " + transaction.toString());
+        log.log(Level.INFO, "Beginning prepare commit for : " + transaction.toString());
         Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commitPrepare(transaction);
-        log.log(Level.INFO, "RO-transaction completed with status: " + response.getStatus().name());
+        log.log(Level.INFO, "prepare completed with status: " + response.getStatus().name());
         return response;
     }
 }
