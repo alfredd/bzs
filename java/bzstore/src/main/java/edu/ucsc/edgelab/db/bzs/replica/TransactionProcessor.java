@@ -292,6 +292,8 @@ public class TransactionProcessor {
                     LOGGER.info("Processing transaction batch: " + transactionBatch.toString());
 
                     Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
+                    LOGGER.info("Transaction batch size: "+ transactionBatch.getTransactionsCount()
+                    +", batch response count: "+batchResponse.getResponsesCount());
                     if (batchResponse == null) {
                         failed = transactionCount;
                         sendFailureNotifications(transactions, responseObservers);
