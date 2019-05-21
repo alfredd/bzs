@@ -111,7 +111,7 @@ public class TransactionProcessor {
             }
             return;
         }
-        TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
+        final TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
         LOGGER.info("Transaction assigned with TID: "+tid+", " + transaction);
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
@@ -124,7 +124,7 @@ public class TransactionProcessor {
         if ( metaInfo.localWrite) {
             LOGGER.info("Transaction contains local write operations");
             remoteOnlyTid.remove(tid);
-            responseHandlerRegistry.addToRegistry(epochNumber, sequenceNumber, transaction, responseObserver);
+            responseHandlerRegistry.addToRegistry(tid.getEpochNumber(), tid.getSequenceNumber(), transaction, responseObserver);
         }
         sequenceNumber += 1;
         final int seqNum = sequenceNumber;
