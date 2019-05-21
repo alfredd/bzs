@@ -318,7 +318,7 @@ public class TransactionProcessor {
                                 TransactionID tid = TransactionID.getTransactionID(t.getTransactionID());
                                 LOGGER.info("Transaction tid = "+tid);
                                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseHandlerRegistry
-                                        .getRemoteTransactionObserver(
+                                        .getLocalTransactionObserver(
                                                 tid.getEpochNumber(),tid.getSequenceNumber()
                                         );//responseObservers.get(i + 1);
                                 LOGGER.info("Response observer is NULL? "+ (responseObserver==null));
