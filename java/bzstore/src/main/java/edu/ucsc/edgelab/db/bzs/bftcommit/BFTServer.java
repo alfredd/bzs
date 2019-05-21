@@ -52,7 +52,6 @@ public class BFTServer extends DefaultSingleRecoverable {
             if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getTransactionsCount() > 0) {
                 Serializer serializer = new Serializer(clusterID, replicaID);
-                serializer.setClusterID(clusterID);
                 String epochId = transactionBatch.getID();
                 Integer versionNumber = Integer.decode(epochId.split(":")[0]);
                 logger.info("Processing transaction batch from Epoch: " + epochId+ ". Transaction batch: "+transactionBatch.toString());
@@ -70,15 +69,17 @@ public class BFTServer extends DefaultSingleRecoverable {
                     Bzs.TransactionResponse.Builder responseBuilder = Bzs.TransactionResponse.newBuilder();
                     for (int i = 0; i < transaction.getWriteOperationsCount(); i++) {
                         Bzs.Write writeOp = transaction.getWriteOperations(i);
-                        BZStoreData bzStoreData;
-                        String key = writeOp.getKey();
-                        bzStoreData = getBzStoreData(key);
-                        Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
-                                .setKey(key)
-                                .setValue(writeOp.getValue())
-                                .setVersion(versionNumber)
-                                .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
-                        responseBuilder.addWriteResponses(writeResponse);
+                        if (writeOp.getClusterID()==clusterID) {
+                            BZStoreData bzStoreData;
+                            String key = writeOp.getKey();
+                            bzStoreData = getBzStoreData(key);
+                            Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
+                                    .setKey(key)
+                                    .setValue(writeOp.getValue())
+                                    .setVersion(versionNumber)
+                                    .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
+                            responseBuilder.addWriteResponses(writeResponse);
+                        }
 
                     }
                     responseBuilder.setStatus(Bzs.TransactionStatus.COMMITTED).setTransactionID(transaction.getTransactionID());
