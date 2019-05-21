@@ -297,8 +297,7 @@ public class TransactionProcessor {
                         Bzs.TransactionBatchResponse remoteBatchResponse = performPrepare(remoteBatch);
                         if (remoteBatchResponse != null) {
                             for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
-                                preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()),
-                                        remoteBatchResponse);
+                                preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()), remoteBatchResponse);
                             }
                         }
                     }
