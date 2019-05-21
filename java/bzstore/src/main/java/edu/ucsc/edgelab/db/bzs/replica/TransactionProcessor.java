@@ -273,8 +273,7 @@ public class TransactionProcessor {
                                 .setID(entrySet.getValue().getTransactionID())
                                 .build();
                         LOGGER.info("Sending prepare message for remote batch: " + remoteBatch.toString());
-                        Bzs.TransactionBatchResponse remoteBatchResponse =
-                                performPrepare(remoteBatch);
+                        Bzs.TransactionBatchResponse remoteBatchResponse = performPrepare(remoteBatch);
                         if (remoteBatchResponse != null) {
                             for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
                                 preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()),
@@ -283,6 +282,9 @@ public class TransactionProcessor {
                         }
                     }
                 }
+                LOGGER.info("Local - Distributed Txn prepared. Epoch: "+epoch);
+                LOGGER.info("Starting Local Txn batch prepare. Epoch: "+epoch);
+
 
                 if (transactions != null) {
                     Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(),
@@ -304,6 +306,7 @@ public class TransactionProcessor {
                             processed = transactionCount;
                             for (int i = 0; i < transactions.size(); i++) {
                                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseObservers.get(i + 1);
+                                LOGGER.info("Response observer is NULL? "+ (responseObserver==null));
                                 Bzs.TransactionResponse transactionResponse = batchResponse.getResponses(i);
                                 responseObserver.onNext(transactionResponse);
                                 responseObserver.onCompleted();
@@ -312,6 +315,7 @@ public class TransactionProcessor {
                     }
                     bytesProcessed = transactionBatch.toByteArray().length;
                 }
+                LOGGER.info("Local Txn batch prepared. Epoch: "+epoch);
             }
 
             long endTime = System.currentTimeMillis();
