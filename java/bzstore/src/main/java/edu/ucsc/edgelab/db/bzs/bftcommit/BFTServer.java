@@ -51,7 +51,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             Bzs.TransactionBatchResponse.Builder batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
             if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_PREPARE) &&
                     transactionBatch.getTransactionsCount() > 0) {
-                Serializer serializer = new Serializer(!checkLocks);
+                Serializer serializer = new Serializer(clusterID, replicaID);
                 serializer.setClusterID(clusterID);
                 String epochId = transactionBatch.getID();
                 Integer versionNumber = Integer.decode(epochId.split(":")[0]);
@@ -59,7 +59,7 @@ public class BFTServer extends DefaultSingleRecoverable {
 
                 for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
                     Bzs.Transaction transaction = transactionBatch.getTransactions(transactionIndex);
-
+                    logger.info("Verifying if transaction is serializable.");
                     if (!serializer.serialize(transaction)) {
                         logger.log(Level.WARNING,
                                 "Returning random bytes. Could not serialize the transaction: " + transaction.toString());

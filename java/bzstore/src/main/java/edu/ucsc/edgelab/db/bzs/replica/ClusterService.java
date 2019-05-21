@@ -27,7 +27,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         this.replicaID = replicaID;
         this.amILeader = isLeader;
         this.processor = processor;
-        serializer = new Serializer(clusterID);
+        serializer = new Serializer(clusterID, replicaID);
     }
 
     @Override

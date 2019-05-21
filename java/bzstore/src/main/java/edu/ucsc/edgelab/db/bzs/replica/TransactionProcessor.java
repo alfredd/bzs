@@ -37,7 +37,7 @@ public class TransactionProcessor {
         this.replicaID = replicaId;
         this.clusterID = clusterId;
         localDataVerifier = new LocalDataVerifier(clusterID);
-        serializer = new Serializer(clusterID);
+        serializer = new Serializer(clusterID, replicaId);
         sequenceNumber = 0;
         epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
