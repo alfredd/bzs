@@ -309,16 +309,19 @@ public class TransactionProcessor {
                             LOGGER.info("Transactions.size = "+transactions.size());
                             int i =0;
 //                            for (int i = 0; i < transactions.size(); i++) {
-                            for (;i<transactions.size();) {
-                                Bzs.Transaction t = transactions.get(i);
+                            for (;i<batchResponse.getResponsesCount();++i) {
 
-                                LOGGER.info("Transaction i = "+i);
+                                Bzs.TransactionResponse r = batchResponse.getResponses(i);
+                                TransactionID tid = TransactionID.getTransactionID(r.getTransactionID());
 //                                Bzs.Transaction t = transactions.get(i);
-                                if (t==null) {
-                                    LOGGER.info("Transaction not found for i="+i);
-                                    continue;
-                                }
-                                TransactionID tid = TransactionID.getTransactionID(t.getTransactionID());
+
+                                LOGGER.info("Transaction response i = "+i);
+//                                Bzs.Transaction t = transactions.get(i);
+//                                if (t==null) {
+//                                    LOGGER.info("Transaction not found for i="+i);
+//                                    continue;
+//                                }
+//                                TransactionID tid = TransactionID.getTransactionID(t.getTransactionID());
                                 LOGGER.info("Transaction tid = "+tid);
                                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseHandlerRegistry
                                         .getLocalTransactionObserver(
@@ -328,7 +331,6 @@ public class TransactionProcessor {
                                 Bzs.TransactionResponse transactionResponse = batchResponse.getResponses(i);
                                 responseObserver.onNext(transactionResponse);
                                 responseObserver.onCompleted();
-                                ++i;
                             }
                         }
                     }
