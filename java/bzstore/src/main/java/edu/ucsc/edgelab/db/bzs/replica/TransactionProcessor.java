@@ -99,7 +99,6 @@ public class TransactionProcessor {
 
         MetaInfo metaInfo = localDataVerifier.getMetaInfo(request);
 
-        LOGGER.info("Transaction received: " + request);
         if ((metaInfo.localRead || metaInfo.localWrite) && !serializer.serialize(request)) {
             LOGGER.info("Transaction cannot be serialized. Will abort. Request: " + request);
             Bzs.TransactionResponse response =
@@ -114,6 +113,7 @@ public class TransactionProcessor {
         }
         TransactionID tid = new TransactionID(epochNumber, sequenceNumber);
         Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
+        LOGGER.info("Transaction assigned with TID: "+tid+", " + transaction);
         if (metaInfo.remoteRead || metaInfo.remoteWrite) {
             remoteOnlyTid.add(tid);
             LOGGER.info("Transaction contains remote operations");
