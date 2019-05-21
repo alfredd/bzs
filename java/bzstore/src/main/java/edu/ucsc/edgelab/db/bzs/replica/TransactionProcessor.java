@@ -304,14 +304,19 @@ public class TransactionProcessor {
                             sendFailureNotifications(transactions, responseObservers);
                         } else {
                             processed = transactionCount;
-                            for (int i = 0; i < transactions.size(); i++) {
-                                Bzs.Transaction t = transactions.get(i);
+                            LOGGER.info("Transactions.size = "+transactions.size());
+                            int i =0;
+//                            for (int i = 0; i < transactions.size(); i++) {
+                            for (Bzs.Transaction t : transactions.values()) {
+                                ++i;
+                                LOGGER.info("Transaction i = "+i);
+//                                Bzs.Transaction t = transactions.get(i);
                                 if (t==null) {
                                     LOGGER.info("Transaction not found for i="+i);
                                     continue;
                                 }
                                 TransactionID tid = TransactionID.getTransactionID(t.getTransactionID());
-
+                                LOGGER.info("Transaction tid = "+tid);
                                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseHandlerRegistry
                                         .getRemoteTransactionObserver(
                                                 tid.getEpochNumber(),tid.getSequenceNumber()
