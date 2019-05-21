@@ -306,7 +306,12 @@ public class TransactionProcessor {
                             processed = transactionCount;
                             for (int i = 0; i < transactions.size(); i++) {
                                 Bzs.Transaction t = transactions.get(i);
+                                if (t==null) {
+                                    LOGGER.info("Transaction not found for i="+i);
+                                    continue;
+                                }
                                 TransactionID tid = TransactionID.getTransactionID(t.getTransactionID());
+
                                 StreamObserver<Bzs.TransactionResponse> responseObserver = responseHandlerRegistry
                                         .getRemoteTransactionObserver(
                                                 tid.getEpochNumber(),tid.getSequenceNumber()

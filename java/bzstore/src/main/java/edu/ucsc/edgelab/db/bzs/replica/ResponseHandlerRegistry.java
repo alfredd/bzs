@@ -5,6 +5,7 @@ import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ResponseHandlerRegistry {
     private Map<Integer, Map<Integer, StreamObserver<Bzs.TransactionResponse>>> requestHandlerRegistry;
@@ -12,6 +13,8 @@ public class ResponseHandlerRegistry {
 
     private Map<Integer, Map<Integer, StreamObserver<Bzs.TransactionResponse>>> remoteRequestHandlerRegistry;
     private Map<Integer, Map<Integer, Bzs.Transaction>> remoteRequestRegistry;
+
+    public static final Logger LOG = Logger.getLogger(ResponseHandlerRegistry.class.getName());
 
     public ResponseHandlerRegistry() {
         requestHandlerRegistry = new LinkedHashMap<>();
@@ -102,7 +105,7 @@ public class ResponseHandlerRegistry {
                                     StreamObserver<Bzs.TransactionResponse> responseObserver) {
         Integer epochNumber = tid.getEpochNumber();
         Integer sequenceNumber = tid.getSequenceNumber();
-
+        LOG.info("Adding transaction to request handler registry. TID: "+tid);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> epochHistory =
                 remoteRequestHandlerRegistry.computeIfAbsent(epochNumber, k -> new LinkedHashMap<>());
         epochHistory.put(sequenceNumber, responseObserver);
