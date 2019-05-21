@@ -37,9 +37,10 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         String transactionID = request.getTransactionID();
         boolean serializable = serializer.serialize(request);
         if (!serializable) {
+            log.info("Transaction is not serializable: "+request);
             sendResponseToCluster(request.getTransactionID(), responseObserver, Bzs.TransactionStatus.ABORTED,
                     Bzs.TransactionResponse.newBuilder(), 0);
-            performOperationAndSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
+//            performOperationAndSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
         } else {
             LockManager.acquireLocks(request);
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
