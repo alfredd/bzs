@@ -55,7 +55,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 serializer.setClusterID(clusterID);
                 String epochId = transactionBatch.getID();
                 Integer versionNumber = Integer.decode(epochId.split(":")[0]);
-                logger.info("Processing transaction batch: " + epochId);
+                logger.info("Processing transaction batch from Epoch: " + epochId+ ". Transaction batch: "+transactionBatch.toString());
 
                 for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
                     Bzs.Transaction transaction = transactionBatch.getTransactions(transactionIndex);
