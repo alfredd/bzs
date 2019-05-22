@@ -85,7 +85,7 @@ public class BenchmarkExecutor implements Runnable {
             int keyIndex = random.nextInt(wordList.size());
             int valueIndex = random.nextInt(wordList.size());
             int clusterId = hashmod(wordList.get(keyIndex), totalClusters);
-            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex), clusterID);
+            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex), clusterId);
         }
         return transactionManager.getTransaction();
     }
