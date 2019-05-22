@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,4 +42,15 @@ public class EpochManager {
         LOGGER.info(String.format("Timer rate = %dms and delay %dms", epochTimeInMS, epochTimeInMS));
         epochTimer.scheduleAtFixedRate(epochMaintainer, epochTimeInMS, epochTimeInMS);
     }
+
+    public void startScheduledTimerTask(TimerTask task, String name, double timeMultiplier) {
+        Timer timer = new Timer(name, true);
+        double scheduledTime = epochTimeInMS * timeMultiplier;
+        long period = (long) scheduledTime;
+        LOGGER.info("Scheduling timer task: "+ name+" with a period of "+period+"ms");
+        timer.scheduleAtFixedRate(task, epochTimeInMS * 5, period);
+    }
 }
+
+
+

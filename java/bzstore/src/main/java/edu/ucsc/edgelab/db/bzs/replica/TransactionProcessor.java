@@ -65,6 +65,7 @@ public class TransactionProcessor {
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
         epochManager.startEpochMaintenance();
+        epochManager.startScheduledTimerTask(new DistributedTxnPreparedProcessorTimerTask(this),"Remote Prepared Processor TimerTask", 1.0);
         initLocalDatabase();
         remoteTransactionProcessor.setObserver(this);
         Timer interClusterConnectorTimer = new Timer("IntraClusterPKIAccessor", true);
@@ -167,7 +168,7 @@ public class TransactionProcessor {
         Process distributed transactions starting with all transactions that have already been prepared.
      */
         int remaining = remotePreparedList.size();
-        if (status.equals(Bzs.TransactionStatus.PREPARED)) {
+        if (tid!=null && status.equals(Bzs.TransactionStatus.PREPARED)) {
             this.remotePreparedList.add(tid);
             remaining = remotePreparedList.indexOf(tid);
         }
@@ -187,16 +188,19 @@ public class TransactionProcessor {
              */
         if (tid != null) {
             Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
-
-            boolean executionDone = false;
-            if (status.equals(Bzs.TransactionStatus.ABORTED)) {
-                log.info("Sending message to clients for aborted transaction: " + tid + ", " + t);
-                sendResponseToClient(tid, status, t);
-            } else {
-                executionDone = processRemoteCommits(tid, t);
-                if (executionDone) {
-                    completed.add(tid);
+            if (t!=null) {
+                boolean executionDone = false;
+                if (status.equals(Bzs.TransactionStatus.ABORTED)) {
+                    log.info("Sending message to clients for aborted transaction: " + tid + ", " + t);
+                    sendResponseToClient(tid, status, t);
+                } else {
+                    executionDone = processRemoteCommits(tid, t);
+                    if (executionDone) {
+                        completed.add(tid);
+                    }
                 }
+            } else {
+                log.info("Transaction with TID: "+tid+" has not yet been prepared locally.");
             }
         }
 

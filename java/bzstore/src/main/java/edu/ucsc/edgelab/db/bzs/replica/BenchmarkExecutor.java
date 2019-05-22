@@ -120,12 +120,19 @@ public class BenchmarkExecutor implements Runnable {
         int maxOperations = 8;
         this.totalCount = txnCount;
         this.processed = 0;
-        sendNLocalTransactions(txnCount, maxOperations);
+        sendTransactions(txnCount, maxOperations);
         log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
 
+        try {
+            Thread.sleep(delayMs);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        sendLocalOnly=false;
+        sendTransactions(txnCount,maxOperations);
     }
 
-    public void sendNLocalTransactions(int n, int m) {
+    public void sendTransactions(int n, int m) {
         while ((--n) >= 0) {
             sendWriteOnlyTransactions(m);
         }
