@@ -280,9 +280,9 @@ public class TransactionProcessor {
             if (!isTimedEpochReset && !(seqNumber < maxBatchSize)) {
                 return;
             }
-//            log.info("Epoch number: " + epochNumber + " , Sequence number: "+sequenceNumber);
 //            log.info(String.format("Resetting epoch: %d, sequence numbers: %d", epochNumber, sequenceNumber));
             final Integer epoch = epochNumber;
+            log.info("Epoch number: " + epoch + " , Sequence number: "+sequenceNumber);
             epochNumber += 1;
             sequenceNumber = 0;
             serializer.resetEpoch();
