@@ -20,7 +20,7 @@ public class BenchmarkExecutor implements Runnable {
     private boolean started = false;
     private int previousCompleted = 0;
     private int currentCompleted = 0;
-
+    private int totalClusters = 0;
 
     private static final Logger LOGGER = Logger.getLogger(BenchmarkExecutor.class.getName());
 
@@ -33,7 +33,9 @@ public class BenchmarkExecutor implements Runnable {
     public BenchmarkExecutor(Integer clusterID, TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
         this.clusterID = clusterID;
+
         BZStoreProperties properties = new BZStoreProperties();
+        this.totalClusters = Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count));
         //String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
         String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/" + dataFile;
@@ -46,8 +48,8 @@ public class BenchmarkExecutor implements Runnable {
 
             for (String word : line)
                 if (word != null)
-                    if (hashmod(word,
-                            Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
+//                    if (hashmod(word,
+//                            Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
                         words.add(word);
         }
         scanner.close();
@@ -82,6 +84,7 @@ public class BenchmarkExecutor implements Runnable {
         for (int i = 0; i < writeCount; i++) {
             int keyIndex = random.nextInt(wordList.size());
             int valueIndex = random.nextInt(wordList.size());
+            int clusterId = hashmod(wordList.get(keyIndex), totalClusters);
             transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex), clusterID);
         }
         return transactionManager.getTransaction();
