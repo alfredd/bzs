@@ -29,9 +29,10 @@ public class TransactionProcessor {
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
     private List<TransactionID> remotePreparedList;
-    private Map<TransactionID, Bzs.TransactionBatchResponse> preparedRemoteList;
+    private Map<TransactionID, Bzs.TransactionBatchResponse> listOfRemoteTransactionsPreparedLocally;
     private Set<TransactionID> remoteOnlyTid = new LinkedHashSet<>();
     private ClusterKeysAccessor clusterKeysAccessor;
+    private Set<TransactionID> abortedDistributedTransactions = new LinkedHashSet<>();
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
@@ -43,7 +44,7 @@ public class TransactionProcessor {
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
         remotePreparedList = new LinkedList<>();
-        preparedRemoteList = new LinkedHashMap<>();
+        listOfRemoteTransactionsPreparedLocally = new LinkedHashMap<>();
     }
 
     private void initMaxBatchSize() {
@@ -157,6 +158,10 @@ public class TransactionProcessor {
                 }
                 return;
             }
+
+            if (abortedDistributedTransactions.contains(tid)) {
+
+            }
             Set<TransactionID> completed = startCommitProcessForPreparedTransactions(tid, status);
 
             log.info("Commit Initiated for " + completed);
@@ -180,7 +185,7 @@ public class TransactionProcessor {
         Set<TransactionID> completed = new HashSet<>();
         for (int i = 0; i < remaining; i++) {
             TransactionID tid2 = remotePreparedList.get(i);
-            Bzs.Transaction transaction = responseHandlerRegistry.getTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
+            Bzs.Transaction transaction = responseHandlerRegistry.getRemoteTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
             log.info("Processing distributed transaction commit.");
             boolean commitInitiated = processRemoteCommits(tid2, transaction);
             if (commitInitiated)
@@ -191,7 +196,7 @@ public class TransactionProcessor {
                 Process current transaction.
              */
         if (tid != null) {
-            Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
+            Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
             if (t!=null) {
                 boolean executionDone = false;
                 if (status.equals(Bzs.TransactionStatus.ABORTED)) {
@@ -220,7 +225,7 @@ public class TransactionProcessor {
 
     private boolean processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
         boolean status = true;
-        Bzs.TransactionBatchResponse batchResponse = preparedRemoteList.get(tid);
+        Bzs.TransactionBatchResponse batchResponse = listOfRemoteTransactionsPreparedLocally.get(tid);
         log.info("Processing remote commits: Tid: " + tid + ". Transaction : " + t);
         if (batchResponse != null) {
             int commitResponse = bftClient.performDbCommit(batchResponse);
@@ -311,9 +316,13 @@ public class TransactionProcessor {
                         log.info("Sending prepare message for remote batch: " + remoteBatch.toString());
                         Bzs.TransactionBatchResponse remoteBatchResponse = performPrepare(remoteBatch);
                         if (remoteBatchResponse != null) {
+                            log.info("Local prepare completed for distributed transaction: "+remoteBatchResponse);
                             for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
-                                preparedRemoteList.put(TransactionID.getTransactionID(remoteBatchResponse.getID()), remoteBatchResponse);
+                                listOfRemoteTransactionsPreparedLocally.put(TransactionID.getTransactionID(remoteBatchResponse.getID()), remoteBatchResponse);
                             }
+                        } else {
+                            abortedDistributedTransactions.add(TransactionID.getTransactionID(entrySet.getValue().getTransactionID()));
+                            log.log(Level.WARNING, "Remote transaction could not be prepared locally: "+ remoteBatch.toString()+ ". Transactions part of this batch will be aborted.");
                         }
                     }
                 }
@@ -418,38 +427,6 @@ public class TransactionProcessor {
 
     public BFTClient getBFTClient() {
         return bftClient;
-    }
-
-    public static void main(String[] args) throws IOException {
-/*        MerkleBTree tree = new MerkleBTree();
-        int maxlen = 120;
-        byte[][] retHashes = new byte[maxlen][];
-        Optional<byte[]>[] rootHashes = new Optional[maxlen];
-        for (Integer i = 0; i < maxlen; i++) {
-            byte[] rawkey = ("K" + i).getBytes();
-            byte[] rawvalue = ("V" + i).getBytes();
-            rootHashes[i] = tree.root.hash;
-
-            retHashes[i] = tree.put(rawkey, rawvalue);
-        }
-        System.out.println(rootHashes[0].equals(rootHashes[2]));
-
-        TreeNode.Nodes nodes = new TreeNode.Nodes();
-        byte[] value = tree.get("K65".getBytes(), nodes);
-        byte[] valueHash = RAMStorage.hash("V65".getBytes());
-
-        System.out.println("Size root hash: " + nodes.root.length + ", hash" + Arrays.toString(nodes.root));
-        System.out.println("Size value hash: " + valueHash.length + ", hash" + Arrays.toString(valueHash));
-        System.out.println(new String(value) + ". Hash list size: " + nodes.nodeHash.size());
-        System.out.println(Arrays.toString(rootHashes[rootHashes.length - 1].get()));
-        for (int i = 0; i < nodes.nodeHash.size(); i++) {
-            byte[] treenodeBytes = nodes.nodeHash.get(i);
-
-            System.out.println("Size of node hash: " + treenodeBytes.length + ", " + Arrays.toString(treenodeBytes));
-
-            System.out.println("Length of value Hash: " + valueHash.length
-                    + ", length of node value hash: " + treenodeBytes.length);
-        }*/
     }
 
 }
