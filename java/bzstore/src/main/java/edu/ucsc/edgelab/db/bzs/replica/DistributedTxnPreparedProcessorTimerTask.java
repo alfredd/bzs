@@ -16,10 +16,12 @@ public class DistributedTxnPreparedProcessorTimerTask extends TimerTask {
 
     @Override
     public void run() {
-        try{
-            processor.startCommitProcessForPreparedTransactions(null, Bzs.TransactionStatus.PREPARED);
+        try {
+            if (processor.getRemotePreparedListSize() > 0)
+                processor.startCommitProcessForPreparedTransactions(null, Bzs.TransactionStatus.PREPARED);
         } catch (Exception e) {
-            log.log(Level.WARNING, "Exception occurred while running scheduled task to process remote prepared transactions: "+e.getLocalizedMessage(), e);
+            log.log(Level.WARNING,
+                    "Exception occurred while running scheduled task to process remote prepared transactions: " + e.getLocalizedMessage(), e);
         }
     }
 }

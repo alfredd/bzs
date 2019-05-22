@@ -163,6 +163,10 @@ public class TransactionProcessor {
         }
     }
 
+    public int getRemotePreparedListSize() {
+        return remotePreparedList.size();
+    }
+
     public Set<TransactionID> startCommitProcessForPreparedTransactions(TransactionID tid, Bzs.TransactionStatus status) {
     /*
         Process distributed transactions starting with all transactions that have already been prepared.
