@@ -22,13 +22,15 @@ public class BenchmarkExecutor implements Runnable {
     private int currentCompleted = 0;
     private int totalClusters = 0;
 
-    private static final Logger LOGGER = Logger.getLogger(BenchmarkExecutor.class.getName());
+    private static final Logger log = Logger.getLogger(BenchmarkExecutor.class.getName());
 
     private final TransactionProcessor transactionProcessor;
     private final ReportBuilder reportBuilder;
     private int totalCount;
     private int processed;
     private int flushed = 0;
+    private final List<String> allWords;
+    private boolean sendLocalOnly;
 
     public BenchmarkExecutor(Integer clusterID, TransactionProcessor transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
@@ -39,17 +41,21 @@ public class BenchmarkExecutor implements Runnable {
         //String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
         String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/" + dataFile;
-        LOGGER.info("Data File path: " + fileName);
+        log.info("Data File path: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
         Set<String> words = new LinkedHashSet<>();
+        allWords = new LinkedList<>();
         while (scanner.hasNext()) {
             String[] line = scanner.next().split(" ");
 
-            for (String word : line)
-                if (word != null)
-                    if (hashmod(word, Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
-                        words.add(word);
+            for (String word : line) {
+                allWords.add(word);
+                Integer cid = hashmod(word, Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count)));
+                if (cid == clusterID) {
+                    words.add(word);
+                }
+            }
         }
         scanner.close();
 
@@ -70,68 +76,67 @@ public class BenchmarkExecutor implements Runnable {
         wordList.addAll(words);
 
 
-        LOGGER.info("Total words read from file: " + wordList.size());
+        log.info("Total words read from file: " + wordList.size());
 
     }
 
-    public Bzs.Transaction generateWriteSet() {
+    public Bzs.Transaction generateWriteSet(Integer operationCount) {
         TransactionManager transactionManager = new TransactionManager();
         Random random = new Random();
+        List<String> wordListForGeneratingWriteSet = this.wordList;
+        if (!sendLocalOnly) {
+            wordListForGeneratingWriteSet = allWords;
+        }
         int writeCount = 0;
-        while (writeCount == 0)
-            writeCount = random.nextInt(10);
+        while (writeCount == 0) {
+            writeCount = random.nextInt(operationCount);
+        }
         for (int i = 0; i < writeCount; i++) {
-            int keyIndex = random.nextInt(wordList.size());
-            int valueIndex = random.nextInt(wordList.size());
-//            int clusterId = hashmod(wordList.get(keyIndex), totalClusters);
-            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex), clusterID);
+            int keyIndex = random.nextInt(wordListForGeneratingWriteSet.size());
+            int valueIndex = random.nextInt(wordListForGeneratingWriteSet.size());
+            int cid = clusterID;
+            if (!sendLocalOnly)
+                cid = hashmod(wordListForGeneratingWriteSet.get(keyIndex), totalClusters);
+            transactionManager.write(wordListForGeneratingWriteSet.get(keyIndex), wordListForGeneratingWriteSet.get(valueIndex), cid);
         }
         return transactionManager.getTransaction();
     }
 
     @Override
     public void run() {
+        int delayMs = 15000;
         try {
             BZStoreProperties properties = new BZStoreProperties();
             String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
-            Integer delayMs = Integer.decode(delay);
-            LOGGER.info("Benchmark tests will run after " + delay + "milliseconds");
+            delayMs = Integer.decode(delay);
+            log.info("Benchmark tests will run after " + delay + "milliseconds");
             Thread.sleep(delayMs);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
+        this.sendLocalOnly = true;
         started = true;
-        int n = 2;
-        int m = 20;
-        this.totalCount = n * m;
+        int txnCount = 40;
+        int maxOperations = 8;
+        this.totalCount = txnCount;
         this.processed = 0;
-        sendNTransactions(n, m);
+        sendNLocalTransactions(txnCount, maxOperations);
+        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
 
     }
 
-    public void sendNTransactions(int n, int m) {
+    public void sendNLocalTransactions(int n, int m) {
         while ((--n) >= 0) {
             sendWriteOnlyTransactions(m);
-//            try {
-//                Thread.sleep(20);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
         }
     }
 
-    public void sendWriteOnlyTransactions(int i) {
+    public void sendWriteOnlyTransactions(int totalOperations) {
 
-        while ((i--) > 0) {
-            Bzs.Transaction writeTransaction = generateWriteSet();
-            StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
-            transactionProcessor.processTransaction(writeTransaction, responseObserver);
-            transactionCount += 1;
-        }
-    }
-
-    public void sendReadOnlyTransactions(int i) {
-
+        Bzs.Transaction writeTransaction = generateWriteSet(totalOperations);
+        StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
+        transactionProcessor.processTransaction(writeTransaction, responseObserver);
+        transactionCount += 1;
     }
 
     public StreamObserver<Bzs.TransactionResponse> getTransactionResponseStreamObserver() {
@@ -164,7 +169,7 @@ public class BenchmarkExecutor implements Runnable {
         processed += currentCompleted;
         if (started && currentCompleted != previousCompleted) {
             flushed = 0;
-            LOGGER.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
+            log.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
                     transactionsFailed));
             long latency = epochProcessingEndTime - epochProcessingStartTime;
             double throughputTps = latency == 0 ? 0 : (double) transactionsProcessedInEpoch * 1000 / (latency);
