@@ -123,13 +123,13 @@ public class BenchmarkExecutor implements Runnable {
         sendTransactions(txnCount, maxOperations);
         log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
 
-        try {
-            Thread.sleep(delayMs);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        sendLocalOnly=false;
-        sendTransactions(txnCount,maxOperations);
+//        try {
+//            Thread.sleep(delayMs);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        sendLocalOnly=false;
+//        sendTransactions(txnCount,maxOperations);
     }
 
     public void sendTransactions(int n, int m) {
