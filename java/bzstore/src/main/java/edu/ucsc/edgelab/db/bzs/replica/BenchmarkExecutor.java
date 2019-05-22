@@ -48,8 +48,7 @@ public class BenchmarkExecutor implements Runnable {
 
             for (String word : line)
                 if (word != null)
-//                    if (hashmod(word,
-//                            Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
+                    if (hashmod(word, Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count))) == clusterID)
                         words.add(word);
         }
         scanner.close();
@@ -84,8 +83,8 @@ public class BenchmarkExecutor implements Runnable {
         for (int i = 0; i < writeCount; i++) {
             int keyIndex = random.nextInt(wordList.size());
             int valueIndex = random.nextInt(wordList.size());
-            int clusterId = hashmod(wordList.get(keyIndex), totalClusters);
-            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex), clusterId);
+//            int clusterId = hashmod(wordList.get(keyIndex), totalClusters);
+            transactionManager.write(wordList.get(keyIndex), wordList.get(valueIndex), clusterID);
         }
         return transactionManager.getTransaction();
     }
