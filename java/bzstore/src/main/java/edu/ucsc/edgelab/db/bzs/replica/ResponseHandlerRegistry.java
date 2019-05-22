@@ -114,7 +114,7 @@ public class ResponseHandlerRegistry {
                                     StreamObserver<Bzs.TransactionResponse> responseObserver) {
         Integer epochNumber = tid.getEpochNumber();
         Integer sequenceNumber = tid.getSequenceNumber();
-        LOG.info("Adding transaction to request handler registry. TID: "+tid);
+        LOG.info("Adding transaction to request handler registry. TID: " + tid);
         Map<Integer, StreamObserver<Bzs.TransactionResponse>> epochHistory =
                 remoteRequestHandlerRegistry.computeIfAbsent(epochNumber, k -> new LinkedHashMap<>());
         epochHistory.put(sequenceNumber, responseObserver);
@@ -122,5 +122,8 @@ public class ResponseHandlerRegistry {
         Map<Integer, Bzs.Transaction> epochTransactionHistory = remoteRequestRegistry.computeIfAbsent(epochNumber,
                 k -> new LinkedHashMap<>());
         epochTransactionHistory.put(sequenceNumber, request);
+        LOG.info("Transaction with tid: " + tid + " are present in both registries? "
+                + remoteRequestHandlerRegistry.get(epochNumber).containsKey(sequenceNumber) + ", "
+                + remoteRequestRegistry.get(epochNumber).containsKey(sequenceNumber));
     }
 }
