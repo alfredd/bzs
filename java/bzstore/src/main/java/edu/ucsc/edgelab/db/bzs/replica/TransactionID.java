@@ -40,6 +40,11 @@ class TransactionID extends TuplePair implements Comparable<TransactionID>{
     }
     @Override
     public String toString() {
-        return String.format("(Epoch, Sequence)=(%d,%d)",first,second);
+        return String.format("((Epoch, Sequence)=(%d,%d))",first,second);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getTiD().hashCode();
     }
 }
