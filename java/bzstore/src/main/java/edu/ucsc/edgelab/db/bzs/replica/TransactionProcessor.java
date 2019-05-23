@@ -156,6 +156,8 @@ public class TransactionProcessor {
                 Process Remote-Only transactions and return.
              */
             if (remoteOnlyTid.contains(tid)) {
+                log.info("TID: "+ tid+" contains remote-only operations.");
+
                 Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
                 if (t != null && status.equals(Bzs.TransactionStatus.PREPARED)) {
                     remoteTransactionProcessor.commitAsync(tid, t);
