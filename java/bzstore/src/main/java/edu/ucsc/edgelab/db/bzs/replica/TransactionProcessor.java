@@ -190,7 +190,7 @@ public class TransactionProcessor {
         }
         log.info("Remaining TIDs in remotePreparedList= " + remotePreparedList);
         Set<TransactionID> completed = new HashSet<>();
-        for (int i = 0; i <= remaining; i++) {
+        for (int i = 0; i < remaining; i++) {
             TransactionID tid2 = remotePreparedList.get(i);
             Bzs.Transaction transaction = responseHandlerRegistry.getRemoteTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
 //            log.info("Processing distributed transaction commit.");
