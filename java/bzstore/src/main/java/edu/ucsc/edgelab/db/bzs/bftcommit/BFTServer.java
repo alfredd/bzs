@@ -54,7 +54,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 Serializer serializer = new Serializer(clusterID, replicaID);
                 String epochId = transactionBatch.getID();
                 Integer versionNumber = Integer.decode(epochId.split(":")[0]);
-                logger.info("Processing transaction batch from Epoch: " + epochId+ ". Transaction batch: "+transactionBatch.toString());
+                logger.info("Processing transaction batch from Epoch: " + epochId + ". Transaction batch: " + transactionBatch.toString());
 
                 for (int transactionIndex = 0; transactionIndex < transactionBatch.getTransactionsCount(); transactionIndex++) {
                     Bzs.Transaction transaction = transactionBatch.getTransactions(transactionIndex);
@@ -64,22 +64,22 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 "Returning random bytes. Could not serialize the transaction: " + transaction.toString());
                         return getRandomBytes();
                     }
-                    logger.info("Transaction is serializable. Processing BFT prepare: "+transaction);
+                    logger.info("Transaction is serializable. Processing BFT prepare: " + transaction);
                     Bzs.TransactionResponse response;
                     Bzs.TransactionResponse.Builder responseBuilder = Bzs.TransactionResponse.newBuilder();
                     for (int i = 0; i < transaction.getWriteOperationsCount(); i++) {
                         Bzs.Write writeOp = transaction.getWriteOperations(i);
-                        if (writeOp.getClusterID()==clusterID) {
-                            BZStoreData bzStoreData;
-                            String key = writeOp.getKey();
-                            bzStoreData = getBzStoreData(key);
-                            Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
-                                    .setKey(key)
-                                    .setValue(writeOp.getValue())
-                                    .setVersion(versionNumber)
-                                    .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
-                            responseBuilder.addWriteResponses(writeResponse);
-                        }
+//                        if (writeOp.getClusterID()==clusterID) {
+                        BZStoreData bzStoreData;
+                        String key = writeOp.getKey();
+                        bzStoreData = getBzStoreData(key);
+                        Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
+                                .setKey(key)
+                                .setValue(writeOp.getValue())
+                                .setVersion(versionNumber)
+                                .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
+                        responseBuilder.addWriteResponses(writeResponse);
+//                        }
 
                     }
                     responseBuilder.setStatus(Bzs.TransactionStatus.COMMITTED).setTransactionID(transaction.getTransactionID());
@@ -90,7 +90,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 batchResponseBuilder.setID(epochId);
                 batchResponse = batchResponseBuilder.build();
                 tbrCache.put(epochId, batchResponse);
-                logger.info("Response prepared: "+batchResponse.toString());
+                logger.info("Response prepared: " + batchResponse.toString());
                 reply = batchResponse.toByteArray();
             } else if (transactionBatch.getOperation().equals(Bzs.Operation.BFT_COMMIT)) {
                 String id = transactionBatch.getID();
@@ -112,15 +112,18 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 writeResponse.getVersion(),
                                 writeResponse.getResponseDigest());
                         try {
-                            String key = writeResponse.getKey();
-                            BZDatabaseController.commit(key, data);
-                            committedKeys.add(key);
-                            MerkleBTreeManager.insert(key,
-                                    Bzs.DBData.newBuilder()
-                                            .setValue(data.value)
-                                            .setVersion(data.version)
-                                            .build(),
-                                    true);
+                            if (writeResponse.getClusterID() == this.clusterID) {
+                                logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}", writeResponse.getKey(), writeResponse.getValue(), writeResponse.getVersion()));
+                                String key = writeResponse.getKey();
+                                BZDatabaseController.commit(key, data);
+                                committedKeys.add(key);
+                                MerkleBTreeManager.insert(key,
+                                        Bzs.DBData.newBuilder()
+                                                .setValue(data.value)
+                                                .setVersion(data.version)
+                                                .build(),
+                                        true);
+                            }
 
                         } catch (InvalidCommitException e) {
 //                            logger.log(Level.WARNING, "Commit failed for transaction: " + response.toString() + ". " +
