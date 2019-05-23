@@ -185,10 +185,8 @@ public class TransactionProcessor {
     /*
         Process distributed transactions starting with all transactions that have already been prepared.
      */
-//        int remaining = remotePreparedList.size();
         if (tid != null && status.equals(Bzs.TransactionStatus.PREPARED)) {
             this.remotePreparedList.add(tid);
-//            remaining = remotePreparedList.size();
         }
         log.info("Remaining TIDs in remotePreparedList= " + remotePreparedList);
         Set<TransactionID> completed = new HashSet<>();
@@ -212,44 +210,6 @@ public class TransactionProcessor {
                 log.log(Level.WARNING, "Could not initiate commit for tid: "+ tid+", transaction: "+transaction);
             }
         }
-
-/*        for (int i = 0; i < remaining; i++) {
-            TransactionID tid2 = remotePreparedList.get(i);
-            Bzs.Transaction transaction = responseHandlerRegistry.getRemoteTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
-//            log.info("Processing distributed transaction commit.");
-            boolean commitInitiated = processRemoteCommits(tid2, transaction);
-            if (commitInitiated)
-                completed.add(tid2);
-        }*/
-
-            /*
-                Process current transaction.
-             */
-/*        if (tid != null) {
-            Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
-            if (t != null) {
-                boolean executionDone = false;
-                if (status.equals(Bzs.TransactionStatus.ABORTED)) {
-                    log.info("Sending message to clients for aborted transaction: " + tid + ", " + t);
-                    sendResponseToClient(tid, status, t);
-                } else {
-                    executionDone = processRemoteCommits(tid, t);
-                    if (executionDone) {
-                        completed.add(tid);
-                    }
-                }
-            } else {
-                log.info("Transaction with TID: " + tid + " has not yet been prepared locally.");
-            }
-        }*/
-
-            /*
-                Remove processed transactions from remotePreparedList
-             */
-
-//        for (TransactionID id : completed) {
-//            remotePreparedList.remove(id);
-//        }
         return completed;
     }
 
