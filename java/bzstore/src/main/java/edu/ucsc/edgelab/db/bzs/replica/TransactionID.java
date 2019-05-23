@@ -24,6 +24,12 @@ class TransactionID extends TuplePair implements Comparable<TransactionID>{
         return second - t2.second;
     }
 
+    @Override
+    public boolean equals(Object tid) {
+        TransactionID otherTid = ((TransactionID) tid);
+        return this.first==otherTid.first && this.second==otherTid.second;
+    }
+
     public String getTiD () {
         return String.format("%d:%d",first,second);
     }
