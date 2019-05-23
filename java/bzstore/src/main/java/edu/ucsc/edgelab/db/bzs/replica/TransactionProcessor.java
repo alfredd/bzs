@@ -282,14 +282,17 @@ public class TransactionProcessor {
             }
 //            log.info(String.format("Resetting epoch: %d, sequence numbers: %d", epochNumber, sequenceNumber));
             final Integer epoch = epochNumber;
+            Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getLocalTransactions(epoch);
+
+            Map<Integer, Bzs.Transaction> remoteTransactions = responseHandlerRegistry.getRemoteTransactions(epoch);
+            if (transactions.size()<=0 && remoteTransactions.size()<=0) {
+                return;
+            }
             log.info("Epoch number: " + epoch + " , Sequence number: "+sequenceNumber);
             epochNumber += 1;
             sequenceNumber = 0;
             serializer.resetEpoch();
             // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
-            Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getLocalTransactions(epoch);
-
-            Map<Integer, Bzs.Transaction> remoteTransactions = responseHandlerRegistry.getRemoteTransactions(epoch);
 
             Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers = responseHandlerRegistry.getLocalTransactionObservers(epoch);
             long startTime = 0;
@@ -387,7 +390,7 @@ public class TransactionProcessor {
             responseHandlerRegistry.clearLocalHistory(epoch);
             if (benchmarkExecutor != null) {
                 benchmarkExecutor.logTransactionDetails(
-                        epochNumber,
+                        epoch,
                         transactionCount,
                         processed,
                         failed,
