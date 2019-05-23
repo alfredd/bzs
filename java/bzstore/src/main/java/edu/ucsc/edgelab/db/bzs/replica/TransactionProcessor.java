@@ -41,7 +41,7 @@ public class TransactionProcessor {
         localDataVerifier = new LocalDataVerifier(clusterID);
         serializer = new Serializer(clusterID, replicaId);
         sequenceNumber = 0;
-        epochNumber = BZDatabaseController.getEpochCount();
+        epochNumber = 0;
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
         remotePreparedList = new LinkedList<>();
@@ -63,6 +63,7 @@ public class TransactionProcessor {
 
     public void initTransactionProcessor() {
         log.info("Initializing Transaction Processor for server: " + clusterID + " " + replicaID);
+        epochNumber = BZDatabaseController.getEpochCount();
         initMaxBatchSize();
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
