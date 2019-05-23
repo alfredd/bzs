@@ -188,7 +188,7 @@ public class TransactionProcessor {
         for (int i = 0; i < remaining; i++) {
             TransactionID tid2 = remotePreparedList.get(i);
             Bzs.Transaction transaction = responseHandlerRegistry.getRemoteTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
-            log.info("Processing distributed transaction commit.");
+//            log.info("Processing distributed transaction commit.");
             boolean commitInitiated = processRemoteCommits(tid2, transaction);
             if (commitInitiated)
                 completed.add(tid2);
@@ -324,6 +324,7 @@ public class TransactionProcessor {
                         if (remoteBatchResponse != null) {
                             log.info("Local prepare completed for distributed transaction: "+remoteBatchResponse);
                             for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
+                                log.info("Adding responses to list listOfRemoteTransactionsPreparedLocally: "+ response);
                                 listOfRemoteTransactionsPreparedLocally.put(TransactionID.getTransactionID(remoteBatchResponse.getID()), remoteBatchResponse);
                             }
                         } else {

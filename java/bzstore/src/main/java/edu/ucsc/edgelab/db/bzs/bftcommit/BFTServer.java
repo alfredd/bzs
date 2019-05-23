@@ -77,7 +77,9 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 .setKey(key)
                                 .setValue(writeOp.getValue())
                                 .setVersion(versionNumber)
+                                .setClusterID(writeOp.getClusterID())
                                 .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
+
                         responseBuilder.addWriteResponses(writeResponse);
 //                        }
 
