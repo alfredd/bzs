@@ -30,7 +30,7 @@ public class TransactionProcessor {
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
     private List<TransactionID> remotePreparedList;
-    private Map<TransactionID, Bzs.TransactionBatchResponse> listOfRemoteTransactionsPreparedLocally;
+    private Map<String, Bzs.TransactionBatchResponse> listOfRemoteTransactionsPreparedLocally;
     private Set<TransactionID> remoteOnlyTid = new LinkedHashSet<>();
     private ClusterKeysAccessor clusterKeysAccessor;
     private Set<TransactionID> abortedDistributedTransactions = new LinkedHashSet<>();
@@ -235,7 +235,7 @@ public class TransactionProcessor {
     private boolean processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
         boolean status = true;
         log.info("List of listOfRemoteTransactionsPreparedLocally: "+ listOfRemoteTransactionsPreparedLocally);
-        Bzs.TransactionBatchResponse batchResponse = listOfRemoteTransactionsPreparedLocally.get(tid);
+        Bzs.TransactionBatchResponse batchResponse = listOfRemoteTransactionsPreparedLocally.get(tid.getTiD());
         log.info("Processing remote commits: Tid: " + tid);
         if (batchResponse != null) {
             int commitResponse = bftClient.performDbCommit(batchResponse);
@@ -333,7 +333,7 @@ public class TransactionProcessor {
                             log.info("Local prepare completed for distributed transaction: " + remoteBatchResponse);
                             for (Bzs.TransactionResponse response : remoteBatchResponse.getResponsesList()) {
                                 log.info("Adding responses to list listOfRemoteTransactionsPreparedLocally: " + response);
-                                listOfRemoteTransactionsPreparedLocally.put(TransactionID.getTransactionID(remoteBatchResponse.getID()),
+                                listOfRemoteTransactionsPreparedLocally.put(TransactionID.getTransactionID(remoteBatchResponse.getID()).getTiD(),
                                         remoteBatchResponse);
                             }
                         } else {
