@@ -68,7 +68,7 @@ public class TransactionProcessor {
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
         epochManager.startEpochMaintenance();
-        epochManager.startScheduledTimerTask(new DistributedTxnPreparedProcessorTimerTask(this), "Remote Prepared Processor TimerTask", 1.0);
+        epochManager.startScheduledTimerTask(new DistributedTxnPreparedProcessorTimerTask(this), "Remote Prepared Processor TimerTask", 2.0);
         initLocalDatabase();
         remoteTransactionProcessor.setObserver(this);
         Timer interClusterConnectorTimer = new Timer("IntraClusterPKIAccessor", true);
@@ -185,26 +185,47 @@ public class TransactionProcessor {
     /*
         Process distributed transactions starting with all transactions that have already been prepared.
      */
-        int remaining = remotePreparedList.size();
+//        int remaining = remotePreparedList.size();
         if (tid != null && status.equals(Bzs.TransactionStatus.PREPARED)) {
             this.remotePreparedList.add(tid);
-            remaining = remotePreparedList.size();
+//            remaining = remotePreparedList.size();
         }
         log.info("Remaining TIDs in remotePreparedList= " + remotePreparedList);
         Set<TransactionID> completed = new HashSet<>();
-        for (int i = 0; i < remaining; i++) {
+
+        for (TransactionID tempTid: remotePreparedList) {
+            if (listOfRemoteTransactionsPreparedLocally.containsKey(tempTid.getTiD())) {
+                completed.add(tempTid);
+            }
+        }
+        for (TransactionID compTid: completed) {
+            remotePreparedList.remove(compTid);
+        }
+
+        for (TransactionID preparedTID: completed) {
+            Bzs.Transaction transaction = responseHandlerRegistry.getRemoteTransaction(preparedTID.getEpochNumber(), preparedTID.getSequenceNumber());
+//            log.info("Processing distributed transaction commit.");
+            boolean commitInitiated = processRemoteCommits(preparedTID, transaction);
+            if (commitInitiated) {
+                log.info("Commit initiated for "+ tid);
+            } else {
+                log.log(Level.WARNING, "Could not initiate commit for tid: "+ tid+", transaction: "+transaction);
+            }
+        }
+
+/*        for (int i = 0; i < remaining; i++) {
             TransactionID tid2 = remotePreparedList.get(i);
             Bzs.Transaction transaction = responseHandlerRegistry.getRemoteTransaction(tid2.getEpochNumber(), tid2.getSequenceNumber());
 //            log.info("Processing distributed transaction commit.");
             boolean commitInitiated = processRemoteCommits(tid2, transaction);
             if (commitInitiated)
                 completed.add(tid2);
-        }
+        }*/
 
             /*
                 Process current transaction.
              */
-        if (tid != null) {
+/*        if (tid != null) {
             Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
             if (t != null) {
                 boolean executionDone = false;
@@ -220,15 +241,15 @@ public class TransactionProcessor {
             } else {
                 log.info("Transaction with TID: " + tid + " has not yet been prepared locally.");
             }
-        }
+        }*/
 
             /*
                 Remove processed transactions from remotePreparedList
              */
 
-        for (TransactionID id : completed) {
-            remotePreparedList.remove(id);
-        }
+//        for (TransactionID id : completed) {
+//            remotePreparedList.remove(id);
+//        }
         return completed;
     }
 
@@ -324,7 +345,7 @@ public class TransactionProcessor {
 
                 log.info("Processing transaction batch in epoch: " + epoch);
 
-                log.info("Performing BFT Commit");
+                log.info("Performing BFT Prepare");
                 if (remoteTransactions != null) {
                     for (Map.Entry<Integer, Bzs.Transaction> entrySet : remoteTransactions.entrySet()) {
 
