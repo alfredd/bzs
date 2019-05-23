@@ -285,7 +285,7 @@ public class TransactionProcessor {
             Map<Integer, Bzs.Transaction> transactions = responseHandlerRegistry.getLocalTransactions(epoch);
 
             Map<Integer, Bzs.Transaction> remoteTransactions = responseHandlerRegistry.getRemoteTransactions(epoch);
-            if (transactions.size()<=0 && remoteTransactions.size()<=0) {
+            if (transactions==null && remoteTransactions==null) {
                 return;
             }
             log.info("Epoch number: " + epoch + " , Sequence number: "+sequenceNumber);
