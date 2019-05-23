@@ -54,6 +54,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 try {
                     batch = createTransactionBatch(request, operation);
                     batchResponse = processor.getBFTClient().performCommitPrepare(batch);
+                    log.info("Response of ClusterService Prepare: "+ batchResponse);
                 } catch (InvalidCommitException e) {
                     log.log(Level.WARNING, e.getLocalizedMessage());
                 }
