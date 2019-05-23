@@ -232,6 +232,7 @@ public class TransactionProcessor {
 
     private boolean processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
         boolean status = true;
+        log.info("List of listOfRemoteTransactionsPreparedLocally: "+ listOfRemoteTransactionsPreparedLocally);
         Bzs.TransactionBatchResponse batchResponse = listOfRemoteTransactionsPreparedLocally.get(tid);
         log.info("Processing remote commits: Tid: " + tid);
         if (batchResponse != null) {
