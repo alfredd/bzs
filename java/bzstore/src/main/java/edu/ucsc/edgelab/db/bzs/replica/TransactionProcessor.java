@@ -272,14 +272,20 @@ public class TransactionProcessor {
     private void sendResponseToClient(TransactionID tid, Bzs.TransactionStatus status, Bzs.Transaction t) {
         StreamObserver<Bzs.TransactionResponse> r =
                 responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
-
+        if (r==null) {
+            log.log(Level.WARNING, "Trying to send response to a client that does not exist in the response handler registry.");
+            return;
+        }
         Bzs.TransactionResponse response = Bzs.TransactionResponse.newBuilder().setStatus(status).build();
         log.log(Level.INFO, "Transaction completed with TID" + tid + ", status: " + status + ", response to " +
                 "client: " + (response == null ? "null" : response.toString()));
         r.onNext(response);
         r.onCompleted();
+        log.info("Sent transaction response to client.");
         responseHandlerRegistry.removeRemoteTransactions(tid.getEpochNumber(), tid.getSequenceNumber());
+        log.info("Removed tid"+tid+" from Epoch history.");
         LockManager.releaseLocks(t);
+        log.info("Released locks held for the transaction.");
     }
 
 
