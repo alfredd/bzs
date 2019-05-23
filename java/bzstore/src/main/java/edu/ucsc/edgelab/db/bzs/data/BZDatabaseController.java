@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.rocksdb.RocksDBException;
 
 import java.io.ByteArrayInputStream;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class BZDatabaseController {
@@ -23,6 +24,18 @@ public final class BZDatabaseController {
 //        LOGGER.info("Committing data with key: {"+key+"}");
         BZ_DATABASE_CONTROLLER.db.commit(key,data);
 //        LOGGER.info("Committed data with key: {"+key+"}");
+    }
+
+    public static void setEpochCount(Integer epochNumber) {
+        try {
+            BZ_DATABASE_CONTROLLER.db.commitEpochNumber(epochNumber);
+        } catch (RocksDBException e) {
+            LOGGER.log(Level.WARNING, "Could not commit epoch number to database: "+ e.getLocalizedMessage(),e);
+        }
+    }
+
+    public static Integer getEpochCount() {
+        return BZ_DATABASE_CONTROLLER.db.getEpochNumber();
     }
 
     public static BZStoreData getlatest(String key) {

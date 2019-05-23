@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 class BackendDb {
 
+    public static final String EPOCH = "Epoch";
     private RocksDB db;
 
     public static final Logger LOGGER = Logger.getLogger(BackendDb.class.getName());
@@ -26,6 +27,20 @@ class BackendDb {
         LOGGER.info("RocksDB database file opened: " + dbPath);
     }
 
+    void commitEpochNumber(Integer epochNumber) throws RocksDBException {
+        db.put(EPOCH.getBytes(), epochNumber.toString().getBytes());
+    }
+
+    Integer getEpochNumber() {
+        Integer epoch = 0;
+        try {
+            byte[] value = db.get(EPOCH.getBytes());
+            epoch = Integer.decode(new String(value));
+        }catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Could not load epoch number from database");
+        }
+        return epoch;
+    }
 
     void commit(String key, BZStoreData dataList) throws InvalidCommitException {
         Bzs.DBData dbData = Bzs.DBData.newBuilder()

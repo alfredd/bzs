@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 
@@ -40,7 +41,7 @@ public class TransactionProcessor {
         localDataVerifier = new LocalDataVerifier(clusterID);
         serializer = new Serializer(clusterID, replicaId);
         sequenceNumber = 0;
-        epochNumber = 0;
+        epochNumber = BZDatabaseController.getEpochCount();
         responseHandlerRegistry = new ResponseHandlerRegistry();
         remoteTransactionProcessor = new RemoteTransactionProcessor(clusterID, replicaID);
         remotePreparedList = new LinkedList<>();
@@ -226,7 +227,7 @@ public class TransactionProcessor {
     private boolean processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
         boolean status = true;
         Bzs.TransactionBatchResponse batchResponse = listOfRemoteTransactionsPreparedLocally.get(tid);
-        log.info("Processing remote commits: Tid: " + tid + ". Transaction : " + t);
+        log.info("Processing remote commits: Tid: " + tid);
         if (batchResponse != null) {
             int commitResponse = bftClient.performDbCommit(batchResponse);
 
@@ -238,7 +239,7 @@ public class TransactionProcessor {
             }
         } else {
             status = false;
-            log.info("Local prepare not completed for transaction: Tid: " + tid + ". Transaction : " + t);
+            log.info("Local prepare not completed for transaction: Tid: " + tid);
         }
         return status;
     }
@@ -290,6 +291,7 @@ public class TransactionProcessor {
             }
             log.info("Epoch number: " + epoch + " , Sequence number: "+sequenceNumber);
             epochNumber += 1;
+            BZDatabaseController.setEpochCount(epochNumber);
             sequenceNumber = 0;
             serializer.resetEpoch();
             // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
