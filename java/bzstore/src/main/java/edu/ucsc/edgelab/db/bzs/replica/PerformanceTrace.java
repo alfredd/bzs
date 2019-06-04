@@ -1,8 +1,8 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,7 +10,7 @@ public class PerformanceTrace {
 
     public static final Logger log = Logger.getLogger(PerformanceTrace.class.getName());
     private int metricCount;
-    private Map<Integer, Metrics> batchMetrics = new HashMap<>();
+    private Map<Integer, Metrics> batchMetrics = new TreeMap<>();
     private ReportBuilder reportBuilder;
 
     public PerformanceTrace() {
@@ -43,7 +43,20 @@ public class PerformanceTrace {
         try {
             reportBuilder = new ReportBuilder("WedgeDB_perf_report", fields);
         } catch (IOException e) {
-            log.log(Level.WARNING, "Exception occurred while creating the report builder. "+ e.getLocalizedMessage(), e);
+            log.log(Level.WARNING, "Exception occurred while creating the report builder. " + e.getLocalizedMessage(), e);
+        }
+    }
+
+    public void writeToFile() {
+        for (int batchnumber : batchMetrics.keySet()) {
+            Metrics m = batchMetrics.get(batchnumber);
+            reportBuilder.writeLine(String.format(
+                            "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
+                            "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
+                            "%d, %d, %d, %d, %d, %d\n "
+                    // TODO add more parameters for the performance analysis.
+
+            ));
         }
     }
 
@@ -116,7 +129,6 @@ public class PerformanceTrace {
             m.remoteTransactionsFailed += count;
         }
     }
-
 
 
     public static void main(String[] args) {
