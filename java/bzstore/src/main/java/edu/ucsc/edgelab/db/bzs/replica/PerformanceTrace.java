@@ -14,29 +14,30 @@ public class PerformanceTrace {
     private ReportBuilder reportBuilder;
 
     public PerformanceTrace() {
-        String[] fields = new String[]{"Epoch Number, ",
-                "Total Txns in Epoch, ",
-                "Total Local Txns in Epoch, ",
-                "Total Remote Txns in Epoch, ",
-                "Local Txns Prepared Count, ",
-                "Distributed Txns Prepared Count, ",
-                "Local Txns Committed In Epoch, ",
-                "Distributed Txns CommittedIn Epoch, ",
-                "Local Txns Failed In Epoch(F), ",
-                "Distributed Txns Failed In Epoch(F), ",
-                "Total Txns Committed, ",
-                "Total Txns Failed, ",
-                "Local Txns Prepare Time(ms), ",
-                "Distributed Txns Prepare Time(ms), ",
-                "Local Txn Commit Time(ms), ",
-                "Dist Txn Commit Time(ms), ",
-                "Local Txn Throughput(Tps), ",
-                "Distributed Txn Throughput(Tps), ",
-                "Local Txn Bytes processed (Bytes), ",
-                "Remote Txn Bytes processed (Bytes), ",
-                "Local Txn Throughput (Bps), ",
-                "Remote Txn Throughput (Bps), ",
-                "Throughput (Bps)\n"
+        String[] fields = new String[]{"Epoch Number, ",    // 1 Done
+                "Total Txns in Epoch, ",                    // 2 Done
+                "Total Local Txns in Epoch, ",              // 3 Done
+                "Total Remote Txns in Epoch, ",             // 4 Done
+                "Local Txns Prepared Count, ",              // 5 Done
+                "Distributed Txns Prepared Count, ",        // 6 Done
+                "Local Txns Committed In Epoch, ",          // 7 Done
+                "Distributed Txns CommittedIn Epoch, ",     // 8 Done
+                "Local Txns Failed In Epoch(F), ",          // 9 Done
+                "Distributed Txns Failed In Epoch(F), ",    // 10 Done
+                "Total Txns Committed, ",                   // 11 Sum (7, 8)
+                "Total Txns Failed, ",                      // 12 Sum (9,10)
+                "Local Txns Prepare Time(ms), ",            // 13
+                "Distributed Txns Prepare Time(ms), ",      // 14
+                "Local Txn Commit Time(ms), ",              // 15
+                "Dist Txn Commit Time(ms), ",               // 16
+                "Batch Completion Time(ms), ",              // 17 StopTime - StartTime
+                "Local Txn Throughput(Tps), ",              // 18
+                "Distributed Txn Throughput(Tps), ",        // 19
+                "Local Txn Bytes processed (Bytes), ",      // 20
+                "Remote Txn Bytes processed (Bytes), ",     // 21
+                "Local Txn Throughput (Bps), ",             // 22
+                "Remote Txn Throughput (Bps), ",            // 23
+                "Throughput (Bps)\n"                        // 24
         };
         metricCount = 0;
         try {
@@ -46,17 +47,17 @@ public class PerformanceTrace {
         }
     }
 
-    private Metrics getMetricsForBatch(Integer batchNumber) {
+    private Metrics getMetricsForBatch(final Integer batchNumber) {
         if (!batchMetrics.containsKey(batchNumber)) {
             batchMetrics.put(batchNumber, new Metrics());
         }
         return batchMetrics.get(batchNumber);
     }
 
-    public void setTotalTransactionCount(Integer batchNumber,
-                                         Integer totalTransactionCount,
-                                         Integer localTransactionCount,
-                                         Integer remoteTransactionCount) {
+    public void setTotalTransactionCount(final Integer batchNumber,
+                                         final Integer totalTransactionCount,
+                                         final Integer localTransactionCount,
+                                         final Integer remoteTransactionCount) {
         Metrics m = getMetricsForBatch(batchNumber);
         m.batchNumber = batchNumber;
         m.localTransactionCount = localTransactionCount;
@@ -64,52 +65,52 @@ public class PerformanceTrace {
         m.transactionCount = totalTransactionCount;
     }
 
-    public void setBatchStartTime(Integer batchNumber) {
+    public void setBatchStartTime(final Integer batchNumber, final long batchStartTime) {
         Metrics m = getMetricsForBatch(batchNumber);
-        m.batchStartTime = System.currentTimeMillis();
+        m.batchStartTime = batchStartTime;
     }
 
-    public void setBatchStopTime(Integer batchNumber) {
+    public void setBatchStopTime(final Integer batchNumber, final long batchEndTime) {
         Metrics m = getMetricsForBatch(batchNumber);
-        m.batchEndTime = System.currentTimeMillis();
+        m.batchEndTime = batchEndTime;
     }
 
-    public void incrementLocalPreparedCount(Integer batchNumber, Integer count) {
+    public void incrementLocalPreparedCount(final Integer batchNumber, final Integer count) {
         Metrics m = getMetricsForBatch(batchNumber);
         synchronized (m) {
             m.localPrepared += count;
         }
     }
 
-    public void incrementDistributedPreparedCount(Integer batchNumber, Integer count) {
+    public void incrementDistributedPreparedCount(final Integer batchNumber, final Integer count) {
         Metrics m = getMetricsForBatch(batchNumber);
         synchronized (m) {
             m.distributedPrepared += count;
         }
     }
 
-    public void incrementDistributedCompletedCount(Integer batchNumber, Integer count) {
+    public void incrementDistributedCompletedCount(final Integer batchNumber, final Integer count) {
         Metrics m = getMetricsForBatch(batchNumber);
         synchronized (m) {
             m.distributedCompleted += count;
         }
     }
 
-    public void incrementLocalCompletedCount(Integer batchNumber, Integer count) {
+    public void incrementLocalCompletedCount(final Integer batchNumber, final Integer count) {
         Metrics m = getMetricsForBatch(batchNumber);
         synchronized (m) {
             m.localCompleted += count;
         }
     }
 
-    public void incrementLocalCommitFailedCount(Integer batchNumber, Integer count) {
+    public void incrementLocalCommitFailedCount(final Integer batchNumber, final Integer count) {
         Metrics m = getMetricsForBatch(batchNumber);
         synchronized (m) {
             m.localTransactionsFailed += count;
         }
     }
 
-    public void incrementDistributedCommitFailedCount(Integer batchNumber, Integer count) {
+    public void incrementDistributedCommitFailedCount(final Integer batchNumber, final Integer count) {
         Metrics m = getMetricsForBatch(batchNumber);
         synchronized (m) {
             m.remoteTransactionsFailed += count;
