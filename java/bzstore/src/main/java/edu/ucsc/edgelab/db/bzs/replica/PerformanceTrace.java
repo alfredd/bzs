@@ -1,11 +1,50 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PerformanceTrace {
 
+    public static final Logger log = Logger.getLogger(PerformanceTrace.class.getName());
+    private int metricCount;
     private Map<Integer, Metrics> batchMetrics = new HashMap<>();
+    private ReportBuilder reportBuilder;
+
+    public PerformanceTrace() {
+        String[] fields = new String[]{"Epoch Number, ",
+                "Total Txns in Epoch, ",
+                "Total Local Txns in Epoch, ",
+                "Total Remote Txns in Epoch, ",
+                "Local Txns Prepared Count, ",
+                "Distributed Txns Prepared Count, ",
+                "Local Txns Committed In Epoch, ",
+                "Distributed Txns CommittedIn Epoch, ",
+                "Local Txns Failed In Epoch(F), ",
+                "Distributed Txns Failed In Epoch(F), ",
+                "Total Txns Committed, ",
+                "Total Txns Failed, ",
+                "Local Txns Prepare Time(ms), ",
+                "Distributed Txns Prepare Time(ms), ",
+                "Local Txn Commit Time(ms), ",
+                "Dist Txn Commit Time(ms), ",
+                "Local Txn Throughput(Tps), ",
+                "Distributed Txn Throughput(Tps), ",
+                "Local Txn Bytes processed (Bytes), ",
+                "Remote Txn Bytes processed (Bytes), ",
+                "Local Txn Throughput (Bps), ",
+                "Remote Txn Throughput (Bps), ",
+                "Throughput (Bps)\n"
+        };
+        metricCount = 0;
+        try {
+            reportBuilder = new ReportBuilder("WedgeDB_perf_report", fields);
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Exception occurred while creating the report builder. "+ e.getLocalizedMessage(), e);
+        }
+    }
 
     private Metrics getMetricsForBatch(Integer batchNumber) {
         if (!batchMetrics.containsKey(batchNumber)) {
@@ -76,6 +115,7 @@ public class PerformanceTrace {
             m.remoteTransactionsFailed += count;
         }
     }
+
 
 
     public static void main(String[] args) {
