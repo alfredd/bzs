@@ -23,8 +23,8 @@ service Replica {
 }
 
 service PKIService {
-    rpc GetPublicKey (KeyType) returns (Key);    // Possible interface to retrieve digital signatures from nodes.
-    rpc GetPrivateKey (KeyType) returns (Key);    // Possible interface to retrieve digital signatures from nodes
+    rpc GetPublicKey (KeyType) returns (Key); // Possible interface to retrieve digital signatures from nodes.
+    rpc GetPrivateKey (KeyType) returns (Key); // Possible interface to retrieve digital signatures from nodes
 }
 
 message KeyType {
@@ -32,7 +32,7 @@ message KeyType {
 }
 
 message Key {
-    string key =1;
+    string key = 1;
     string type = 2;
 }
 
@@ -157,8 +157,8 @@ message DBData {
 }
 
 message MerkleTree {
-    bytes root =1;
-    repeated bytes nodes =2;
+    bytes root = 1;
+    repeated bytes nodes = 2;
 }
 
 message VectorClock {
@@ -168,4 +168,13 @@ message VectorClock {
 message Timestamp {
     int32 clusterID = 1;
     int32 epochNumber = 2;
+}
+
+message SmrLogEntry {
+    int32 batchNumber = 1;
+    map<string, Transaction> localPrepare= 2;
+    map<string, Transaction> distributedPrepare= 3;
+    map<string, Transaction> committed= 4;
+    map<int32,int32> dClock = 5;
+    int32 pc = 6;
 }
