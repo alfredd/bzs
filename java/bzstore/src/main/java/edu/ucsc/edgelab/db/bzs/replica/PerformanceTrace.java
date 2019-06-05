@@ -11,6 +11,7 @@ public class PerformanceTrace {
     public static final Logger log = Logger.getLogger(PerformanceTrace.class.getName());
     private int metricCount;
     private Map<Integer, Metrics> batchMetrics = new TreeMap<>();
+    private Map<TransactionID, TransactionMetrics> transactionMetrics = new TreeMap<>();
     private ReportBuilder reportBuilder;
 
     public PerformanceTrace() {
@@ -51,13 +52,73 @@ public class PerformanceTrace {
         for (int batchnumber : batchMetrics.keySet()) {
             Metrics m = batchMetrics.get(batchnumber);
             reportBuilder.writeLine(String.format(
-                            "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
+                    "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
                             "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
                             "%d, %d, %d, %d, %d, %d\n "
                     // TODO add more parameters for the performance analysis.
 
             ));
         }
+    }
+
+    public enum TimingMetric {
+        localPrepareStartTime,
+        localPrepareEndTime,
+        remotePrepareStartTime,
+        remotePrepareEndTime,
+        localCommitTime,
+        remoteCommitTime
+    }
+
+    public enum BatchMetric {
+        prepareBatchNumber,
+        commitBatchNumber
+    }
+
+    public void setTransactionTimingMetric(final TransactionID tid, TimingMetric metric, final long time) {
+        TransactionMetrics m = getTimingMetric(tid);
+        synchronized (m) {
+            switch (metric) {
+                case localPrepareStartTime:
+                    m.prepareStartTime = time;
+                    break;
+                case localPrepareEndTime:
+                    m.prepareEndTime = time;
+                    break;
+                case remotePrepareStartTime:
+                    m.remotePrepareStartTime = time;
+                    break;
+                case remotePrepareEndTime:
+                    m.remotePrepareEndTime = time;
+                case localCommitTime:
+                    m.localCommitTime = time;
+                    break;
+                case remoteCommitTime:
+                    m.remoteCommitTime = time;
+                    break;
+            }
+        }
+    }
+
+    public void setTidBatchInfo(TransactionID tid, BatchMetric metric, int value) {
+        TransactionMetrics m = getTimingMetric(tid);
+        synchronized (m) {
+            switch (metric) {
+                case prepareBatchNumber:
+                    m.prepareBatch = value;
+                    break;
+                case commitBatchNumber:
+                    m.commitBatch = value;
+                    break;
+            }
+        }
+    }
+
+    private TransactionMetrics getTimingMetric(TransactionID tid) {
+        if (!transactionMetrics.containsKey(tid)) {
+            transactionMetrics.put(tid, new TransactionMetrics());
+        }
+        return transactionMetrics.get(tid);
     }
 
     private Metrics getMetricsForBatch(final Integer batchNumber) {
@@ -148,11 +209,15 @@ class Metrics {
     long batchStartTime = 0;
     long batchEndTime = 0;
 
-    //    int localTransactionsCompleted = 0;
+    long localPrepareStartTime = 0;
+    long distributedPrepareStartTime = 0;
+
+    long localPrepareEndTime = 0;
+    long distributedPrepareEndTime = 0;
+
+
     int localTransactionsFailed = 0;
     int remoteTransactionsFailed = 0;
-
-//    int remoteTransactionsCompleted = 0;
 
     int localPrepared = 0;
     int distributedPrepared = 0;
@@ -193,4 +258,15 @@ class Metrics {
                 distributedCompleted
         );
     }
+}
+
+class TransactionMetrics {
+    int prepareBatch;
+    int commitBatch;
+    long prepareStartTime;
+    long prepareEndTime;
+    long remotePrepareStartTime;
+    long remotePrepareEndTime;
+    long localCommitTime;
+    long remoteCommitTime;
 }
