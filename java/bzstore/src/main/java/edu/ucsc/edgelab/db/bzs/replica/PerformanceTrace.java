@@ -85,10 +85,20 @@ public class PerformanceTrace {
                 }
             }
 
-            double averageCompletionTime = (double) completionTimes.stream().mapToLong(i -> i.longValue()).sum() / completionTimes.size();
-            double averageCommitTime = (double) commitTimes.stream().mapToLong(i -> i.longValue()).sum() / commitTimes.size();
-            double averagePrepareTime = ((double) prepareTimes.stream().mapToLong(i -> i.longValue()).sum()) / prepareTimes.size();
-            double averageBatchSpan = ((double) batchSpans.stream().mapToLong(i -> i.intValue()).sum()) / batchSpans.size();
+            double averageCompletionTime = 0.0;
+            double averageCommitTime = 0.0;
+            double averagePrepareTime = 0.0;
+            double averageBatchSpan = 0.0;
+
+
+            if (completionTimes.size() > 0)
+                averageCompletionTime = (double) completionTimes.stream().mapToLong(i -> i.longValue()).sum() / completionTimes.size();
+            if (batchSpans.size() > 0)
+                averageBatchSpan = ((double) batchSpans.stream().mapToLong(i -> i.intValue()).sum()) / batchSpans.size();
+            if (prepareTimes.size() > 0)
+                averagePrepareTime = ((double) prepareTimes.stream().mapToLong(i -> i.longValue()).sum()) / prepareTimes.size();
+            if (commitTimes.size() > 0)
+                averageCommitTime = (double) commitTimes.stream().mapToLong(i -> i.longValue()).sum() / commitTimes.size();
 
             reportBuilder.writeLine(String.format(
                     "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
@@ -108,6 +118,19 @@ public class PerformanceTrace {
 
             batchMetrics.remove(batchnumber);
         }
+    }
+
+    public static void main(String[] args) {
+        List<Integer> nums = new LinkedList<>();
+        nums.add(1);
+        nums.add(3);
+        nums.add(2);
+        nums.add(4);
+        nums.add(5);
+        nums.add(6);
+        double avg = (double) nums.stream().mapToInt(i -> i.intValue()).sum() / nums.size();
+        System.out.println(avg);
+
     }
 
     public enum TimingMetric {
