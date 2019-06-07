@@ -130,8 +130,8 @@ public class TransactionProcessor {
             isDistributedTxn = true;
             log.info("Transaction contains remote operations");
             LockManager.acquireLocks(transaction);
-            performanceTrace.setTidBatchInfo(tid, prepareBatchNumber,tid.getEpochNumber());
-            performanceTrace.setTransactionTimingMetric(tid, remotePrepareStartTime,System.currentTimeMillis());
+            performanceTrace.setTidBatchInfo(tid, prepareBatchNumber, tid.getEpochNumber());
+            performanceTrace.setTransactionTimingMetric(tid, remotePrepareStartTime, System.currentTimeMillis());
             remoteTransactionProcessor.prepareAsync(tid, transaction);
         }
         if (metaInfo.localWrite) {
@@ -163,9 +163,9 @@ public class TransactionProcessor {
             /*
                 Process Remote-Only transactions and return.
              */
-            performanceTrace.setTransactionTimingMetric(tid, PerformanceTrace.TimingMetric.remotePrepareEndTime,System.currentTimeMillis());
+            performanceTrace.setTransactionTimingMetric(tid, PerformanceTrace.TimingMetric.remotePrepareEndTime, System.currentTimeMillis());
             if (remoteOnlyTid.contains(tid)) {
-                log.info("TID: "+ tid+" contains remote-only operations.");
+                log.info("TID: " + tid + " contains remote-only operations.");
 
                 Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
                 if (t != null && status.equals(Bzs.TransactionStatus.PREPARED)) {
@@ -200,23 +200,23 @@ public class TransactionProcessor {
         log.info("Remaining TIDs in remotePreparedList= " + remotePreparedList);
         Set<TransactionID> completed = new HashSet<>();
 
-        for (TransactionID tempTid: remotePreparedList) {
+        for (TransactionID tempTid : remotePreparedList) {
             if (listOfRemoteTransactionsPreparedLocally.containsKey(tempTid.getTiD())) {
                 completed.add(tempTid);
             }
         }
-        for (TransactionID compTid: completed) {
+        for (TransactionID compTid : completed) {
             remotePreparedList.remove(compTid);
         }
 
-        for (TransactionID preparedTID: completed) {
+        for (TransactionID preparedTID : completed) {
             Bzs.Transaction transaction = responseHandlerRegistry.getRemoteTransaction(preparedTID.getEpochNumber(), preparedTID.getSequenceNumber());
 //            log.info("Processing distributed transaction commit.");
             boolean commitInitiated = processRemoteCommits(preparedTID, transaction);
             if (commitInitiated) {
-                log.info("Commit initiated for "+ tid);
+                log.info("Commit initiated for " + tid);
             } else {
-                log.log(Level.WARNING, "Could not initiate commit for tid: "+ tid+", transaction: "+transaction);
+                log.log(Level.WARNING, "Could not initiate commit for tid: " + tid + ", transaction: " + transaction);
             }
         }
         return completed;
@@ -224,7 +224,7 @@ public class TransactionProcessor {
 
     private boolean processRemoteCommits(TransactionID tid, Bzs.Transaction t) {
         boolean status = true;
-        log.info("List of listOfRemoteTransactionsPreparedLocally: "+ listOfRemoteTransactionsPreparedLocally);
+        log.info("List of listOfRemoteTransactionsPreparedLocally: " + listOfRemoteTransactionsPreparedLocally);
         Bzs.TransactionBatchResponse batchResponse = listOfRemoteTransactionsPreparedLocally.get(tid.getTiD());
         log.info("Processing remote commits: Tid: " + tid);
         if (batchResponse != null) {
@@ -247,7 +247,7 @@ public class TransactionProcessor {
 //        this.remotePreparedList.add(tid);
         Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
         performanceTrace.setTransactionTimingMetric(tid, PerformanceTrace.TimingMetric.remoteCommitTime, System.currentTimeMillis());
-        performanceTrace.setTidBatchInfo(tid, PerformanceTrace.BatchMetric.commitBatchNumber,epochUnderProcess);
+        performanceTrace.setTidBatchInfo(tid, PerformanceTrace.BatchMetric.commitBatchNumber, epochUnderProcess);
         if (!status.equals(Bzs.TransactionStatus.COMMITTED))
             remoteTransactionProcessor.abortAsync(tid, t);
         sendResponseToClient(tid, status, t);
@@ -258,7 +258,7 @@ public class TransactionProcessor {
     public void abortOperationObserver(TransactionID tid, Bzs.TransactionStatus transactionStatus) {
         Bzs.Transaction t = responseHandlerRegistry.getTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
         performanceTrace.setTransactionTimingMetric(tid, PerformanceTrace.TimingMetric.localCommitTime, System.currentTimeMillis());
-        performanceTrace.setTidBatchInfo(tid, PerformanceTrace.BatchMetric.failedBatchNumber,epochUnderProcess);
+        performanceTrace.setTidBatchInfo(tid, PerformanceTrace.BatchMetric.failedBatchNumber, epochUnderProcess);
         LockManager.releaseLocks(t);
         remotePreparedList.remove(tid);
     }
@@ -266,7 +266,7 @@ public class TransactionProcessor {
     private void sendResponseToClient(TransactionID tid, Bzs.TransactionStatus status, Bzs.Transaction t) {
         StreamObserver<Bzs.TransactionResponse> r =
                 responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
-        if (r==null) {
+        if (r == null) {
             log.log(Level.WARNING, "Trying to send response to a client that does not exist in the response handler registry.");
             return;
         }
@@ -277,7 +277,7 @@ public class TransactionProcessor {
         r.onCompleted();
         log.info("Sent transaction response to client.");
         responseHandlerRegistry.removeRemoteTransactions(tid.getEpochNumber(), tid.getSequenceNumber());
-        log.info("Removed tid"+tid+" from Epoch history.");
+        log.info("Removed tid" + tid + " from Epoch history.");
         LockManager.releaseLocks(t);
         log.info("Released locks held for the transaction.");
     }
@@ -298,7 +298,10 @@ public class TransactionProcessor {
             if (transactions == null && remoteTransactions == null) {
                 return;
             }
-            performanceTrace.setTotalTransactionCount(epoch,transactions.size()+remoteTransactions.size(),transactions.size(),remoteTransactions.size());
+            final int localTransactionsCount = transactions == null ? 0 : transactions.size();
+            final int distributedTransactionsCount = remoteTransactions == null ? 0 : remoteTransactions.size();
+            performanceTrace.setTotalTransactionCount(epoch, localTransactionsCount + distributedTransactionsCount, localTransactionsCount,
+                    distributedTransactionsCount);
             log.info("Epoch number: " + epoch + " , Sequence number: " + sequenceNumber);
             epochNumber += 1;
             BZDatabaseController.setEpochCount(epochNumber);
@@ -307,16 +310,16 @@ public class TransactionProcessor {
             // Process transactions in the current epoch. Pass the requests gathered during the epoch to BFT Client.
 
             Map<Integer, StreamObserver<Bzs.TransactionResponse>> responseObservers = responseHandlerRegistry.getLocalTransactionObservers(epoch);
-            epochUnderProcess=epoch;
+            epochUnderProcess = epoch;
             long startTime = 0;
             int transactionCount = 0;
             int processed = 0;
             int failed = 0;
             int bytesProcessed = 0;
-            if ((transactions != null && transactions.size() > 0) || (remoteTransactions != null && remoteTransactions.size() > 0)) {
+            if ((transactions != null && localTransactionsCount > 0) || (remoteTransactions != null && distributedTransactionsCount > 0)) {
                 startTime = System.currentTimeMillis();
                 if (transactions != null)
-                    transactionCount += transactions.size();
+                    transactionCount += localTransactionsCount;
 
                 log.info("Processing transaction batch in epoch: " + epoch);
 
@@ -345,16 +348,16 @@ public class TransactionProcessor {
                                 log.info("Adding responses to list listOfRemoteTransactionsPreparedLocally: " + response);
                                 listOfRemoteTransactionsPreparedLocally.put(remoteBatchResponse.getID(), remoteBatchResponse);
                             }
-                            preparedBytes+= length;
+                            preparedBytes += length;
                         } else {
                             failed += length;
                             abortedDistributedTransactions.add(tempTid);
                             log.log(Level.WARNING, "Remote transaction could not be prepared locally: " + remoteBatch.toString() + ". Transactions " +
                                     "part of this batch will be aborted.");
                             performanceTrace.setTidBatchInfo(tempTid, failedBatchNumber, epochNumber);
-                            performanceTrace.incrementDistributedCommitFailedCount(epoch,1);
+                            performanceTrace.incrementDistributedCommitFailedCount(epoch, 1);
                         }
-                        performanceTrace.setTransactionTimingMetric(tempTid,localPrepareEndTime, System.currentTimeMillis());
+                        performanceTrace.setTransactionTimingMetric(tempTid, localPrepareEndTime, System.currentTimeMillis());
                     }
                     performanceTrace.incrementBytesPreparedInEpoch(epoch, preparedBytes);
                 }
@@ -375,7 +378,7 @@ public class TransactionProcessor {
                     if (batchResponse == null) {
                         failed = transactionCount;
                         sendFailureNotifications(transactions, responseObservers);
-                        performanceTrace.incrementLocalPreparedCount(epoch, transactions.size());
+                        performanceTrace.incrementLocalPreparedCount(epoch, localTransactionsCount);
                     } else {
 
                         int commitResponseID = bftClient.performDbCommit(batchResponse);
@@ -383,12 +386,12 @@ public class TransactionProcessor {
                             failed = transactionCount;
                             log.info("DB COMMIT Consensus failed: " + commitResponseID);
                             sendFailureNotifications(transactions, responseObservers);
-                            performanceTrace.incrementLocalCommitFailedCount(epoch, transactions.size());
+                            performanceTrace.incrementLocalCommitFailedCount(epoch, localTransactionsCount);
 
                         } else {
                             processed = transactionCount;
                             performanceTrace.incrementLocalCompletedCount(epoch, processed);
-                            log.info("Transactions.size = " + transactions.size());
+                            log.info("Transactions.size = " + localTransactionsCount);
                             int i = 0;
 //                            for (int i = 0; i < transactions.size(); i++) {
                             for (; i < batchResponse.getResponsesCount(); ++i) {
