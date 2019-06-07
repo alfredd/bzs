@@ -65,28 +65,30 @@ public class PerformanceTrace {
             List<Integer> batchSpans = new LinkedList<>();
             if (!tidMap.containsKey(batchnumber)) {
                 Set<TransactionID> tids = tidMap.remove(batchnumber);
-                for (TransactionID tid : tids) {
-                    TransactionMetrics tm = transactionMetrics.remove(tid);
-                    if (tm.remoteCommitTime != 0 && tm.prepareStartTime != 0)
-                        completionTimes.add(tm.remoteCommitTime - tm.prepareStartTime);
-                    if (tm.remoteCommitTime!=0 && tm.localCommitTime!=0)
-                        commitTimes.add(tm.remoteCommitTime - tm.localCommitTime);
-                    if (tm.remotePrepareEndTime!=0 && tm.remotePrepareStartTime!=0)
-                        prepareTimes.add(tm.remotePrepareEndTime- tm.remotePrepareStartTime);
-                    if (tm.prepareBatch!=0 && (tm.commitBatch!=0 || tm.failedBatch!=0)) {
-                        int completedBatch = tm.failedBatch;
-                        if (tm.commitBatch!=0) {
-                            completedBatch = tm.commitBatch;
+                if (tids != null) {
+                    for (TransactionID tid : tids) {
+                        TransactionMetrics tm = transactionMetrics.remove(tid);
+                        if (tm.remoteCommitTime != 0 && tm.prepareStartTime != 0)
+                            completionTimes.add(tm.remoteCommitTime - tm.prepareStartTime);
+                        if (tm.remoteCommitTime != 0 && tm.localCommitTime != 0)
+                            commitTimes.add(tm.remoteCommitTime - tm.localCommitTime);
+                        if (tm.remotePrepareEndTime != 0 && tm.remotePrepareStartTime != 0)
+                            prepareTimes.add(tm.remotePrepareEndTime - tm.remotePrepareStartTime);
+                        if (tm.prepareBatch != 0 && (tm.commitBatch != 0 || tm.failedBatch != 0)) {
+                            int completedBatch = tm.failedBatch;
+                            if (tm.commitBatch != 0) {
+                                completedBatch = tm.commitBatch;
+                            }
+                            batchSpans.add(tm.commitBatch - (completedBatch));
                         }
-                        batchSpans.add(tm.commitBatch-(completedBatch));
                     }
                 }
             }
 
-            double averageCompletionTime = (double) completionTimes.stream().mapToLong(i -> i.longValue()).sum()/completionTimes.size();
-            double averageCommitTime = (double) commitTimes.stream().mapToLong(i -> i.longValue()).sum()/commitTimes.size();
-            double averagePrepareTime = ((double) prepareTimes.stream().mapToLong(i -> i.longValue()).sum())/prepareTimes.size();
-            double averageBatchSpan = ((double) batchSpans.stream().mapToLong(i -> i.intValue()).sum())/batchSpans.size();
+            double averageCompletionTime = (double) completionTimes.stream().mapToLong(i -> i.longValue()).sum() / completionTimes.size();
+            double averageCommitTime = (double) commitTimes.stream().mapToLong(i -> i.longValue()).sum() / commitTimes.size();
+            double averagePrepareTime = ((double) prepareTimes.stream().mapToLong(i -> i.longValue()).sum()) / prepareTimes.size();
+            double averageBatchSpan = ((double) batchSpans.stream().mapToLong(i -> i.intValue()).sum()) / batchSpans.size();
 
             reportBuilder.writeLine(String.format(
                     "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
