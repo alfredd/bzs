@@ -39,7 +39,7 @@ public class TransactionProcessor {
     private ClusterKeysAccessor clusterKeysAccessor;
     private Set<TransactionID> abortedDistributedTransactions = new LinkedHashSet<>();
 
-    private PerformanceTrace performanceTrace = new PerformanceTrace();
+    private PerformanceTrace performanceTrace;
 
     public TransactionProcessor(Integer replicaId, Integer clusterId) {
         this.replicaID = replicaId;
@@ -80,6 +80,7 @@ public class TransactionProcessor {
         Timer interClusterConnectorTimer = new Timer("IntraClusterPKIAccessor", true);
         clusterKeysAccessor = new ClusterKeysAccessor(clusterID);
         interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 15, 150 * 1000 * 10);
+        performanceTrace = new PerformanceTrace();
     }
 
     private void initLocalDatabase() {
