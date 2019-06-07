@@ -1,16 +1,17 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 public class PerformanceTrace {
 
     public static final Logger log = Logger.getLogger(PerformanceTrace.class.getName());
     private int metricCount;
     private Map<Integer, Metrics> batchMetrics = new TreeMap<>();
+    private Map<Integer, Set<TransactionID>> tidMap = new TreeMap<>();
     private Map<TransactionID, TransactionMetrics> transactionMetrics = new TreeMap<>();
     private ReportBuilder reportBuilder;
 
@@ -27,18 +28,19 @@ public class PerformanceTrace {
                 "Distributed Txns Failed In Epoch(F), ",    // 10 Done
                 "Total Txns Committed, ",                   // 11 Sum (7, 8)
                 "Total Txns Failed, ",                      // 12 Sum (9,10)
-                "Local Txns Prepare Time(ms), ",            // 13
-                "Distributed Txns Prepare Time(ms), ",      // 14
-                "Local Txn Commit Time(ms), ",              // 15
-                "Dist Txn Commit Time(ms), ",               // 16
+                "Local Txns Prepare Time(ms), ",            // 13 Done
+                "Distributed Txns Prepare Time(ms), ",      // 14 Done
+                "Local Txn Commit Time(ms), ",              // 15 Done
+                "Dist Txn Commit Time(ms), ",               // 16 NA
                 "Batch Completion Time(ms), ",              // 17 StopTime - StartTime
-                "Local Txn Throughput(Tps), ",              // 18
-                "Distributed Txn Throughput(Tps), ",        // 19
-                "Local Txn Bytes processed (Bytes), ",      // 20
-                "Remote Txn Bytes processed (Bytes), ",     // 21
-                "Local Txn Throughput (Bps), ",             // 22
-                "Remote Txn Throughput (Bps), ",            // 23
-                "Throughput (Bps)\n"                        // 24
+                "Txn Throughput(Tps), ",                    // 18 Done
+                "Prepared Txn throughput (Tps), ",          // 19 Done
+                "Prepared Txn throughput (Bps), ",          // 20 Done
+                "Throughput (Bps), ",                       // 21 Done
+                "Distributed Txn Avg Prepare Time(s), ",    // 22 Done
+                "Distributed Txn Avg Commit Time(s), ",     // 23 Done
+                "Distributed Txn Avg Completion Time(s), ", // 24 Done
+                "Distributed Txn Avg Epoch Span, \n ",      // 25 Done
         };
         metricCount = 0;
         try {
@@ -51,13 +53,58 @@ public class PerformanceTrace {
     public void writeToFile() {
         for (int batchnumber : batchMetrics.keySet()) {
             Metrics m = batchMetrics.get(batchnumber);
+
+            long latency = m.batchEndTime - m.batchStartTime;
+            double throughputTps = latency == 0 ? 0 : (double) (m.localCompleted + m.distributedCompleted) * 1000 / (latency);
+            double throughputBps = latency == 0 ? 0 : (double) m.bytesCommittedInEpoch * 1000 / (latency);
+            double preparedTps = latency == 0 ? 0 : (double) (m.localPrepared + m.distributedPrepared) * 1000 / (latency);
+            double preparedBps = latency == 0 ? 0 : (double) (m.bytesPreparedInEpoch) * 1000 / (latency);
+            List<Long> completionTimes = new LinkedList<>();
+            List<Long> prepareTimes = new LinkedList<>();
+            List<Long> commitTimes = new LinkedList<>();
+            List<Integer> batchSpans = new LinkedList<>();
+            if (!tidMap.containsKey(batchnumber)) {
+                Set<TransactionID> tids = tidMap.remove(batchnumber);
+                for (TransactionID tid : tids) {
+                    TransactionMetrics tm = transactionMetrics.remove(tid);
+                    if (tm.remoteCommitTime != 0 && tm.prepareStartTime != 0)
+                        completionTimes.add(tm.remoteCommitTime - tm.prepareStartTime);
+                    if (tm.remoteCommitTime!=0 && tm.localCommitTime!=0)
+                        commitTimes.add(tm.remoteCommitTime - tm.localCommitTime);
+                    if (tm.remotePrepareEndTime!=0 && tm.remotePrepareStartTime!=0)
+                        prepareTimes.add(tm.remotePrepareEndTime- tm.remotePrepareStartTime);
+                    if (tm.prepareBatch!=0 && (tm.commitBatch!=0 || tm.failedBatch!=0)) {
+                        int completedBatch = tm.failedBatch;
+                        if (tm.commitBatch!=0) {
+                            completedBatch = tm.commitBatch;
+                        }
+                        batchSpans.add(tm.commitBatch-(completedBatch));
+                    }
+                }
+            }
+
+            double averageCompletionTime = (double) completionTimes.stream().mapToLong(i -> i.longValue()).sum()/completionTimes.size();
+            double averageCommitTime = (double) commitTimes.stream().mapToLong(i -> i.longValue()).sum()/commitTimes.size();
+            double averagePrepareTime = ((double) prepareTimes.stream().mapToLong(i -> i.longValue()).sum())/prepareTimes.size();
+            double averageBatchSpan = ((double) batchSpans.stream().mapToLong(i -> i.intValue()).sum())/batchSpans.size();
+
             reportBuilder.writeLine(String.format(
                     "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
-                            "%d, %d, %d, %d, %d, %d, %d, %d, %d, " +
-                            "%d, %d, %d, %d, %d, %d\n "
+                            "%d, %d, %d, %d, %d, %d, %d, %d, %f, " +
+                            "%f, %f, %f, %f, %f, %f, %f\n ",
                     // TODO add more parameters for the performance analysis.
+                    m.batchNumber,
+                    m.transactionCount, m.localTransactionCount, m.remoteTransactionCount, m.localPrepared, m.distributedPrepared,
+                    m.localCompleted, m.distributedCompleted, m.localTransactionsFailed, m.remoteTransactionsFailed,
+                    (m.localCompleted + m.distributedCompleted),
+                    (m.localTransactionsFailed + m.remoteTransactionsFailed), (m.localPrepareEndTime - m.localPrepareEndTime),
+                    (m.distributedPrepareEndTime + m.distributedPrepareStartTime),
+                    (m.localCommitEndTime - m.localCommitStartTime), 0, (m.batchEndTime + m.batchStartTime), throughputTps, preparedTps,
+                    preparedBps, throughputBps, averagePrepareTime, averageCommitTime, averageCompletionTime, averageBatchSpan
 
             ));
+
+            batchMetrics.remove(batchnumber);
         }
     }
 
@@ -72,7 +119,8 @@ public class PerformanceTrace {
 
     public enum BatchMetric {
         prepareBatchNumber,
-        commitBatchNumber
+        commitBatchNumber,
+        failedBatchNumber
     }
 
     public void setTransactionTimingMetric(final TransactionID tid, TimingMetric metric, final long time) {
@@ -100,7 +148,7 @@ public class PerformanceTrace {
         }
     }
 
-    public void setTidBatchInfo(TransactionID tid, BatchMetric metric, int value) {
+    public void setTidBatchInfo(final TransactionID tid, BatchMetric metric, final int value) {
         TransactionMetrics m = getTimingMetric(tid);
         synchronized (m) {
             switch (metric) {
@@ -118,6 +166,10 @@ public class PerformanceTrace {
         if (!transactionMetrics.containsKey(tid)) {
             transactionMetrics.put(tid, new TransactionMetrics());
         }
+        if (!tidMap.containsKey(tid.getEpochNumber())) {
+            tidMap.put(tid.getEpochNumber(), new HashSet<>());
+        }
+        tidMap.get(tid.getEpochNumber()).add(tid);
         return transactionMetrics.get(tid);
     }
 
@@ -141,12 +193,16 @@ public class PerformanceTrace {
 
     public void setBatchStartTime(final Integer batchNumber, final long batchStartTime) {
         Metrics m = getMetricsForBatch(batchNumber);
-        m.batchStartTime = batchStartTime;
+        synchronized (m) {
+            m.batchStartTime = batchStartTime;
+        }
     }
 
     public void setBatchStopTime(final Integer batchNumber, final long batchEndTime) {
         Metrics m = getMetricsForBatch(batchNumber);
-        m.batchEndTime = batchEndTime;
+        synchronized (m) {
+            m.batchEndTime = batchEndTime;
+        }
     }
 
     public void incrementLocalPreparedCount(final Integer batchNumber, final Integer count) {
@@ -191,12 +247,65 @@ public class PerformanceTrace {
         }
     }
 
-
-    public static void main(String[] args) {
-        PerformanceTrace performanceTrace = new PerformanceTrace();
-        performanceTrace.setTotalTransactionCount(1, 100, 10, 90);
-        System.out.println(performanceTrace.batchMetrics.get(1));
+    public void incrementBytesPreparedInEpoch(final Integer batchNumber, final Integer count) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.bytesPreparedInEpoch += count;
+        }
     }
+
+
+    public void incrementBytesCommittedInEpoch(final Integer batchNumber, final Integer count) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.bytesCommittedInEpoch += count;
+        }
+    }
+
+
+    public void setLocalPrepareEndTime(final Integer batchNumber, final long time) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.localPrepareEndTime = time;
+        }
+    }
+
+    public void setLocalPrepareStartTime(final Integer batchNumber, final long time) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.localPrepareStartTime = time;
+        }
+    }
+
+    public void setLocalCommitEndTime(final Integer batchNumber, final long time) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.localCommitEndTime = time;
+        }
+    }
+
+    public void setLocalCommitStartTime(final Integer batchNumber, final long time) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.localCommitStartTime = time;
+        }
+    }
+
+    public void setDistributedPrepareEndTime(final Integer batchNumber, final long time) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.distributedPrepareEndTime = time;
+        }
+    }
+
+    public void setDistributedPrepareStartTime(final Integer batchNumber, final long time) {
+        Metrics m = getMetricsForBatch(batchNumber);
+        synchronized (m) {
+            m.distributedPrepareStartTime = time;
+        }
+    }
+
+
 }
 
 
@@ -215,6 +324,11 @@ class Metrics {
     long localPrepareEndTime = 0;
     long distributedPrepareEndTime = 0;
 
+    int bytesPreparedInEpoch = 0;
+    int bytesCommittedInEpoch = 0;
+
+    long localCommitEndTime = 0;
+    long localCommitStartTime = 0;
 
     int localTransactionsFailed = 0;
     int remoteTransactionsFailed = 0;
@@ -261,12 +375,13 @@ class Metrics {
 }
 
 class TransactionMetrics {
-    int prepareBatch;
-    int commitBatch;
-    long prepareStartTime;
-    long prepareEndTime;
-    long remotePrepareStartTime;
-    long remotePrepareEndTime;
-    long localCommitTime;
-    long remoteCommitTime;
+    int prepareBatch = 0;
+    int commitBatch = 0;
+    int failedBatch = 0;
+    long prepareStartTime = 0;
+    long prepareEndTime = 0;
+    long remotePrepareStartTime = 0;
+    long remotePrepareEndTime = 0;
+    long localCommitTime = 0;
+    long remoteCommitTime = 0;
 }
