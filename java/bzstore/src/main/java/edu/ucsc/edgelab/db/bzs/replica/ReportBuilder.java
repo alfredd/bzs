@@ -25,6 +25,7 @@ public class ReportBuilder {
             LOGGER.info("Shutting down report writer.");
             try {
                 writer.close();
+                flush();
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Failed to close report file writer.", e);
             }
