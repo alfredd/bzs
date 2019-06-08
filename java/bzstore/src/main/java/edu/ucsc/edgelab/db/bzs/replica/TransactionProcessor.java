@@ -283,6 +283,10 @@ public class TransactionProcessor {
         log.info("Released locks held for the transaction.");
     }
 
+    private void logPerformanceTrace() {
+        performanceTrace.writeToFile();
+    }
+
 
     void resetEpoch(boolean isTimedEpochReset) {
         // Increment Epoch number and reset sequence number.
@@ -435,7 +439,6 @@ public class TransactionProcessor {
 //                        endTime,
 //                        bytesProcessed);
 //            }
-            performanceTrace.writeToFile();
         }
 
     }
