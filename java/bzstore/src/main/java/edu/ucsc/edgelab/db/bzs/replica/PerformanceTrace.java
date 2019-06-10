@@ -110,7 +110,7 @@ public class PerformanceTrace {
                     m.localCompleted, m.distributedCompleted, m.localTransactionsFailed, m.remoteTransactionsFailed,
                     (m.localCompleted + m.distributedCompleted),
                     (m.localTransactionsFailed + m.remoteTransactionsFailed), (m.localPrepareEndTime - m.localPrepareStartTime),
-                    (m.distributedPrepareEndTime + m.distributedPrepareStartTime),
+                    (m.distributedPrepareEndTime - m.distributedPrepareStartTime),
                     (m.localCommitEndTime - m.localCommitStartTime), 0, (m.batchEndTime - m.batchStartTime), throughputTps, preparedTps,
                     preparedBps, throughputBps, averagePrepareTime, averageCommitTime, averageCompletionTime, averageBatchSpan
 
