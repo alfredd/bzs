@@ -73,6 +73,7 @@ public class TransactionProcessor {
     public void initTransactionProcessor() {
         log.info("Initializing Transaction Processor for server: " + clusterID + " " + replicaID);
         epochNumber = BZDatabaseController.getEpochCount();
+        performanceTrace = new PerformanceTrace();
         initMaxBatchSize();
         startBftClient();
         EpochManager epochManager = new EpochManager(this);
@@ -83,7 +84,6 @@ public class TransactionProcessor {
         Timer interClusterConnectorTimer = new Timer("IntraClusterPKIAccessor", true);
         clusterKeysAccessor = new ClusterKeysAccessor(clusterID);
         interClusterConnectorTimer.scheduleAtFixedRate(clusterKeysAccessor, 15, 150 * 1000 * 10);
-        performanceTrace = new PerformanceTrace();
     }
 
     private void initLocalDatabase() {
