@@ -121,7 +121,7 @@ public class BenchmarkExecutor implements Runnable {
         this.totalCount = txnCount;
         this.processed = 0;
         sendTransactions(txnCount, maxOperations);
-        txnCount = 10;
+        txnCount = 100;
 
 
         log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
