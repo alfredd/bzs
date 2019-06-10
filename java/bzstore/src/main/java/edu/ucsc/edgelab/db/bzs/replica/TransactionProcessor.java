@@ -8,13 +8,12 @@ import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.TypeVariable;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace.BatchMetric.*;
+import static edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace.BatchMetric.failedBatchNumber;
+import static edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace.BatchMetric.prepareBatchNumber;
 import static edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace.TimingMetric.*;
 
 public class TransactionProcessor {
@@ -40,7 +39,7 @@ public class TransactionProcessor {
     private Set<TransactionID> remoteOnlyTid = new LinkedHashSet<>();
     private ClusterKeysAccessor clusterKeysAccessor;
     private Set<TransactionID> abortedDistributedTransactions = new LinkedHashSet<>();
-    private boolean updateEpoch=true;
+    private boolean updateEpoch = true;
 
     private PerformanceTrace performanceTrace;
 
@@ -147,7 +146,7 @@ public class TransactionProcessor {
                 responseHandlerRegistry.addToRemoteRegistry(tid, transaction, responseObserver);
             }
         }
-        updateEpoch=true;
+        updateEpoch = true;
         sequenceNumber += 1;
         final int seqNum = sequenceNumber;
         if (seqNum > maxBatchSize) {
@@ -174,7 +173,7 @@ public class TransactionProcessor {
 
                 Bzs.Transaction t = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
                 if (t != null && status.equals(Bzs.TransactionStatus.PREPARED)) {
-                    updateEpoch=true;
+                    updateEpoch = true;
                     remoteTransactionProcessor.commitAsync(tid, t);
                     responseHandlerRegistry.getRemoteTransactionObserver(tid.getEpochNumber(), tid.getSequenceNumber());
                 } else {
@@ -185,8 +184,8 @@ public class TransactionProcessor {
 
             if (abortedDistributedTransactions.contains(tid)) {
                 Bzs.Transaction tempT = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
-                if (tempT!=null) {
-                    remoteTransactionProcessor.abortAsync(tid,tempT);
+                if (tempT != null) {
+                    remoteTransactionProcessor.abortAsync(tid, tempT);
                     LockManager.releaseLocks(tempT);
                     return;
                 }
@@ -239,7 +238,7 @@ public class TransactionProcessor {
         Bzs.TransactionBatchResponse batchResponse = listOfRemoteTransactionsPreparedLocally.get(tid.getTiD());
         log.info("Processing remote commits: Tid: " + tid);
         if (batchResponse != null) {
-            updateEpoch= true;
+            updateEpoch = true;
             int commitResponse = bftClient.performDbCommit(batchResponse);
             performanceTrace.setTransactionTimingMetric(tid, PerformanceTrace.TimingMetric.localCommitTime, System.currentTimeMillis());
             if (commitResponse < 0) {
@@ -264,6 +263,7 @@ public class TransactionProcessor {
             remoteTransactionProcessor.abortAsync(tid, t);
         listOfRemoteTransactionsPreparedLocally.remove(tid.getTiD());
         sendResponseToClient(tid, status, t);
+        remotePreparedList.remove(tid);
         LockManager.releaseLocks(t);
 
     }
@@ -273,7 +273,7 @@ public class TransactionProcessor {
         performanceTrace.setTransactionTimingMetric(tid, PerformanceTrace.TimingMetric.localCommitTime, System.currentTimeMillis());
         performanceTrace.setTidBatchInfo(tid, PerformanceTrace.BatchMetric.failedBatchNumber, epochUnderProcess);
         LockManager.releaseLocks(t);
-        sendResponseToClient(tid,transactionStatus,t);
+//        sendResponseToClient(tid,transactionStatus,t);
         listOfRemoteTransactionsPreparedLocally.remove(tid.getTiD());
         remotePreparedList.remove(tid);
     }
@@ -318,7 +318,7 @@ public class TransactionProcessor {
                 if (updateEpoch) {
                     logPerformanceTrace();
                     updateEpoch = false;
-                    epochNumber+=1;
+                    epochNumber += 1;
                     epochUnderProcess = epochNumber;
                 }
                 return;
@@ -484,12 +484,6 @@ public class TransactionProcessor {
         for (int i = 1; i <= 10; i++) {
             list.add(i);
         }
-    }
-
-    public static void main(String[] args) {
-//        Map<String, Integer> m = new HashMap<>();
-//        for(TypeVariable f : m.getClass().getTypeParameters())
-//        System.out.println("f: "+f.);
     }
 
     Bzs.TransactionBatch getTransactionBatch(String id, Collection<Bzs.Transaction> transactions) {
