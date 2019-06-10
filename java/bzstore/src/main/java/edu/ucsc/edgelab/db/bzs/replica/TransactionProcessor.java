@@ -184,7 +184,12 @@ public class TransactionProcessor {
             }
 
             if (abortedDistributedTransactions.contains(tid)) {
-
+                Bzs.Transaction tempT = responseHandlerRegistry.getRemoteTransaction(tid.getEpochNumber(), tid.getSequenceNumber());
+                if (tempT!=null) {
+                    remoteTransactionProcessor.abortAsync(tid,tempT);
+                    LockManager.releaseLocks(tempT);
+                    return;
+                }
             }
             Set<TransactionID> completed = startCommitProcessForPreparedTransactions(tid, status);
 
@@ -257,6 +262,7 @@ public class TransactionProcessor {
         performanceTrace.setTidBatchInfo(tid, PerformanceTrace.BatchMetric.commitBatchNumber, epochUnderProcess);
         if (!status.equals(Bzs.TransactionStatus.COMMITTED))
             remoteTransactionProcessor.abortAsync(tid, t);
+        listOfRemoteTransactionsPreparedLocally.remove(tid.getTiD());
         sendResponseToClient(tid, status, t);
         LockManager.releaseLocks(t);
 
@@ -267,6 +273,8 @@ public class TransactionProcessor {
         performanceTrace.setTransactionTimingMetric(tid, PerformanceTrace.TimingMetric.localCommitTime, System.currentTimeMillis());
         performanceTrace.setTidBatchInfo(tid, PerformanceTrace.BatchMetric.failedBatchNumber, epochUnderProcess);
         LockManager.releaseLocks(t);
+        sendResponseToClient(tid,transactionStatus,t);
+        listOfRemoteTransactionsPreparedLocally.remove(tid.getTiD());
         remotePreparedList.remove(tid);
     }
 
