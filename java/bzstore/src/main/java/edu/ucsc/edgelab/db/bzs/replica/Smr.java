@@ -21,13 +21,13 @@ class SmrLog {
 
     private Map<Integer, Bzs.SmrLogEntry.Builder> smrLog = new ConcurrentHashMap<>();
 
-    void createLogEntry(final Integer batchNumber) {
-        if (!smrLog.containsKey(batchNumber)) {
+    void createLogEntry(final Integer epochNumber) {
+        if (!smrLog.containsKey(epochNumber)) {
             Bzs.SmrLogEntry.Builder logEntryBuilder = Bzs.SmrLogEntry.newBuilder();
-            logEntryBuilder.setBatchNumber(batchNumber);
-            smrLog.put(batchNumber, logEntryBuilder);
+            logEntryBuilder.setEpochNumber(epochNumber);
+            smrLog.put(epochNumber, logEntryBuilder);
         } else {
-            log.log(Level.WARNING, "Log entry already exists for "+ batchNumber);
+            log.log(Level.WARNING, "Log entry already exists for "+ epochNumber);
         }
     }
 
@@ -42,6 +42,10 @@ class SmrLog {
     }
 
     void addToCommitLog(TransactionID tid) {
+
+    }
+
+    void commitEpoch(int epochNumber) {
 
     }
 }

@@ -171,10 +171,10 @@ message Timestamp {
 }
 
 message SmrLogEntry {
-    int32 batchNumber = 1;
-    map<string, Transaction> localPrepare= 2;
-    map<string, Transaction> distributedPrepare= 3;
-    map<string, Transaction> committed= 4;
+    int32 epochNumber = 1;
+    map<string, Transaction> localPreparedBatch= 2;
+    map<string, Transaction> distributedPreparedBatch= 3;
+    map<string, Transaction> committedBatch= 4;
     map<int32,int32> dClock = 5;
-    int32 pc = 6;
+    int32 lce = 6;
 }
