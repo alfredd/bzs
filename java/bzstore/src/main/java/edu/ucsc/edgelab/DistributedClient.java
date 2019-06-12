@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab;
 
 import edu.ucsc.edgelab.db.bzs.BZStoreClient;
+import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.Transaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
@@ -44,17 +45,17 @@ public class DistributedClient {
 
     public BZStoreData read(String key) {
         int clusterId = hashmod(key, total_clusters);
-        BZStoreClient CurrClient = clientHashMap.get(0);
+        BZStoreClient CurrClient = clientHashMap.get(clusterId);
         transaction.setClient(CurrClient);
-        LOGGER.info("Executing read on cluster: "+0);
+        LOGGER.info("Executing read on cluster: " + clusterId);
 
         return transaction.read(key, clusterId);
     }
 
     public void write(String key, String value) {
         int clusterId = hashmod(key, total_clusters);
-        transaction.setClient(clientHashMap.get(0));
-        LOGGER.info("Executing write on cluster: "+0);
+        transaction.setClient(clientHashMap.get(clusterId));
+        LOGGER.info("Executing write on cluster: " + clusterId);
         transaction.write(key, value, clusterId);
     }
 
@@ -85,15 +86,33 @@ public class DistributedClient {
             LOGGER.log(Level.INFO, e.getMessage());
         }
         dclient.createNewTransactions();
-        String key = "Botswana";
+
+        String key = "Niger";
         BZStoreData data = dclient.read(key);
-        LOGGER.info("Data from db: "+data);
-        String key2 = "Japan";
+        LOGGER.info("Data from db: " + data);
+        String key2 = "Tajikistan";
         data = dclient.read(key2);
-        LOGGER.info("Data from db: "+data);
-        dclient.write(key, "Random Value 10");
-        dclient.write(key2, "Random Value 1");
+        LOGGER.info("Data from db: " + data);
+        dclient.write(key, "99");
+        dclient.write(key2, "99");
+        Bzs.Transaction t = dclient.transaction.getTransaction();
+        long startTime = System.currentTimeMillis();
         dclient.commit();
+        System.out.println("Commit processed in "+(System.currentTimeMillis()-startTime)+"ms");
+
+//        dclient.createNewTransactions();
+//        key="Zambia";
+//        key2="Palestine";
+//        data = dclient.read(key);
+//        data = dclient.read(key2);
+//        dclient.write(key, "Random Value 58");
+//        dclient.write(key2, "Random Value 77");
+////        Bzs.Transaction t = dclient.transaction.getTransaction();
+//        startTime = System.currentTimeMillis();
+//        dclient.commit();
+//        System.out.println("Commit processed in "+(System.currentTimeMillis()-startTime)+"ms");
+
+
     }
 
     public static Integer hashmod(String key, int totalCluster) {
