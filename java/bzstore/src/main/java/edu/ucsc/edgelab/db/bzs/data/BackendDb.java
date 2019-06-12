@@ -54,6 +54,14 @@ class BackendDb {
         }
     }
 
+    void commit(String key, Bzs.SmrLogEntry smrEntry) throws InvalidCommitException {
+        try {
+            db.put(key.getBytes(), smrEntry.toByteArray());
+        } catch (RocksDBException e) {
+            throw new InvalidCommitException("Cannot commit key:" + key + ", " + smrEntry.toString() + e.getMessage(), e);
+        }
+    }
+
 
     BZStoreData get(String key) {
         byte[] value = new byte[0];

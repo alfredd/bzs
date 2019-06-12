@@ -1,5 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.data;
 
+import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.rocksdb.RocksDBException;
 
@@ -30,7 +31,7 @@ public final class BZDatabaseController {
         try {
             BZ_DATABASE_CONTROLLER.db.commitEpochNumber(epochNumber);
         } catch (RocksDBException e) {
-            LOGGER.log(Level.WARNING, "Could not commit epoch number to database: "+ e.getLocalizedMessage(),e);
+            LOGGER.log(Level.WARNING, e.getLocalizedMessage(),e);
         }
     }
 
@@ -71,6 +72,10 @@ public final class BZDatabaseController {
 
         //Need to check this. Can this be replaced by a runtime exception.
         return new byte[0];
+    }
+
+    public static void commitEpochBlock(String epochNumber, Bzs.SmrLogEntry logEntry) throws InvalidCommitException {
+        BZ_DATABASE_CONTROLLER.db.commit(epochNumber,logEntry);
     }
 
 //    public static void rollbackForKeys(List<String> keys) {

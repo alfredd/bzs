@@ -1,6 +1,8 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +47,15 @@ class SmrLog {
 
     }
 
-    void commitEpoch(int epochNumber) {
+    void commitEpoch(Integer epochNumber) {
+        Bzs.SmrLogEntry.Builder epochBlockBuilder = smrLog.get(epochNumber);
 
+        Bzs.SmrLogEntry logEntry = epochBlockBuilder.build();
+        try {
+            BZDatabaseController.commitEpochBlock(epochNumber.toString(), logEntry);
+            smrLog.remove(epochNumber);
+        } catch (InvalidCommitException e) {
+            log.log(Level.WARNING, "Could not commit smrLogEntry to database: "+e.getLocalizedMessage());
+        }
     }
 }
