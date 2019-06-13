@@ -12,21 +12,21 @@ public class TransactionCache {
 
     private TransactionCache() {}
 
-    public static void add (TransactionID tid, Bzs.Transaction t) {
+    public static void update (TransactionID tid, Bzs.Transaction t) {
         synchronized (CACHE) {
             CACHE.storage.put(tid,t);
         }
     }
 
-    public static Bzs.Transaction getTransaction(TransactionID tid) {
+    public static Bzs.Transaction get(TransactionID tid) {
 //        synchronized (CACHE) {
             return CACHE.storage.get(tid);
 //        }
     }
 
-    public static void removeTransactionHistory(TransactionID tid) {
+    public static Bzs.Transaction remove(TransactionID tid) {
         synchronized (CACHE) {
-            CACHE.storage.remove(tid);
+            return CACHE.storage.remove(tid);
         }
     }
 
