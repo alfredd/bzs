@@ -36,14 +36,14 @@ class SmrLog {
     void add(TransactionID tid, Bzs.Transaction transaction) {
     }
 
-    void localPrepare (TransactionID tid) {
+    void localPrepared(TransactionID tid) {
     }
 
-    void distributedPrepare(TransactionID tid) {
+    void distributedPrepared(TransactionID tid) {
 
     }
 
-    void addToCommitLog(TransactionID tid) {
+    void committed(TransactionID tid) {
 
     }
 
