@@ -2,7 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 
 
-class TransactionID extends TuplePair implements Comparable<TransactionID>{
+public class TransactionID extends TuplePair implements Comparable<TransactionID>{
 
     public TransactionID(final int epochNumber, final int sequenceNumber) {
         super(epochNumber, sequenceNumber);
