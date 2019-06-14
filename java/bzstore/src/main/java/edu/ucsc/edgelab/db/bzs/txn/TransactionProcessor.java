@@ -11,15 +11,11 @@ import java.util.logging.Logger;
 
 public class TransactionProcessor {
 
-    private final Integer clusterID;
-    private final Integer replicaID;
     private Serializer serializer;
     private EpochManager epochManager;
     public static final Logger log = Logger.getLogger(TransactionProcessor.class.getName());
 
     public TransactionProcessor(Integer clusterID, Integer replicaID) {
-        this.clusterID = clusterID;
-        this.replicaID = replicaID;
         serializer = new Serializer(clusterID, replicaID);
         epochManager = new EpochManager();
     }
@@ -39,8 +35,8 @@ public class TransactionProcessor {
                 }
                 return;
             }
-            TransactionID tid = epochManager.getTID();
-            TransactionCache.add(tid,request,responseObserver);
+            final TransactionID tid = epochManager.getTID();
+            TransactionCache.add(tid, request, responseObserver);
         }
     }
 }
