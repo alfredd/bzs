@@ -37,8 +37,12 @@ public class EpochProcessor {
             }
         }
 
+        // Send dRWT for prepare
+
         // BFT Prepare everything
 
+        // BFT Commit lRWT
 
+        // BFT add to SMR log
     }
 }
