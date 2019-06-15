@@ -37,9 +37,9 @@ public class EpochProcessor {
             }
         }
 
-        // Send dRWT for prepare
+        // Send dRWT for remote prepare
 
-        // BFT Prepare everything
+        // BFT Local Prepare everything
 
         // BFT Commit lRWT
 
