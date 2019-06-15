@@ -13,8 +13,6 @@ public class Smr {
     private Smr() {}
 
     private SmrLog smrLog = new SmrLog();
-
-
 }
 
 class SmrLog {

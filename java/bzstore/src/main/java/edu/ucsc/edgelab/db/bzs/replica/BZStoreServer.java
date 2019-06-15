@@ -64,6 +64,7 @@ public class BZStoreServer {
 
         this.replicaID = id;
         this.clusterID = clusterId;
+        ID.setIDs(clusterID,replicaID);
         transactionProcessor = new TransactionProcessor(this.replicaID, this.clusterID);
         try {
             BZDatabaseController.initDB(clusterId,replicaID);

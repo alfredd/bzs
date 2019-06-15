@@ -18,7 +18,7 @@ public class EpochManager {
         sequenceNumber=0;
         final Integer epoch = epochNumber;
         epochNumber+=1;
-        EpochProcessor epochProcessor = new EpochProcessor();
-        epochProcessor.processEpoch(epoch, sequence);
+        EpochProcessor epochProcessor = new EpochProcessor(epoch);
+        epochProcessor.processEpoch(sequence);
     }
 }

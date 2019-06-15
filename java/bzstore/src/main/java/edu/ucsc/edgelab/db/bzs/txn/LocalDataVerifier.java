@@ -1,6 +1,7 @@
-package edu.ucsc.edgelab.db.bzs.replica;
+package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.txn.MetaInfo;
 
 public class LocalDataVerifier {
 
@@ -38,10 +39,3 @@ public class LocalDataVerifier {
     }
 }
 
-class MetaInfo {
-    public boolean localRead, localWrite, remoteRead, remoteWrite;
-
-    public MetaInfo() {
-        localRead = localWrite = remoteWrite = remoteRead = false;
-    }
-}
