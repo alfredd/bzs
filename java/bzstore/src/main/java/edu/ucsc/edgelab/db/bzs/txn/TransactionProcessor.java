@@ -36,7 +36,8 @@ public class TransactionProcessor {
                 return;
             }
             final TransactionID tid = epochManager.getTID();
-            TransactionCache.add(tid, request, responseObserver);
+            Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
+            TransactionCache.add(tid, transaction, responseObserver);
         }
     }
 }

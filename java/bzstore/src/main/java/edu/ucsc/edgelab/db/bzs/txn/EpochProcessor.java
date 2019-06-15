@@ -12,8 +12,8 @@ public class EpochProcessor {
 
     private LocalDataVerifier localDataVerifier = new LocalDataVerifier(ID.getClusterID());
 
-    private List<Bzs.Transaction> lRWT = new LinkedList<>();
-    private List<Bzs.Transaction> dRWT = new LinkedList<>();
+    private List<TransactionID> lRWT = new LinkedList<>();
+    private List<TransactionID> dRWT = new LinkedList<>();
     private Integer epochNumber;
 
     public EpochProcessor(Integer epochNumber) {
@@ -29,9 +29,9 @@ public class EpochProcessor {
                 Bzs.Transaction rwt = TransactionCache.getTransaction(tid);
                 MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                 if (metaInfo.remoteRead || metaInfo.remoteWrite) {
-                    dRWT.add(rwt);
+                    dRWT.add(tid);
                 } else {
-                    lRWT.add(rwt);
+                    lRWT.add(tid);
                 }
                 allRWT.add(rwt);
             }
