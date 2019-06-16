@@ -31,15 +31,15 @@ public class EpochManagerTest {
     }
 
     @Test
-    public void testUpdateEpoch () {
+    public void testUpdateEpoch() {
         EpochManager e = new EpochManager();
         final long epochStartTime = System.currentTimeMillis();
         e.setEpochStartTime(epochStartTime);
-        int seq =-1;
+        int seq = -1;
         while (true) {
             e.getTID();
             seq = e.updateEpoch();
-            if (seq>0) {
+            if (seq > 0) {
                 break;
             }
         }
@@ -47,6 +47,6 @@ public class EpochManagerTest {
         long epochEndTime = System.currentTimeMillis();
         final long duration = epochEndTime - epochStartTime;
 
-        assertTrue(seq>= 2000 || duration>30000);
+        assertTrue(seq >= 2000 || duration > 30000);
     }
 }

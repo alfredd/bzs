@@ -8,10 +8,10 @@ public class EpochThreadPoolExecutor {
     private ThreadPoolExecutor epochExecutor;
 
     public EpochThreadPoolExecutor() {
-        epochExecutor = new ThreadPoolExecutor(1,10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        epochExecutor = new ThreadPoolExecutor(1, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     }
 
-    public void addToThreadPool (EpochProcessor processor) {
+    public void addToThreadPool(EpochProcessor processor) {
         epochExecutor.execute(processor);
     }
 }

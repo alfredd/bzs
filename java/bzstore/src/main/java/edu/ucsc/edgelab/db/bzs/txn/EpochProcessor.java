@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class EpochProcessor implements Runnable{
+public class EpochProcessor implements Runnable {
 
     private final Integer txnCount;
     private static final Logger log = Logger.getLogger(EpochProcessor.class.getName());
@@ -27,12 +27,12 @@ public class EpochProcessor implements Runnable{
 
     public void processEpoch() {
         List<Bzs.Transaction> allRWT = new LinkedList<>();
-        for (int i =0;i<=txnCount;i++) {
+        for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
 
             if (tid != null) {
                 Bzs.Transaction rwt = TransactionCache.getTransaction(tid);
-                if (rwt!=null) {
+                if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
                         dRWT.add(tid);
@@ -41,7 +41,7 @@ public class EpochProcessor implements Runnable{
                     }
                     allRWT.add(rwt);
                 } else {
-                    log.log(Level.WARNING, "Transaction with TID"+ tid+", not found in transaction cache.");
+                    log.log(Level.WARNING, "Transaction with TID" + tid + ", not found in transaction cache.");
                 }
             }
         }
