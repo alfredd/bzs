@@ -22,8 +22,23 @@ public class EpochManager {
         return epochStartTime;
     }
 
-    public void updateEpoch() {
-        System.currentTimeMillis();
+    public Integer updateEpoch() {
+        final long currentTime = System.currentTimeMillis();
+        long duration = getEpochStartTime() - currentTime;
+        Integer seq = -1;
+        if (duration > 30*1000) {
+            if (sequenceNumber> 0) {
+                seq = sequenceNumber;
+            }
+        } else if (sequenceNumber>2000){
+            seq = sequenceNumber;
+        }
+        if (seq>0) {
+            setEpochStartTime(currentTime);
+            epochNumber+=1;
+            sequenceNumber =0;
+        }
+        return seq;
     }
 
     public void processEpoch() {
