@@ -1,16 +1,25 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 public class EpochManager {
     private volatile Integer epochNumber = 0;
     private volatile Integer sequenceNumber = 0;
-    private volatile long epochStartTime = 0;
+    private volatile long epochStartTime;
+    private EpochThreadPoolExecutor epochThreadPoolExecutor;
+
+
+    public EpochManager() {
+        epochStartTime = System.currentTimeMillis();
+        epochThreadPoolExecutor = new EpochThreadPoolExecutor();
+    }
 
     public TransactionID getTID() {
+        updateEpoch();
         final Integer epochNumber = this.epochNumber;
         final Integer sequenceNumber = this.sequenceNumber;
-        this.sequenceNumber+=1;
+        this.sequenceNumber += 1;
         return new TransactionID(epochNumber, sequenceNumber);
     }
 
@@ -26,27 +35,24 @@ public class EpochManager {
         final long currentTime = System.currentTimeMillis();
         long duration = getEpochStartTime() - currentTime;
         Integer seq = -1;
-        if (duration > 30*1000) {
-            if (sequenceNumber> 0) {
+        if (duration > Configuration.MAX_EPOCH_DURATION_MS) {
+            if (sequenceNumber > 0) {
                 seq = sequenceNumber;
             }
-        } else if (sequenceNumber>2000){
+        } else if (sequenceNumber > Configuration.MAX_EPOCH_TXN) {
             seq = sequenceNumber;
         }
-        if (seq>0) {
+        if (seq > 0) {
+            final int epoch = epochNumber;
             setEpochStartTime(currentTime);
-            epochNumber+=1;
-            sequenceNumber =0;
+            epochNumber += 1;
+            sequenceNumber = 0;
+            processEpoch(epoch, seq);
         }
         return seq;
     }
 
-    public void processEpoch() {
-        final Integer sequence = sequenceNumber;
-        sequenceNumber=0;
-        final Integer epoch = epochNumber;
-        epochNumber+=1;
-        EpochProcessor epochProcessor = new EpochProcessor(epoch);
-        epochProcessor.processEpoch(sequence);
+    public void processEpoch(final Integer epoch, final Integer txnCount) {
+        epochThreadPoolExecutor.addToThreadPool(new EpochProcessor(epoch, txnCount));
     }
 }

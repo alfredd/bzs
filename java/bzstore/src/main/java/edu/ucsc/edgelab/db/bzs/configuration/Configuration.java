@@ -8,6 +8,8 @@ public class Configuration {
 
     public static final int WAIT_TIMEOUT = 800;
     private static final int DEFAULT_EPOCH_TIME_IN_MS = 50;
+    public static final int MAX_EPOCH_TXN = 2000;
+    public static final long MAX_EPOCH_DURATION_MS = 30*1000;
 
     public static ServerInfo getLeaderInfo(Integer clusterID) throws IOException, UnknownConfiguration {
 
