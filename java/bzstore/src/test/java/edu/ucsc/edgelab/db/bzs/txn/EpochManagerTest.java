@@ -26,6 +26,7 @@ public class EpochManagerTest {
     @Test
     public void testEpochTime() {
         EpochManager e = new EpochManager();
+
         final long epochStartTime = System.currentTimeMillis();
         e.setEpochStartTime(epochStartTime);
 
@@ -34,7 +35,14 @@ public class EpochManagerTest {
 
     @Test
     public void testUpdateEpoch() {
-        EpochManager e = new EpochManager();
+        final int[] txnCounter = {0};
+        EpochManager e = new EpochManager() {
+
+            @Override
+            protected void processEpoch(Integer epoch, Integer txnCount) {
+                txnCounter[0] = txnCount;
+            }
+        };
         final long epochStartTime = System.currentTimeMillis();
         e.setEpochStartTime(epochStartTime);
         int seq = -1;
@@ -42,17 +50,22 @@ public class EpochManagerTest {
         final TransactionID tid = e.getTID();
         Integer newEpochNumber = tid.getEpochNumber();
         seq=tid.getSequenceNumber();
+        Integer newSeqNumber = -1;
         while (newEpochNumber==startEpoch) {
             final TransactionID tid1 = e.getTID();
             newEpochNumber = tid1.getEpochNumber();
             if (newEpochNumber==startEpoch)
                 seq = tid1.getSequenceNumber();
+            else newSeqNumber = tid1.getSequenceNumber();
         }
 
         long epochEndTime = System.currentTimeMillis();
         final long duration = epochEndTime - epochStartTime;
-        System.out.println(duration+", "+ seq);
+        System.out.println(duration+", "+ seq + ", "+txnCounter[0]+", "+ newSeqNumber);
 
+        assertEquals(0, newSeqNumber.intValue());
         assertTrue(seq >= Configuration.MAX_EPOCH_TXN || duration > Configuration.MAX_EPOCH_DURATION_MS);
+        if (seq >= Configuration.MAX_EPOCH_TXN)
+            assertEquals(seq+1, txnCounter[0]);
     }
 }
