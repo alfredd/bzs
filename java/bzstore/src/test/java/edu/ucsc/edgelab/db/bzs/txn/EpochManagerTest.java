@@ -66,6 +66,6 @@ public class EpochManagerTest {
         assertEquals(0, newSeqNumber.intValue());
         assertTrue(seq >= Configuration.MAX_EPOCH_TXN || duration > Configuration.MAX_EPOCH_DURATION_MS);
         if (seq >= Configuration.MAX_EPOCH_TXN)
-            assertEquals(seq+1, txnCounter[0]);
+            assertEquals(seq+EpochManager.EPOCH_BUFFER, txnCounter[0]);
     }
 }

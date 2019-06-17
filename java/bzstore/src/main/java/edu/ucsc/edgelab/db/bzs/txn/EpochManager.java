@@ -8,6 +8,7 @@ public class EpochManager {
     private volatile Integer sequenceNumber = 0;
     private volatile long epochStartTime;
     private EpochThreadPoolExecutor epochThreadPoolExecutor;
+    public static final int EPOCH_BUFFER = 5;
 
 
     public EpochManager() {
@@ -47,7 +48,7 @@ public class EpochManager {
             setEpochStartTime(currentTime);
             epochNumber += 1;
             sequenceNumber = -1;
-            processEpoch(epoch, seq+1);
+            processEpoch(epoch, seq+EPOCH_BUFFER);
         }
         return seq;
     }
