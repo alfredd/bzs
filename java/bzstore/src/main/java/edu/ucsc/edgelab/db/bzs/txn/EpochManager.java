@@ -16,10 +16,10 @@ public class EpochManager {
     }
 
     public TransactionID getTID() {
-        updateEpoch();
         final Integer epochNumber = this.epochNumber;
         final Integer sequenceNumber = this.sequenceNumber;
         this.sequenceNumber += 1;
+        updateEpoch();
         return new TransactionID(epochNumber, sequenceNumber);
     }
 
@@ -47,12 +47,12 @@ public class EpochManager {
             setEpochStartTime(currentTime);
             epochNumber += 1;
             sequenceNumber = 0;
-            processEpoch(epoch, seq);
+            processEpoch(epoch, seq+1);
         }
         return seq;
     }
 
-    public void processEpoch(final Integer epoch, final Integer txnCount) {
+    private void processEpoch(final Integer epoch, final Integer txnCount) {
         epochThreadPoolExecutor.addToThreadPool(new EpochProcessor(epoch, txnCount));
     }
 }

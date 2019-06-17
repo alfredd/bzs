@@ -1,5 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
+import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import org.junit.Test;
 
@@ -36,17 +38,21 @@ public class EpochManagerTest {
         final long epochStartTime = System.currentTimeMillis();
         e.setEpochStartTime(epochStartTime);
         int seq = -1;
-        while (true) {
-            e.getTID();
-            seq = e.updateEpoch();
-            if (seq > 0) {
-                break;
-            }
+        int startEpoch = e.getTID().getEpochNumber();
+        final TransactionID tid = e.getTID();
+        Integer newEpochNumber = tid.getEpochNumber();
+        seq=tid.getSequenceNumber();
+        while (newEpochNumber==startEpoch) {
+            final TransactionID tid1 = e.getTID();
+            newEpochNumber = tid1.getEpochNumber();
+            if (newEpochNumber==startEpoch)
+                seq = tid1.getSequenceNumber();
         }
 
         long epochEndTime = System.currentTimeMillis();
         final long duration = epochEndTime - epochStartTime;
+        System.out.println(duration+", "+ seq);
 
-        assertTrue(seq >= 2000 || duration > 30000);
+        assertTrue(seq >= Configuration.MAX_EPOCH_TXN || duration > Configuration.MAX_EPOCH_DURATION_MS);
     }
 }
