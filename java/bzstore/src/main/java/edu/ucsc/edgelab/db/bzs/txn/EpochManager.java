@@ -23,7 +23,7 @@ public class EpochManager {
         return new TransactionID(epochNumber, sequenceNumber);
     }
 
-    public void setEpochStartTime(final long epochStartTime) {
+    private void setEpochStartTime(final long epochStartTime) {
         this.epochStartTime = epochStartTime;
     }
 
@@ -31,7 +31,7 @@ public class EpochManager {
         return epochStartTime;
     }
 
-    public Integer updateEpoch() {
+    private Integer updateEpoch() {
         final long currentTime = System.currentTimeMillis();
         long duration = getEpochStartTime() - currentTime;
         Integer seq = -1;
