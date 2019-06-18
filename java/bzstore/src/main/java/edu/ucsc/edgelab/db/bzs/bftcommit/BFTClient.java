@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.bftcommit;
 
 import bftsmart.tom.ServiceProxy;
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.replica.ID;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -18,6 +19,16 @@ public class BFTClient {
     protected ServiceProxy serviceProxy;
 
     private static final Logger LOGGER = Logger.getLogger(BFTClient.class.getName());
+
+    private static BFTClient bftClient = null;
+
+    private static final void createConnection() {
+        bftClient = new BFTClient(ID.getReplicaID());
+    }
+
+    public static final BFTClient getInstance() {
+        return bftClient;
+    }
 
     public BFTClient(int ClientId) {
         LOGGER.info("Trying to connect to server: "+ClientId);
