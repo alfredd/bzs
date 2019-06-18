@@ -7,6 +7,7 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.txn.LocalDataVerifier;
 import edu.ucsc.edgelab.db.bzs.txn.MetaInfo;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
@@ -397,7 +398,7 @@ public class TransactionProcessor {
                 if (transactions != null) {
 
                     performanceTrace.setLocalPrepareStartTime(epoch, System.currentTimeMillis());
-                    Bzs.TransactionBatch transactionBatch = getTransactionBatch(epoch.toString(), transactions.values());
+                    Bzs.TransactionBatch transactionBatch = TxnUtils.getTransactionBatch(epoch.toString(), transactions.values());
                     log.info("Processing transaction batch: " + transactionBatch.toString());
 
                     Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
@@ -481,22 +482,6 @@ public class TransactionProcessor {
             responseObserver.onNext(tResponse);
             responseObserver.onCompleted();
         }
-    }
-
-    public static void addNumbers(List<? super Integer> list) {
-        for (int i = 1; i <= 10; i++) {
-            list.add(i);
-        }
-    }
-
-    Bzs.TransactionBatch getTransactionBatch(String id, Collection<Bzs.Transaction> transactions) {
-        Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
-
-        for (Bzs.Transaction transaction : transactions) {
-            batchBuilder.addTransactions(transaction);
-        }
-        batchBuilder.setID(id.toString()).setOperation(Bzs.Operation.BFT_PREPARE);
-        return batchBuilder.build();
     }
 
     public BFTClient getBFTClient() {

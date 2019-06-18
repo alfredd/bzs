@@ -26,7 +26,7 @@ public class EpochProcessor implements Runnable {
     }
 
     public void processEpoch() {
-        List<Bzs.Transaction> allRWT = new LinkedList<>();
+        Set<Bzs.Transaction> allRWT = new LinkedHashSet<>();
         for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
 
@@ -52,8 +52,12 @@ public class EpochProcessor implements Runnable {
 
         // BFT Local Prepare everything
 
+        final String batchID = String.format("%d:%d", ID.getClusterID(), epochNumber);
+        final Bzs.TransactionBatch rwtLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT);
+        Bzs.TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(rwtLocalBatch);
+        if (response!=null) {
 
-
+        }
         // BFT Commit lRWT
 
         // BFT add to SMR log
