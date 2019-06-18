@@ -49,6 +49,7 @@ public class EpochManager {
                 seq = sequenceNumber-1;
                 sequenceNumber = 0;
                 epochNumber += 1;
+                Epoch.setEpochNumber(epochNumber);
                 processEpoch(epoch, seq+EPOCH_BUFFER);
             }
             return seq;

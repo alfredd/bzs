@@ -26,6 +26,8 @@ public class EpochProcessor implements Runnable {
     }
 
     public void processEpoch() {
+        Epoch.setEpochUnderExecution(epochNumber);
+
         Set<Bzs.Transaction> allRWT = new LinkedHashSet<>();
         for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
@@ -57,7 +59,10 @@ public class EpochProcessor implements Runnable {
         Bzs.TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(rwtLocalBatch);
         if (response!=null) {
 
+        } else {
+            // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
         }
+
         // BFT Commit lRWT
 
         // BFT add to SMR log
