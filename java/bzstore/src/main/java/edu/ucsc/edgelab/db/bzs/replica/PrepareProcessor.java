@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.MessageType;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -21,7 +22,7 @@ class PrepareProcessor extends RemoteOpProcessor {
 
     @Override
     public void run() {
-        Set<Integer> remoteCIDs = getListOfClusterIDs();
+        Set<Integer> remoteCIDs = TxnUtils.getListOfClusterIDs(remoteTransaction,cid);
         log.info("Sending prepare message for TID: "+tid+" to cluster: "+ remoteCIDs);
         List<Thread> remoteThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Prepare);
 

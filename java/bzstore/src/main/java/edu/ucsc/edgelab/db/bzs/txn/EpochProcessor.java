@@ -7,6 +7,8 @@ import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,11 +50,25 @@ public class EpochProcessor implements Runnable {
 
         // Send dRWT for remote prepare
 
+        Map<Integer, List<Bzs.Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWT);
+
         // BFT Local Prepare everything
 
         // BFT Commit lRWT
 
         // BFT add to SMR log
+    }
+
+    private Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(List<TransactionID> dRWTs) {
+        Map<Integer, List<Bzs.Transaction>> tMap = new TreeMap<>();
+        for (TransactionID dRWTid : dRWTs) {
+            Bzs.Transaction drwt = TransactionCache.getTransaction(dRWTid);
+            if (drwt != null) {
+                Bzs.Transaction t = Bzs.Transaction.newBuilder(drwt).build();
+
+            }
+        }
+        return tMap;
     }
 
     @Override

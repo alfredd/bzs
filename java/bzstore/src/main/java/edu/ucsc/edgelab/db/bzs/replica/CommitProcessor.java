@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.MessageType;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +25,7 @@ public class CommitProcessor extends RemoteOpProcessor {
 
     @Override
     public void run() {
-        Set<Integer> remoteCIDs = getListOfClusterIDs();
+        Set<Integer> remoteCIDs = TxnUtils.getListOfClusterIDs(remoteTransaction,cid);
         List<Thread> remoteThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Commit);
 
         joinAllThreads(remoteThreads);

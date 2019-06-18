@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.MessageType;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -14,7 +15,7 @@ public class AbortProcessor extends RemoteOpProcessor {
 
     @Override
     public void run() {
-        Set<Integer> remoteCIDs = getListOfClusterIDs();
+        Set<Integer> remoteCIDs = TxnUtils.getListOfClusterIDs(remoteTransaction,cid);
         List<Thread> abortThreads = super.sendMessageToClusterLeaders(remoteCIDs, MessageType.Abort);
         joinAllThreads(abortThreads);
         Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.ABORTED;

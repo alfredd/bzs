@@ -65,7 +65,7 @@ public abstract class RemoteOpProcessor implements Runnable {
         return remoteThreads;
     }
 
-    protected Set<Integer> getListOfClusterIDs() {
+/*    protected Set<Integer> getListOfClusterIDs() {
 
         Set<Integer> cidSet = new HashSet<>();
 
@@ -84,5 +84,5 @@ public abstract class RemoteOpProcessor implements Runnable {
     private void addToCidSet(Set<Integer> cidSet, int clusterID) {
         if (clusterID != this.cid)
             cidSet.add(clusterID);
-    }
+    }*/
 }
