@@ -5,10 +5,7 @@ import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -64,8 +61,13 @@ public class EpochProcessor implements Runnable {
         for (TransactionID dRWTid : dRWTs) {
             Bzs.Transaction drwt = TransactionCache.getTransaction(dRWTid);
             if (drwt != null) {
-                Bzs.Transaction t = Bzs.Transaction.newBuilder(drwt).build();
-
+                Set<Integer> cids = TxnUtils.getListOfClusterIDs(drwt, ID.getClusterID());
+                for (Integer cid: cids) {
+                    if (!tMap.containsKey(cid)) {
+                        tMap.put(cid, new LinkedList<>());
+                    }
+                    tMap.get(cid).add(drwt);
+                }
             }
         }
         return tMap;
