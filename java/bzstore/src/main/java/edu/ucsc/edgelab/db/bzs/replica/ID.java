@@ -16,4 +16,8 @@ public class ID {
         ID.clusterID = clusterID;
         ID.replicaID = replicaID;
     }
+
+    public static String string() {
+        return String.format("Cluster:Replica = %d:%d", ID.clusterID, ID.replicaID);
+    }
 }

@@ -22,7 +22,7 @@ public class BFTClient {
 
     private static BFTClient bftClient = null;
 
-    private static final void createConnection() {
+    public static final void createConnection() {
         bftClient = new BFTClient(ID.getReplicaID());
     }
 

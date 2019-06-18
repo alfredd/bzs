@@ -1,5 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
+import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTServer;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
@@ -93,7 +94,10 @@ public class BZStoreServer {
             logger.info("Shutting down.");
             BZStoreServer.this.stop();
         }));
+        logger.info("Starting up BFTServer for "+ID.string());
         BFTServer bftServer = new BFTServer(clusterID, replicaID, isLeader);
+        logger.info("Creating connection to BFT Server. ");
+        BFTClient.createConnection();
     }
 
     private boolean amITheLeader(ServerInfo leaderInfo) {

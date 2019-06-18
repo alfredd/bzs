@@ -97,8 +97,9 @@ public class TransactionProcessor {
     }
 
     private void startBftClient() {
-        if (bftClient == null && replicaID != null)
-            bftClient = new BFTClient(replicaID);
+//        if (bftClient == null && replicaID != null)
+//            bftClient = new BFTClient(replicaID);
+        bftClient = BFTClient.getInstance();
     }
 
     public int getEpochNumber() {
