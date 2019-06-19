@@ -29,6 +29,8 @@ public class EpochProcessor implements Runnable {
         Epoch.setEpochUnderExecution(epochNumber);
 
         Set<Bzs.Transaction> allRWT = new LinkedHashSet<>();
+        Set<Bzs.Transaction> lRWTxns = new LinkedHashSet<>();
+
         for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
 
@@ -40,6 +42,7 @@ public class EpochProcessor implements Runnable {
                         dRWT.add(tid);
                     } else {
                         lRWT.add(tid);
+                        lRWTxns.add(rwt);
                     }
                     allRWT.add(rwt);
                 } else {
@@ -63,9 +66,9 @@ public class EpochProcessor implements Runnable {
             // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
         }
 
-        // BFT Commit lRWT
+        // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
-        // BFT add to SMR log
+        // If successful, Commit SMR Entry log. via BFT commit.
     }
 
     private Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(List<TransactionID> dRWTs) {
