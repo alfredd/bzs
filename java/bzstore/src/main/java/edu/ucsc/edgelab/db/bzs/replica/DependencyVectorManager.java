@@ -1,5 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
+import edu.ucsc.edgelab.db.bzs.txn.Epoch;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,8 +22,10 @@ public class DependencyVectorManager {
         }
     }
 
-    public static LinkedList<Integer> getDependencyVector () {
+    public static LinkedList<Integer> getCurrentTimeVector() {
         synchronized (dvec) {
+            int epoch = Epoch.getEpochUnderExecution();
+            dvec.set(ID.getClusterID(), epoch);
             LinkedList<Integer> dv = new LinkedList<Integer>();
             dv.addAll(dvec);
             return dv;
