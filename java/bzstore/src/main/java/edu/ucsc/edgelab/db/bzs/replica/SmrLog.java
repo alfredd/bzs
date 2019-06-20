@@ -55,7 +55,7 @@ public class SmrLog {
         }
     }
 
-    public static void committed( TransactionID tid) {
+    public static void committedDRWT(TransactionID tid) {
         int commitToEpoch = Epoch.getEpochUnderExecution();
         if (lockLCEForEpoch == commitToEpoch) {
             commitToEpoch = Epoch.getEpochNumber();
