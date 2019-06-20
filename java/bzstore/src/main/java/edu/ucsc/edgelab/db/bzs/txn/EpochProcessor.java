@@ -3,7 +3,9 @@ package edu.ucsc.edgelab.db.bzs.txn;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
+import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
+import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.*;
@@ -16,9 +18,9 @@ public class EpochProcessor implements Runnable {
     private static final Logger log = Logger.getLogger(EpochProcessor.class.getName());
     private LocalDataVerifier localDataVerifier = new LocalDataVerifier(ID.getClusterID());
 
-    private List<TransactionID> lRWT = new LinkedList<>();
-    private List<TransactionID> dRWT = new LinkedList<>();
-    private Integer epochNumber;
+    private Set<TransactionID> lRWT = new LinkedHashSet<>();
+    private Set<TransactionID> dRWT = new LinkedHashSet<>();
+    private final Integer epochNumber;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount) {
         this.epochNumber = epochNumber;
@@ -67,11 +69,14 @@ public class EpochProcessor implements Runnable {
         }
 
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
-
+        SmrLog.createLogEntry(epochNumber);
+        SmrLog.localPrepared(epochNumber, lRWT);
+        SmrLog.distributedPrepared(epochNumber,dRWT);
+        SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
         // If successful, Commit SMR Entry log. via BFT commit.
     }
 
-    private Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(List<TransactionID> dRWTs) {
+    private Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(Set<TransactionID> dRWTs) {
         Map<Integer, List<Bzs.Transaction>> tMap = new TreeMap<>();
         for (TransactionID dRWTid : dRWTs) {
             Bzs.Transaction drwt = TransactionCache.getTransaction(dRWTid);
