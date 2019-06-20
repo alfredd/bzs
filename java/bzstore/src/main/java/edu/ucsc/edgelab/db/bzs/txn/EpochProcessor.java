@@ -28,6 +28,7 @@ public class EpochProcessor implements Runnable {
     }
 
     public void processEpoch() {
+        SmrLog.createLogEntry(epochNumber);
         Epoch.setEpochUnderExecution(epochNumber);
 
         Set<Bzs.Transaction> allRWT = new LinkedHashSet<>();
@@ -67,9 +68,9 @@ public class EpochProcessor implements Runnable {
         } else {
             // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
         }
-
+        SmrLog.setLockLCEForEpoch(epochNumber);
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
-        SmrLog.createLogEntry(epochNumber);
+
         SmrLog.localPrepared(epochNumber, lRWT);
         SmrLog.distributedPrepared(epochNumber,dRWT);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
