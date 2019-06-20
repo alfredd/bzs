@@ -114,4 +114,11 @@ public class BFTClient {
     public int abort(Bzs.TransactionBatch batch) {
         return sendBytesToBftServer(batch);
     }
+
+    public void prepareSmrLogEntry(Bzs.SmrLogEntry logEntry) {
+    }
+
+    public void commitSMR(Integer epochNumber) {
+
+    }
 }

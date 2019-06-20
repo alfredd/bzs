@@ -1,5 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
+import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.txn.Epoch;
 
 import java.util.List;
@@ -84,6 +85,12 @@ public class SmrLog {
         if (smrData != null) {
             smrData.lastCommittedEpoch = lceMap.get(epoch);
         }
+    }
+
+    public static Bzs.SmrLogEntry generateLogEntry(Integer epochNumber) {
+        SMRData data = getSMRData(epochNumber);
+
+        return null;
     }
 
 
