@@ -87,9 +87,11 @@ public class SmrLog {
         }
     }
 
-    public static Bzs.SmrLogEntry generateLogEntry(Integer epochNumber) {
+    // TODO: Implementation incomplete.
+    public static Bzs.SmrLogEntry generateLogEntry(final Integer epochNumber) {
         SMRData data = getSMRData(epochNumber);
-
+        Bzs.SmrLogEntry.Builder epochBlockBuilder = Bzs.SmrLogEntry.newBuilder();
+        epochBlockBuilder = epochBlockBuilder.setEpochNumber(epochNumber).setLce(data.lastCommittedEpoch);
         return null;
     }
 
