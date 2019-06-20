@@ -74,7 +74,10 @@ public class EpochProcessor implements Runnable {
         SmrLog.localPrepared(epochNumber, lRWT);
         SmrLog.distributedPrepared(epochNumber,dRWT);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
-        // If successful, Commit SMR Entry log. via BFT commit.
+        // Generate SMR log entry.
+        // Perform BFT Consensus on the SMR Log entry
+        // Commit SMR log entry
+
     }
 
     private Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(Set<TransactionID> dRWTs) {
