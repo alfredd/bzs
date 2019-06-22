@@ -94,18 +94,5 @@ public class SmrLog {
         epochBlockBuilder = epochBlockBuilder.setEpochNumber(epochNumber).setLce(data.lastCommittedEpoch);
         return null;
     }
-
-
-//    void commitEpoch(Integer epochNumber) {
-//        Bzs.SmrLogEntry.Builder epochBlockBuilder = smrLog.get(epochNumber);
-//
-//        Bzs.SmrLogEntry logEntry = epochBlockBuilder.build();
-//        try {
-//            BZDatabaseController.commitEpochBlock(epochNumber.toString(), logEntry);
-//            smrLog.remove(epochNumber);
-//        } catch (InvalidCommitException e) {
-//            log.log(Level.WARNING, "Could not commit smrLogEntry to database: " + e.getLocalizedMessage());
-//        }
-//    }
 }
 

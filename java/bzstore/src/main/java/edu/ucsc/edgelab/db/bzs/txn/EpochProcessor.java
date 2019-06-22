@@ -35,6 +35,7 @@ public class EpochProcessor implements Runnable {
 
         Set<Transaction> allRWT = new LinkedHashSet<>();
         Set<Transaction> lRWTxns = new LinkedHashSet<>();
+        Set<Transaction> dRWTxns = new LinkedHashSet<>();
 
         for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
@@ -45,6 +46,7 @@ public class EpochProcessor implements Runnable {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
                         dRWT.add(tid);
+                        dRWTxns.add(rwt);
                     } else {
                         lRWT.add(tid);
                         lRWTxns.add(rwt);
