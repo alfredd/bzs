@@ -74,8 +74,8 @@ public class EpochProcessor implements Runnable {
         }
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
-        SmrLog.localPrepared(epochNumber, lRWT);
-        SmrLog.distributedPrepared(epochNumber,dRWT);
+        SmrLog.localPrepared(epochNumber, lRWTxns);
+        SmrLog.distributedPrepared(epochNumber,dRWTxns);
         SmrLog.setLockLCEForEpoch(epochNumber);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
 
