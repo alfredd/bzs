@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.bftcommit;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import com.google.protobuf.InvalidProtocolBufferException;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
@@ -38,7 +39,32 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     }
 
-    @SuppressWarnings("unchecked")
+
+    public byte[] appExecuteOrdered2(byte[] request, MessageContext messageContext) {
+        byte[] reply = ByteBuffer.allocate(4).putInt(-10).array();
+        ;
+        Bzs.TransactionBatch transactionBatch = null;
+        try {
+            transactionBatch = Bzs.TransactionBatch.newBuilder().mergeFrom(request).build();
+        } catch (InvalidProtocolBufferException e) {
+            logger.log(Level.SEVERE, "Exception occurred while parsing request: "+ e.getLocalizedMessage(), e);
+        }
+        if (transactionBatch==null) {
+            return getRandomBytes();
+        }
+        Bzs.Operation operation = transactionBatch.getOperation();
+        switch (operation) {
+            case BFT_PREPARE:
+                break;
+            case BFT_SMR_PREPARE:
+                break;
+            case BFT_SMR_COMMIT:
+                break;
+            case BFT_ABORT:
+        }
+        return reply;
+    }
+
     @Override
     public byte[] appExecuteOrdered(byte[] transactions, MessageContext msgCtx) {
         // TODO: Need to re-factor.
@@ -115,7 +141,8 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 writeResponse.getResponseDigest());
                         try {
                             if (writeResponse.getClusterID() == this.clusterID) {
-                                logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}", writeResponse.getKey(), writeResponse.getValue(), writeResponse.getVersion()));
+                                logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}", writeResponse.getKey(),
+                                        writeResponse.getValue(), writeResponse.getVersion()));
                                 String key = writeResponse.getKey();
                                 BZDatabaseController.commit(key, data);
                                 committedKeys.add(key);

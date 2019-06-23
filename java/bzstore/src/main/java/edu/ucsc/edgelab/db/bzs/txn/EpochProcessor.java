@@ -61,8 +61,7 @@ public class EpochProcessor implements Runnable {
             }
         }
 
-        // Send dRWT for remote prepare
-
+        // TODO Implementation:  Send dRWT for remote prepare
         Map<Integer, List<Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWT, ID.getClusterID());
 
         // BFT Local Prepare everything
@@ -85,7 +84,6 @@ public class EpochProcessor implements Runnable {
         int status = -1;
 
         // Generate SMR log entry.
-        // TODO: Implementation
         SmrLogEntry logEntry = SmrLog.generateLogEntry(epochNumber);
 
 
