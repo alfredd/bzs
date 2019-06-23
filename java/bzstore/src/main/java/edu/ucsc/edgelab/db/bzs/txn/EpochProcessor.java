@@ -77,6 +77,7 @@ public class EpochProcessor implements Runnable {
         SmrLog.localPrepared(epochNumber, lRWTxns);
         SmrLog.distributedPrepared(epochNumber,dRWTxns);
         SmrLog.setLockLCEForEpoch(epochNumber);
+        SmrLog.updateLastCommittedEpoch(epochNumber);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
 
 

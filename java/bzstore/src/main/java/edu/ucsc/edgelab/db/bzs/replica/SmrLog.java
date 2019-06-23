@@ -16,6 +16,7 @@ public class SmrLog {
     private static final Logger log = Logger.getLogger(SmrLog.class.getName());
 
     private static final Map<Integer, SmrLogEntryCreator> smrEpochData = new ConcurrentHashMap<>();
+    private static int lastLCE = -1;
 
 
     public static void setLockLCEForEpoch(int lockLCEForEpoch) {
@@ -30,6 +31,7 @@ public class SmrLog {
         if (!smrEpochData.containsKey(epochNumber)) {
             SmrLogEntryCreator smrData = new SmrLogEntryCreator();
             smrData.setEpochNumber(epochNumber);
+            smrData.addLastCommittedEpoch(lastLCE);
             smrEpochData.put(epochNumber, smrData);
         } else {
             log.log(Level.WARNING, "Log entry already exists for " + epochNumber);
@@ -59,15 +61,15 @@ public class SmrLog {
 
     public static void committedDRWT(Bzs.Transaction tid) {
         int commitToEpoch = Epoch.getEpochUnderExecution();
+        int lce = tid.getEpochNumber();
         if (lockLCEForEpoch == commitToEpoch) {
             commitToEpoch = Epoch.getEpochNumber();
-            int lce = tid.getEpochNumber();
             if (lceMap.containsKey(commitToEpoch)) {
                 if (lceMap.get(commitToEpoch) > tid.getEpochNumber())
                     lce = lceMap.get(commitToEpoch);
             }
-            lceMap.put(commitToEpoch, lce);
         }
+        lceMap.put(commitToEpoch, lce);
         SmrLogEntryCreator smrData = getSMRData(commitToEpoch);
         if (smrData != null) {
             smrData.addCommittedDRWTxns(tid);
@@ -84,7 +86,15 @@ public class SmrLog {
     public static void updateLastCommittedEpoch(final Integer epoch) {
         SmrLogEntryCreator smrData = smrEpochData.get(epoch);
         if (smrData != null) {
-            smrData.addLastCommittedEpoch(lceMap.get(epoch));
+            Integer lce = lastLCE;
+            if (lceMap.containsKey(epoch)) {
+                lce = lceMap.get(epoch);
+            } else {
+                lceMap.put(epoch, lastLCE);
+            }
+            smrData.addLastCommittedEpoch(lce);
+            final Integer lce1 = lceMap.get(epoch);
+            lastLCE = lce1 > lastLCE ? lce1 : lastLCE;
         }
     }
 
