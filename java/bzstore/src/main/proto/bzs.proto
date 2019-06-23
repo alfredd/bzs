@@ -179,9 +179,9 @@ message Timestamp {
 
 message SmrLogEntry {
     int32 epochNumber = 1;
-    map<string, Transaction> localPreparedBatch= 2;
-    map<string, Transaction> distributedPreparedBatch= 3;
-    map<string, Transaction> committedBatch= 4;
+    repeated Transaction lRWTxns= 2;
+    repeated Transaction preparedDRWTxns= 3;
+    repeated Transaction committedDRWTxns= 4;
     map<int32,int32> depVector = 5;
     int32 lce = 6;
 }
