@@ -1,6 +1,5 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
-import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
@@ -13,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static edu.ucsc.edgelab.db.bzs.Bzs.*;
+import static edu.ucsc.edgelab.db.bzs.txn.TxnUtils.mapTransactionsToCluster;
 
 public class EpochProcessor implements Runnable {
 
@@ -60,7 +60,7 @@ public class EpochProcessor implements Runnable {
 
         // Send dRWT for remote prepare
 
-        Map<Integer, List<Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWT);
+        Map<Integer, List<Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWT, ID.getClusterID());
 
         // BFT Local Prepare everything
 
@@ -93,23 +93,6 @@ public class EpochProcessor implements Runnable {
         // TODO: Implementation
         BFTClient.getInstance().commitSMR(epochNumber);
 
-    }
-
-    private Map<Integer, List<Transaction>> mapTransactionsToCluster(Set<TransactionID> dRWTs) {
-        Map<Integer, List<Transaction>> tMap = new TreeMap<>();
-        for (TransactionID dRWTid : dRWTs) {
-            Transaction drwt = TransactionCache.getTransaction(dRWTid);
-            if (drwt != null) {
-                Set<Integer> cids = TxnUtils.getListOfClusterIDs(drwt, ID.getClusterID());
-                for (Integer cid: cids) {
-                    if (!tMap.containsKey(cid)) {
-                        tMap.put(cid, new LinkedList<>());
-                    }
-                    tMap.get(cid).add(drwt);
-                }
-            }
-        }
-        return tMap;
     }
 
     @Override
