@@ -31,7 +31,7 @@ public class BFTClient {
     }
 
     public BFTClient(int ClientId) {
-        LOGGER.info("Trying to connect to server: "+ClientId);
+        LOGGER.info("Trying to connect to server: " + ClientId);
         serviceProxy = new ServiceProxy(ClientId);
     }
 
@@ -41,7 +41,7 @@ public class BFTClient {
             return Bzs.TransactionBatchResponse.parseFrom(reply);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception generated while committing transaction" + e.getLocalizedMessage(), e);
-        } catch (Exception e ) {
+        } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Could not parse response. Might be due to consensus failure. Transaction will be aborted.");
         }
         return null;
@@ -53,8 +53,6 @@ public class BFTClient {
         reply = serviceProxy.invokeOrdered(data);
         return reply;//Bzs.TransactionBatchResponse.parseFrom(reply);
     }
-
-
 
 
     public boolean performRead(Collection<Bzs.ROTransaction> roTransactions) {
@@ -102,7 +100,7 @@ public class BFTClient {
 
     private int sendBytesToBftServer(Bzs.TransactionBatch batch) {
         byte[] reply = sendBytesToBFTServer(batch.toByteArray());
-        int id=-10;
+        int id = -10;
         try {
             id = ByteBuffer.wrap(reply).getInt();
         } catch (Exception e) {
@@ -115,10 +113,16 @@ public class BFTClient {
         return sendBytesToBftServer(batch);
     }
 
-    public void prepareSmrLogEntry(Bzs.SmrLogEntry logEntry) {
+    public int prepareSmrLogEntry(final Bzs.SmrLogEntry logEntry) {
+        String id = Integer.toString(logEntry.getEpochNumber());
+        Bzs.TransactionBatch batch =
+                Bzs.TransactionBatch.newBuilder().setID(id).setOperation(Bzs.Operation.BFT_SMR_PREPARE).setSmrLogEntry(logEntry).build();
+        return sendBytesToBftServer(batch);
     }
 
-    public void commitSMR(Integer epochNumber) {
-
+    public void commitSMR(final Integer epochNumber) {
+        String id = Integer.toString(epochNumber);
+        Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setOperation(Bzs.Operation.BFT_SMR_COMMIT).setID(id).build();
+        sendBytesToBftServer(batch);
     }
 }

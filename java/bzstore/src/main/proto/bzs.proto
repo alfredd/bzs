@@ -46,17 +46,19 @@ message Key {
 message TransactionBatch {
     repeated Transaction transactions = 1;
     repeated ROTransaction rotransaction = 2;
+    SmrLogEntry smrLogEntry = 3;
     //    BFTCommit bftCommit = 3;
-    string ID = 3;
-    Operation operation = 4;
+    string ID = 4;
+    Operation operation = 5;
 }
 
 message TransactionBatchResponse {
     repeated TransactionResponse responses = 1;
     repeated ROTransactionResponse readresponses = 2;
     //    BFTCommitResponse bftCommitResponse = 3;
-    string ID = 3;
-    Operation operation = 4;
+    SmrLogEntry smrLogEntry = 3;
+    string ID = 4;
+    Operation operation = 5;
 }
 
 message BFTCommit {
@@ -89,6 +91,8 @@ enum Operation {
     BFT_PREPARE = 0;
     BFT_COMMIT = 1;
     BFT_ABORT = 2;
+    BFT_SMR_PREPARE = 3;
+    BFT_SMR_COMMIT = 4;
 }
 
 message Write {
@@ -179,9 +183,9 @@ message Timestamp {
 
 message SmrLogEntry {
     int32 epochNumber = 1;
-    repeated Transaction lRWTxns= 2;
-    repeated Transaction preparedDRWTxns= 3;
-    repeated Transaction committedDRWTxns= 4;
-    map<int32,int32> depVector = 5;
+    repeated Transaction lRWTxns = 2;
+    repeated Transaction preparedDRWTxns = 3;
+    repeated Transaction committedDRWTxns = 4;
+    map<int32, int32> depVector = 5;
     int32 lce = 6;
 }

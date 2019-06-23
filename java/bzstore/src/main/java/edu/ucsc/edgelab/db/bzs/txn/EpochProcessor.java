@@ -7,7 +7,10 @@ import edu.ucsc.edgelab.db.bzs.replica.ID;
 import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,7 +70,7 @@ public class EpochProcessor implements Runnable {
         final String batchID = String.format("%d:%d", ID.getClusterID(), epochNumber);
         final TransactionBatch rwtLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT);
         TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(rwtLocalBatch);
-        if (response!=null) {
+        if (response != null) {
 
         } else {
             // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
@@ -75,11 +78,11 @@ public class EpochProcessor implements Runnable {
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
         SmrLog.localPrepared(epochNumber, lRWTxns);
-        SmrLog.distributedPrepared(epochNumber,dRWTxns);
+        SmrLog.distributedPrepared(epochNumber, dRWTxns);
         SmrLog.setLockLCEForEpoch(epochNumber);
         SmrLog.updateLastCommittedEpoch(epochNumber);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
-
+        int status = -1;
 
         // Generate SMR log entry.
         // TODO: Implementation
@@ -88,8 +91,10 @@ public class EpochProcessor implements Runnable {
 
         // Perform BFT Consensus on the SMR Log entry
         // TODO: Implementation
-        BFTClient.getInstance().prepareSmrLogEntry(logEntry);
-
+        status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
+        if (status < 0) {
+            log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch = %d.");
+        }
         // Commit SMR log entry
         // TODO: Implementation
         BFTClient.getInstance().commitSMR(epochNumber);
