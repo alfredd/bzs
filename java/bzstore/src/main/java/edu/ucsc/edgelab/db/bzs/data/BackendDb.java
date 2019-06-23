@@ -62,14 +62,18 @@ class BackendDb {
         }
     }
 
-
-    BZStoreData get(String key) {
-        byte[] value = new byte[0];
+    byte[] getData(String key) {
+        byte[] value = null;
         try {
             value = db.get(key.getBytes());
         } catch (RocksDBException e) {
             LOGGER.log(Level.WARNING, "Could not read data from db for key: " + key, e);
         }
+        return value;
+    }
+
+    BZStoreData getBZStoreData(String key) {
+        byte[] value = getData(key);
         if (value != null) {
             try {
                 Bzs.DBData data = Bzs.DBData.parseFrom(value);
@@ -98,5 +102,17 @@ class BackendDb {
             found = false;
         }
         return false;
+    }
+
+    public Bzs.SmrLogEntry getSmrBlock(String epochNumber) {
+        byte[] data = getData(epochNumber);
+        if (data!=null) {
+            try {
+                return Bzs.SmrLogEntry.parseFrom(data);
+            } catch (InvalidProtocolBufferException e) {
+                LOGGER.log(Level.WARNING, "Could not parse data from database: "+ e.getLocalizedMessage(), e);
+            }
+        }
+        return null;
     }
 }

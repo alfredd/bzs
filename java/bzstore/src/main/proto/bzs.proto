@@ -103,13 +103,14 @@ message Write {
 }
 
 message WriteResponse {
-    string key = 1;
-    string value = 2;
-    int64 version = 3;
-    string responseDigest = 4;
-    OperationStatus status = 5;
-    int32 clusterID = 6;
-    int32 replicaID = 7;
+//    string key = 1;
+//    string value = 2;
+    Write writeOperation = 1;
+    int64 version = 2;
+    string responseDigest = 3;
+    OperationStatus status = 4;
+//    int32 clusterID = 6;
+//    int32 replicaID = 7;
 }
 
 message Read {
@@ -119,13 +120,14 @@ message Read {
 }
 
 message ReadResponse {
-    string key = 1;
+//    string key = 1;
+    Read readOperation = 1;
     string value = 2;
     int64 version = 3;
     string responseDigest = 4;
     OperationStatus status = 5;
-    int32 clusterID = 6;
-    int32 replicaID = 7;
+//    int32 clusterID = 6;
+//    int32 replicaID = 7;
 }
 
 message ReadHistory {

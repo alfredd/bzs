@@ -20,6 +20,13 @@ public final class BZDatabaseController {
 
     public static void initDB(Integer cid,Integer rid) throws RocksDBException {
         BZ_DATABASE_CONTROLLER = new BZDatabaseController(cid,rid);
+        Integer latestEpochCount = BZ_DATABASE_CONTROLLER.db.getEpochNumber();
+        for (int e=0;e<=latestEpochCount;e++) {
+            Bzs.SmrLogEntry smrEntry = getSmrBlock(e);
+            if (smrEntry !=null) {
+
+            }
+        }
     }
     private BZDatabaseController(Integer cid,Integer rid) throws RocksDBException {
         db = new BackendDb(cid,rid);
@@ -44,7 +51,7 @@ public final class BZDatabaseController {
     }
 
     public static BZStoreData getlatest(String key) {
-        BZStoreData dataHistory = BZ_DATABASE_CONTROLLER.db.get(key);
+        BZStoreData dataHistory = BZ_DATABASE_CONTROLLER.db.getBZStoreData(key);
         if (dataHistory == null) {
 //            String message = String.format("No data available for key=%s.", key);
 //            LOGGER.log(Level.WARNING, message);
@@ -78,14 +85,19 @@ public final class BZDatabaseController {
         return new byte[0];
     }
 
-    public static void commitEpochBlock(String epochNumber, Bzs.SmrLogEntry logEntry) throws InvalidCommitException {
-        BZ_DATABASE_CONTROLLER.db.commit(epochNumber,logEntry);
+    public static void commitSmrBlock(Integer epochNumber, Bzs.SmrLogEntry logEntry) throws InvalidCommitException {
+        BZ_DATABASE_CONTROLLER.db.commit(epochNumber.toString(),logEntry);
+    }
+
+    public static Bzs.SmrLogEntry getSmrBlock(Integer epochNumber) {
+        return BZ_DATABASE_CONTROLLER.db.getSmrBlock(epochNumber.toString());
+
     }
 
 //    public static void rollbackForKeys(List<String> keys) {
 //        synchronized (BZ_DATABASE_CONTROLLER) {
 //            for(String key: keys) {
-//                List<BZStoreData> data = BZ_DATABASE_CONTROLLER.db.get(key);
+//                List<BZStoreData> data = BZ_DATABASE_CONTROLLER.db.getBZStoreData(key);
 //                data.remove(0);
 //            }
 //        }

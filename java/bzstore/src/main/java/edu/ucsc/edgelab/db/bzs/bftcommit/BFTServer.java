@@ -85,9 +85,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             for(Bzs.Write wOp : txn.getWriteOperationsList()) {
                 if (wOp.getClusterID() == this.clusterID) {
                     Bzs.WriteResponse wresp = Bzs.WriteResponse.newBuilder()
-                            .setClusterID(this.clusterID)
-                            .setKey(wOp.getKey())
-                            .setValue(wOp.getValue())
+                            .setWriteOperation(wOp)
 //                            .setVersion()
                             .build();
                     builder = builder.addWriteResponses(wresp);
@@ -132,10 +130,8 @@ public class BFTServer extends DefaultSingleRecoverable {
                         String key = writeOp.getKey();
                         bzStoreData = getBzStoreData(key);
                         Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
-                                .setKey(key)
-                                .setValue(writeOp.getValue())
+                                .setWriteOperation(writeOp)
                                 .setVersion(versionNumber)
-                                .setClusterID(writeOp.getClusterID())
                                 .setResponseDigest(generateHash(writeOp.getValue() )).build();
 
                         responseBuilder.addWriteResponses(writeResponse);
@@ -168,13 +164,13 @@ public class BFTServer extends DefaultSingleRecoverable {
                     boolean committed = true;
                     for (Bzs.WriteResponse writeResponse : response.getWriteResponsesList()) {
                         BZStoreData data = new BZStoreData(
-                                writeResponse.getValue(),
+                                writeResponse.getWriteOperation().getValue(),
                                 writeResponse.getVersion());
                         try {
-                            if (writeResponse.getClusterID() == this.clusterID) {
-                                logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}", writeResponse.getKey(),
-                                        writeResponse.getValue(), writeResponse.getVersion()));
-                                String key = writeResponse.getKey();
+                            if (writeResponse.getWriteOperation().getClusterID() == this.clusterID) {
+                                logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}", writeResponse.getWriteOperation().getKey(),
+                                        writeResponse.getWriteOperation().getValue(), writeResponse.getVersion()));
+                                String key = writeResponse.getWriteOperation().getKey();
                                 BZDatabaseController.commit(key, data);
                                 committedKeys.add(key);
                                 MerkleBTreeManager.insert(key,

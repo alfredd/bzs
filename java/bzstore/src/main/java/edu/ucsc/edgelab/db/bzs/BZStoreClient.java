@@ -46,7 +46,7 @@ public class BZStoreClient {
     public Bzs.ReadResponse read(Bzs.Read readOperation) {
         log.log(Level.FINE, "Beginning read operation for : " + readOperation.toString());
         Bzs.ReadResponse response = blockingStub.readOperation(readOperation);
-        log.log(Level.FINE, String.format("Read version %d of key: %s.", response.getVersion(), response.getKey()));
+        log.log(Level.FINE, String.format("Read version %d of key: %s.", response.getVersion(), response.getReadOperation().getKey()));
         return response;
     }
 

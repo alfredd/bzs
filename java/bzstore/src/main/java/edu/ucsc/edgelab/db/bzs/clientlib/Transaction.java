@@ -86,11 +86,11 @@ public class Transaction extends TransactionManager implements TransactionInterf
     public BZStoreData getBzStoreDataFromCluster(long startTime, Bzs.Read read) {
         Bzs.ReadResponse response = client.read(read);
         BZStoreData data = new BZStoreData();
-        String responseKey = response.getKey();
+        String responseKey = response.getReadOperation().getKey();
         data.value = response.getValue();
 //        data.digest = response.getResponseDigest();
         data.version = response.getVersion();
-        setReadHistory(responseKey, data.value, data.version, response.getClusterID());
+        setReadHistory(responseKey, data.value, data.version, response.getReadOperation().getClusterID());
         long duration = System.currentTimeMillis() - startTime;
 
         LOGGER.info("Read operation processed in " + duration + " msecs");
