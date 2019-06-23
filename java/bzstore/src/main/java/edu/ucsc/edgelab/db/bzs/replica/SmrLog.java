@@ -84,7 +84,7 @@ public class SmrLog {
     }
 
     public static void updateLastCommittedEpoch(final Integer epoch) {
-        SmrLogEntryCreator smrData = smrEpochData.get(epoch);
+        SmrLogEntryCreator smrData = getSMRData(epoch);
         if (smrData != null) {
             Integer lce = lastLCE;
             if (lceMap.containsKey(epoch)) {
@@ -94,7 +94,8 @@ public class SmrLog {
             }
             smrData.addLastCommittedEpoch(lce);
             final Integer lce1 = lceMap.get(epoch);
-            lastLCE = lce1 > lastLCE ? lce1 : lastLCE;
+            if (lce1 > lastLCE)
+                lastLCE = lce1;
         }
     }
 
