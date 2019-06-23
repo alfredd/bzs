@@ -22,7 +22,7 @@ public class SerializerTest {
             BZStoreData obj1 = new BZStoreData();
             obj1.value = mytestvalue;
             obj1.version = 1;
-            obj1.digest = "hello";
+//            obj1.digest = "hello";
 
             Bzs.ReadHistory h1 =
                     Bzs.ReadHistory.newBuilder().setKey(testKey).setVersion(obj1.version).setValue(obj1.value).build();
@@ -75,20 +75,20 @@ public class SerializerTest {
         Bzs.Transaction tr1 = t1.getTransaction();
         Serializer serializer = new Serializer(0);
         assertTrue(serializer.serialize(tr1));
-        BZDatabaseController.commit("x", new BZStoreData("10", 1, "1"));
-        BZDatabaseController.commit("y", new BZStoreData("1", 1, "2"));
-        BZDatabaseController.commit("z", new BZStoreData("3", 1, "3"));
+        BZDatabaseController.commit("x", new BZStoreData("10", 1));
+        BZDatabaseController.commit("y", new BZStoreData("1", 1));
+        BZDatabaseController.commit("z", new BZStoreData("3", 1));
 
 
         Transaction t2 = new Transaction();
-        t2.setReadHistory("x", "10", 1, "1", 0);
+        t2.setReadHistory("x", "10", 1, 0);
         t2.write("x", "10" + 45);
         t2.write("z", "5");
         Bzs.Transaction tr2 = t2.getTransaction();
 
         assertTrue(serializer.serialize(tr2));
-        BZDatabaseController.commit("x", new BZStoreData("1045", 2, "11"));
-        BZDatabaseController.commit("z", new BZStoreData("5", 1, "31"));
+        BZDatabaseController.commit("x", new BZStoreData("1045", 2));
+        BZDatabaseController.commit("z", new BZStoreData("5", 1));
 
     }
 
@@ -102,22 +102,22 @@ public class SerializerTest {
         Bzs.Transaction tr1 = t1.getTransaction();
         Serializer serializer = new Serializer(0);
         assertTrue(serializer.serialize(tr1));
-        BZDatabaseController.commit("x", new BZStoreData("10",  "1"));
-        BZDatabaseController.commit("y", new BZStoreData("1",  "2"));
-        BZDatabaseController.commit("z", new BZStoreData("3",  "3"));
+        BZDatabaseController.commit("x", new BZStoreData("10"));
+        BZDatabaseController.commit("y", new BZStoreData("1"));
+        BZDatabaseController.commit("z", new BZStoreData("3"));
 
         serializer.resetEpoch();
         BZStoreData data = BZDatabaseController.getlatest("x");
 
         Transaction t2 = new Transaction();
-        t2.setReadHistory("x", data.value, data.version, data.digest, 0);
+        t2.setReadHistory("x", data.value, data.version, 0);
         t2.write("x", "10" + 45);
         t2.write("z", "5");
         Bzs.Transaction tr2 = t2.getTransaction();
 
         assertTrue(serializer.serialize(tr2));
-        BZDatabaseController.commit("x", new BZStoreData("1045", 2, "11"));
-        BZDatabaseController.commit("z", new BZStoreData("5", 1, "31"));
+        BZDatabaseController.commit("x", new BZStoreData("1045", 2));
+        BZDatabaseController.commit("z", new BZStoreData("5", 1));
 
     }
 

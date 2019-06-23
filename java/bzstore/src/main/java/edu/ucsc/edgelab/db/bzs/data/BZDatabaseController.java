@@ -5,6 +5,8 @@ import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.rocksdb.RocksDBException;
 
 import java.io.ByteArrayInputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,6 +14,8 @@ public final class BZDatabaseController {
     private BackendDb db;
     private static final Logger LOGGER = Logger.getLogger(BZDatabaseController.class.getName());
     private static BZDatabaseController BZ_DATABASE_CONTROLLER;
+
+    private Map<String, BZStoreData> localCache = new ConcurrentHashMap<>();
 
 
     public static void initDB(Integer cid,Integer rid) throws RocksDBException {

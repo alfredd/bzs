@@ -78,7 +78,7 @@ public class Transaction extends TransactionManager implements TransactionInterf
         Bzs.ReadResponse response = client.read(read);
         BZStoreData data = new BZStoreData();
         data.value = response.getValue();
-        data.digest = response.getResponseDigest();
+//        data.digest = response.getResponseDigest();
         data.version = response.getVersion();
         return data;
     }
@@ -88,9 +88,9 @@ public class Transaction extends TransactionManager implements TransactionInterf
         BZStoreData data = new BZStoreData();
         String responseKey = response.getKey();
         data.value = response.getValue();
-        data.digest = response.getResponseDigest();
+//        data.digest = response.getResponseDigest();
         data.version = response.getVersion();
-        setReadHistory(responseKey, data.value, data.version, data.digest, response.getClusterID());
+        setReadHistory(responseKey, data.value, data.version, response.getClusterID());
         long duration = System.currentTimeMillis() - startTime;
 
         LOGGER.info("Read operation processed in " + duration + " msecs");

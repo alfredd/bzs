@@ -10,6 +10,7 @@ import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.data.MerkleBTreeManager;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
+import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -42,19 +43,21 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     public byte[] appExecuteOrdered2(byte[] request, MessageContext messageContext) {
         byte[] reply = ByteBuffer.allocate(4).putInt(-10).array();
-        ;
         Bzs.TransactionBatch transactionBatch = null;
         try {
             transactionBatch = Bzs.TransactionBatch.newBuilder().mergeFrom(request).build();
         } catch (InvalidProtocolBufferException e) {
-            logger.log(Level.SEVERE, "Exception occurred while parsing request: "+ e.getLocalizedMessage(), e);
+            logger.log(Level.SEVERE, "Exception occurred while parsing request: " + e.getLocalizedMessage(), e);
         }
-        if (transactionBatch==null) {
+        if (transactionBatch == null) {
             return getRandomBytes();
         }
+
+
         Bzs.Operation operation = transactionBatch.getOperation();
         switch (operation) {
             case BFT_PREPARE:
+                processBFTPrepare(transactionBatch);
                 break;
             case BFT_SMR_PREPARE:
                 break;
@@ -63,6 +66,35 @@ public class BFTServer extends DefaultSingleRecoverable {
             case BFT_ABORT:
         }
         return reply;
+    }
+
+    private void processBFTPrepare(Bzs.TransactionBatch transactionBatch) {
+        Serializer serializer = new Serializer(clusterID, replicaID);
+        List<Bzs.TransactionResponse.Builder> responseList = new LinkedList<>();
+        for (Bzs.Transaction txn : transactionBatch.getTransactionsList()) {
+            TransactionID tid = TransactionID.getTransactionID(txn.getTransactionID());
+            Bzs.TransactionStatus status = Bzs.TransactionStatus.ABORTED;
+            if (serializer.serialize(txn)) {
+                status = Bzs.TransactionStatus.PREPARED;
+            }
+            Bzs.TransactionResponse.Builder builder = Bzs.TransactionResponse.newBuilder().setTransactionID(tid.getTiD()).setStatus(status);
+            if (status.equals(Bzs.TransactionStatus.ABORTED) ) {
+                responseList.add(builder);
+                continue;
+            }
+            for(Bzs.Write wOp : txn.getWriteOperationsList()) {
+                if (wOp.getClusterID() == this.clusterID) {
+                    Bzs.WriteResponse wresp = Bzs.WriteResponse.newBuilder()
+                            .setClusterID(this.clusterID)
+                            .setKey(wOp.getKey())
+                            .setValue(wOp.getValue())
+//                            .setVersion()
+                            .build();
+                    builder = builder.addWriteResponses(wresp);
+                }
+            }
+            responseList.add(builder);
+        }
     }
 
     @Override
@@ -104,7 +136,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 .setValue(writeOp.getValue())
                                 .setVersion(versionNumber)
                                 .setClusterID(writeOp.getClusterID())
-                                .setResponseDigest(generateHash(writeOp.getValue() + bzStoreData.digest)).build();
+                                .setResponseDigest(generateHash(writeOp.getValue() )).build();
 
                         responseBuilder.addWriteResponses(writeResponse);
 //                        }
@@ -137,8 +169,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                     for (Bzs.WriteResponse writeResponse : response.getWriteResponsesList()) {
                         BZStoreData data = new BZStoreData(
                                 writeResponse.getValue(),
-                                writeResponse.getVersion(),
-                                writeResponse.getResponseDigest());
+                                writeResponse.getVersion());
                         try {
                             if (writeResponse.getClusterID() == this.clusterID) {
                                 logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}", writeResponse.getKey(),

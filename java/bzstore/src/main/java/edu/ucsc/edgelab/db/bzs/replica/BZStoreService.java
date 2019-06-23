@@ -100,7 +100,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 .setKey(key)
                 .setClusterID(cid)
                 .setReplicaID(rid)
-                .setResponseDigest(data.digest)
+//                .setResponseDigest(data.digest)
                 .setValue(data.value)
                 .setVersion(data.version)
                 .setStatus(status)
