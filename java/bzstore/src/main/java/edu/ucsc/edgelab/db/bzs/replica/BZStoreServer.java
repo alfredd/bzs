@@ -6,6 +6,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
+import edu.ucsc.edgelab.db.bzs.txn.TxnProcessor;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.rocksdb.RocksDBException;
@@ -27,7 +28,7 @@ public class BZStoreServer {
     private Integer replicaID;
 
     private Server server;
-    private TransactionProcessor transactionProcessor;
+    private TxnProcessor transactionProcessor;
 
     public static void main(String[] args) throws IOException {
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
@@ -66,7 +67,7 @@ public class BZStoreServer {
         this.replicaID = id;
         this.clusterID = clusterId;
         ID.setIDs(clusterID,replicaID);
-        transactionProcessor = new TransactionProcessor(this.replicaID, this.clusterID);
+        transactionProcessor = new TxnProcessor(this.replicaID, this.clusterID);
         try {
             BZDatabaseController.initDB(clusterId,replicaID);
         } catch (RocksDBException e) {
@@ -81,8 +82,8 @@ public class BZStoreServer {
     private void start() throws IOException {
         ServerInfo leaderInfo = ServerInfo.getLeaderInfo(clusterID);
         boolean isLeader = amITheLeader(leaderInfo);
-        if (isLeader)
-            transactionProcessor.initTransactionProcessor();
+//        if (isLeader)
+//            transactionProcessor.initTransactionProcessor();
         server = ServerBuilder.forPort(this.serverPort)
                 .addService(new BZStoreService(replicaID, clusterID, this.transactionProcessor, isLeader))
                 .addService(new BZStoreReplica(clusterID, replicaID, this.transactionProcessor, isLeader))

@@ -2,10 +2,13 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.ClusterGrpc;
+import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
+import edu.ucsc.edgelab.db.bzs.txn.Epoch;
 import edu.ucsc.edgelab.db.bzs.txn.LocalDataVerifier;
 import edu.ucsc.edgelab.db.bzs.txn.MetaInfo;
+import edu.ucsc.edgelab.db.bzs.txn.TxnProcessor;
 import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
@@ -15,7 +18,7 @@ import java.util.logging.Logger;
 
 public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
-    private TransactionProcessor processor;
+    private TxnProcessor processor;
     private Integer replicaID;
     private Integer clusterID;
     private boolean amILeader;
@@ -24,7 +27,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     public static final Logger log = Logger.getLogger(ClusterService.class.getName());
 
 
-    public ClusterService(Integer clusterID, Integer replicaID, TransactionProcessor processor, boolean isLeader) {
+    public ClusterService(Integer clusterID, Integer replicaID, TxnProcessor processor, boolean isLeader) {
         this.clusterID = clusterID;
         this.replicaID = replicaID;
         this.amILeader = isLeader;
@@ -46,7 +49,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         } else {
             LockManager.acquireLocks(request);
             Bzs.Operation operation = Bzs.Operation.BFT_PREPARE;
-            int epochNumber = processor.getEpochNumber();
+            int epochNumber = Epoch.getEpochNumber();
             transactionIDMap.put(transactionID, new EpochTransactionID(epochNumber, request.getTransactionID()));
 
             Bzs.TransactionBatchResponse batchResponse = null;
@@ -55,7 +58,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 Bzs.TransactionBatch batch = null;
                 try {
                     batch = createTransactionBatch(request, operation);
-                    batchResponse = processor.getBFTClient().performCommitPrepare(batch);
+                    batchResponse = BFTClient.getInstance().performCommitPrepare(batch);
                     log.info("Response of ClusterService Prepare: "+ batchResponse);
                 } catch (InvalidCommitException e) {
                     log.log(Level.WARNING, e.getLocalizedMessage());
@@ -174,7 +177,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         Bzs.TransactionBatch batch = null;
         try {
             batch = createTransactionBatch(request, operation);
-            int status = processor.getBFTClient().dbCommit(batch);
+            int status = BFTClient.getInstance().dbCommit(batch);
             performOperationAndSendResponse(request.getTransactionID(), responseObserver, null,
                     status < 0 ? failureStatus : transactionStatus);
         } catch (InvalidCommitException e) {

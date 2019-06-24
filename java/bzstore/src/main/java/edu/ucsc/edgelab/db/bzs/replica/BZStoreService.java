@@ -9,6 +9,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.UnknownConfiguration;
+import edu.ucsc.edgelab.db.bzs.txn.TxnProcessor;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
@@ -20,10 +21,10 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     private static final Logger log = Logger.getLogger(BZStoreService.class.getName());
     private final Integer replicaID;
     private final Integer clusterID;
-    private TransactionProcessor transactionProcessor;
+    private TxnProcessor transactionProcessor;
     private ForwardingClient forwardingClient = null;
 
-    public BZStoreService(Integer id, Integer clusterID, TransactionProcessor tp, boolean isLeader) {
+    public BZStoreService(Integer id, Integer clusterID, TxnProcessor tp, boolean isLeader) {
         log.info("BZStore service started. Replica ID: " + id);
         this.replicaID = id;
         this.clusterID = clusterID;

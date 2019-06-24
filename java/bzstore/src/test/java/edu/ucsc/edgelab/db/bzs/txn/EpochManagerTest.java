@@ -1,15 +1,15 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
-import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
-import org.junit.Test;
+import org.junit.Ignore;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class EpochManagerTest {
 
-    @Test
+    @Ignore
     public void testGetTID() {
         EpochManager e = new EpochManager();
         TransactionID tid1 = e.getTID();
@@ -23,7 +23,7 @@ public class EpochManagerTest {
 
     }
 
-    @Test
+    @Ignore
     public void testUpdateEpoch() {
         final int[] txnCounter = {0};
 //        EpochManager e = new EpochManager() {

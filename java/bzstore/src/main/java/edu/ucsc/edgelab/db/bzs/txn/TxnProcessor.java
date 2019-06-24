@@ -9,13 +9,13 @@ import io.grpc.stub.StreamObserver;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TransactionProcessor {
+public class TxnProcessor {
 
     private Serializer serializer;
     private EpochManager epochManager;
-    public static final Logger log = Logger.getLogger(TransactionProcessor.class.getName());
+    public static final Logger log = Logger.getLogger(TxnProcessor.class.getName());
 
-    public TransactionProcessor(Integer clusterID, Integer replicaID) {
+    public TxnProcessor(Integer clusterID, Integer replicaID) {
         serializer = new Serializer(clusterID, replicaID);
         epochManager = new EpochManager();
     }
