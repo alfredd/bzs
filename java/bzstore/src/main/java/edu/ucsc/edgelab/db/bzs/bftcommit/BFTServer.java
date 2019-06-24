@@ -57,7 +57,7 @@ public class BFTServer extends DefaultSingleRecoverable {
         Bzs.Operation operation = transactionBatch.getOperation();
         switch (operation) {
             case BFT_PREPARE:
-                processBFTPrepare(transactionBatch);
+                reply = processBFTPrepare(transactionBatch).toByteArray();
                 break;
             case BFT_SMR_PREPARE:
                 break;
@@ -68,7 +68,7 @@ public class BFTServer extends DefaultSingleRecoverable {
         return reply;
     }
 
-    private void processBFTPrepare(Bzs.TransactionBatch transactionBatch) {
+    private Bzs.TransactionBatchResponse processBFTPrepare(Bzs.TransactionBatch transactionBatch) {
         Serializer serializer = new Serializer(clusterID, replicaID);
         List<Bzs.TransactionResponse.Builder> responseList = new LinkedList<>();
         for (Bzs.Transaction txn : transactionBatch.getTransactionsList()) {
@@ -78,21 +78,28 @@ public class BFTServer extends DefaultSingleRecoverable {
                 status = Bzs.TransactionStatus.PREPARED;
             }
             Bzs.TransactionResponse.Builder builder = Bzs.TransactionResponse.newBuilder().setTransactionID(tid.getTiD()).setStatus(status);
-            if (status.equals(Bzs.TransactionStatus.ABORTED) ) {
+            if (status.equals(Bzs.TransactionStatus.ABORTED)) {
                 responseList.add(builder);
                 continue;
             }
-            for(Bzs.Write wOp : txn.getWriteOperationsList()) {
+            for (Bzs.Write wOp : txn.getWriteOperationsList()) {
                 if (wOp.getClusterID() == this.clusterID) {
                     Bzs.WriteResponse wresp = Bzs.WriteResponse.newBuilder()
                             .setWriteOperation(wOp)
-//                            .setVersion()
+                            .setVersion(txn.getEpochNumber())
                             .build();
                     builder = builder.addWriteResponses(wresp);
                 }
             }
             responseList.add(builder);
         }
+
+        Bzs.TransactionBatchResponse.Builder tbr = Bzs.TransactionBatchResponse.newBuilder();
+
+        for (Bzs.TransactionResponse.Builder builder : responseList) {
+            tbr = tbr.addResponses(builder.build());
+        }
+        return tbr.build();
     }
 
     @Override
@@ -132,7 +139,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                         Bzs.WriteResponse writeResponse = Bzs.WriteResponse.newBuilder()
                                 .setWriteOperation(writeOp)
                                 .setVersion(versionNumber)
-                                .setResponseDigest(generateHash(writeOp.getValue() )).build();
+                                .setResponseDigest(generateHash(writeOp.getValue())).build();
 
                         responseBuilder.addWriteResponses(writeResponse);
 //                        }
@@ -168,7 +175,8 @@ public class BFTServer extends DefaultSingleRecoverable {
                                 writeResponse.getVersion());
                         try {
                             if (writeResponse.getWriteOperation().getClusterID() == this.clusterID) {
-                                logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}", writeResponse.getWriteOperation().getKey(),
+                                logger.info(String.format("Writing  to DB {key, value, version} = {%s, %s, %d}",
+                                        writeResponse.getWriteOperation().getKey(),
                                         writeResponse.getWriteOperation().getValue(), writeResponse.getVersion()));
                                 String key = writeResponse.getWriteOperation().getKey();
                                 BZDatabaseController.commit(key, data);
