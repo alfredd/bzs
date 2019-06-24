@@ -11,6 +11,7 @@ import edu.ucsc.edgelab.db.bzs.data.MerkleBTreeManager;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,6 +29,7 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     private Map<String, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
 //    private Integer count;
+    private Map<Integer, Bzs.SmrLogEntry> smrLogCache = new LinkedHashMap<>();
 
     public BFTServer(Integer clusterID, int replicaID, boolean isLeader) {
         logger.info("Starting BFT-Smart Server.");
@@ -60,12 +62,31 @@ public class BFTServer extends DefaultSingleRecoverable {
                 reply = processBFTPrepare(transactionBatch).toByteArray();
                 break;
             case BFT_SMR_PREPARE:
+                reply = processSMRLogPrepare(transactionBatch);
                 break;
             case BFT_SMR_COMMIT:
+                reply = commitSMRLogEntry(transactionBatch);
                 break;
             case BFT_ABORT:
         }
         return reply;
+    }
+
+    private byte[] commitSMRLogEntry(Bzs.TransactionBatch transactionBatch) {
+        Integer epoch = Integer.decode(transactionBatch.getID());
+        Bzs.SmrLogEntry smrLogEntry = smrLogCache.get(epoch);
+        try {
+            BZDatabaseController.commitSmrBlock(epoch,smrLogEntry);
+        } catch (InvalidCommitException e) {
+            e.printStackTrace();
+        }
+        return ByteBuffer.allocate(4).putInt(1).array();
+    }
+
+    private byte[] processSMRLogPrepare(Bzs.TransactionBatch transactionBatch) {
+        Bzs.SmrLogEntry smrLogEntry = transactionBatch.getSmrLogEntry();
+        smrLogCache.put(Integer.valueOf(smrLogEntry.getEpochNumber()), smrLogEntry);
+        return DigestUtils.md5(smrLogEntry.toByteArray());
     }
 
     private Bzs.TransactionBatchResponse processBFTPrepare(Bzs.TransactionBatch transactionBatch) {
