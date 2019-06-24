@@ -1,11 +1,13 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
+import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
 import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
+import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -67,10 +69,21 @@ public class EpochProcessor implements Runnable {
         // BFT Local Prepare everything
 
         final String batchID = String.format("%d:%d", ID.getClusterID(), epochNumber);
-        final TransactionBatch rwtLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT);
+        final TransactionBatch rwtLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT, Bzs.Operation.BFT_PREPARE);
         TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(rwtLocalBatch);
         if (response != null) {
-
+            for (TransactionResponse txnResponse : response.getResponsesList()) {
+                TransactionStatus respStatus = txnResponse.getStatus();
+                switch (respStatus) {
+                    case ABORTED:
+                        TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
+                        StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
+                        responseObserver.onNext(txnResponse);
+                        responseObserver.onCompleted();
+                        break;
+                    case PREPARED:
+                }
+            }
         } else {
             // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
         }

@@ -32,13 +32,13 @@ public class TxnUtils {
             cidSet.add(clusterID);
     }
 
-    public static Bzs.TransactionBatch getTransactionBatch(final String batchID, final Collection<Bzs.Transaction> transactions) {
+    public static Bzs.TransactionBatch getTransactionBatch(final String batchID, final Collection<Bzs.Transaction> transactions, final Bzs.Operation operation) {
         Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
 
         for (Bzs.Transaction transaction : transactions) {
             batchBuilder.addTransactions(transaction);
         }
-        batchBuilder.setID(batchID).setOperation(Bzs.Operation.BFT_PREPARE);
+        batchBuilder.setID(batchID).setOperation(operation);
         return batchBuilder.build();
     }
 

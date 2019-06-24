@@ -77,7 +77,9 @@ public class BFTServer extends DefaultSingleRecoverable {
             if (serializer.serialize(txn)) {
                 status = Bzs.TransactionStatus.PREPARED;
             }
-            Bzs.TransactionResponse.Builder builder = Bzs.TransactionResponse.newBuilder().setTransactionID(tid.getTiD()).setStatus(status);
+            Bzs.TransactionResponse.Builder builder = Bzs.TransactionResponse.newBuilder()
+                    .setTransactionID(tid.getTiD())
+                    .setStatus(status);
             if (status.equals(Bzs.TransactionStatus.ABORTED)) {
                 responseList.add(builder);
                 continue;
