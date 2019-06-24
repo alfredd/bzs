@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.Timer;
@@ -27,7 +28,7 @@ public class EpochManager {
 //                logger.info("Epoch updated.");
             }
         };
-
+        epochNumber = BZDatabaseController.getEpochCount();
         Timer t = new Timer();
         t.scheduleAtFixedRate(epochUpdater, Configuration.MAX_EPOCH_DURATION_MS, Configuration.MAX_EPOCH_DURATION_MS);
     }
