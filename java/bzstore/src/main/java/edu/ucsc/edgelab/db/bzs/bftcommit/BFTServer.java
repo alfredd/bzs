@@ -42,8 +42,8 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     }
 
-
-    public byte[] appExecuteOrdered2(byte[] request, MessageContext messageContext) {
+    @Override
+    public byte[] appExecuteOrdered(byte[] request, MessageContext messageContext) {
         byte[] reply = ByteBuffer.allocate(4).putInt(-10).array();
         Bzs.TransactionBatch transactionBatch = null;
         try {
@@ -125,8 +125,8 @@ public class BFTServer extends DefaultSingleRecoverable {
         return tbr.build();
     }
 
-    @Override
-    public byte[] appExecuteOrdered(byte[] transactions, MessageContext msgCtx) {
+
+    public byte[] appExecuteOrdered2(byte[] transactions, MessageContext msgCtx) {
         // TODO: Need to re-factor.
         byte[] reply;
         try {
