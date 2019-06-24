@@ -18,6 +18,7 @@ public class TxnProcessor {
     public TxnProcessor(Integer clusterID, Integer replicaID) {
         serializer = new Serializer(clusterID, replicaID);
         epochManager = new EpochManager();
+        epochManager.setSerializer(serializer);
     }
 
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {

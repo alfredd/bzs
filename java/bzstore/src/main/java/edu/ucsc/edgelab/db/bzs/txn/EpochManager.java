@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.Timer;
@@ -15,6 +16,7 @@ public class EpochManager {
     public static final int EPOCH_BUFFER = 5;
 
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
+    private Serializer serializer;
 
 
     public EpochManager() {
@@ -46,6 +48,7 @@ public class EpochManager {
         synchronized (this) {
             Integer seq = sequenceNumber;
             if (seq > 0) {
+                serializer.resetEpoch();
                 final int epoch = epochNumber;
                 seq = sequenceNumber-1;
                 sequenceNumber = 0;
@@ -59,5 +62,9 @@ public class EpochManager {
 
     protected void processEpoch(final Integer epoch, final Integer txnCount) {
         epochThreadPoolExecutor.addToThreadPool(new EpochProcessor(epoch, txnCount));
+    }
+
+    public void setSerializer(Serializer serializer) {
+        this.serializer = serializer;
     }
 }
