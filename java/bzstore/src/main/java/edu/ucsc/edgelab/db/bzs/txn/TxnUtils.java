@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -39,16 +40,16 @@ public class TxnUtils {
         return batchBuilder.setID(batchID).setOperation(operation).build();
     }
 
-    public static Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(final Collection<Bzs.Transaction> dRWTs, final int myClusterID) {
-        Map<Integer, List<Bzs.Transaction>> tMap = new TreeMap<>();
-        for (Bzs.Transaction drwt : dRWTs) {
+    public static Map<Integer, Map<TransactionID, Bzs.Transaction>> mapTransactionsToCluster(final Map<TransactionID, Bzs.Transaction> dRWTs, final int myClusterID) {
+        Map<Integer, Map<TransactionID, Bzs.Transaction>> tMap = new TreeMap<>();
+        for (Map.Entry<TransactionID, Bzs.Transaction> drwt : dRWTs.entrySet()) {
             if (drwt != null) {
-                Set<Integer> cids = getListOfClusterIDs(drwt, myClusterID);
+                Set<Integer> cids = getListOfClusterIDs(drwt.getValue(), myClusterID);
                 for (Integer cid : cids) {
                     if (!tMap.containsKey(cid)) {
-                        tMap.put(cid, new LinkedList<>());
+                        tMap.put(cid, new LinkedHashMap<>());
                     }
-                    tMap.get(cid).add(drwt);
+                    tMap.get(cid).put(drwt.getKey(), drwt.getValue());
                 }
             }
         }

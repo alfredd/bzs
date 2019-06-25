@@ -60,8 +60,8 @@ public class EpochProcessor implements Runnable {
             }
         }
 
-        Map<Integer, List<Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns.values(), ID.getClusterID());
-        for (Map.Entry<Integer, List<Transaction>> entry: clusterDRWTMap.entrySet()) {
+        Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns, ID.getClusterID());
+        for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
             DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
             threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
         }
