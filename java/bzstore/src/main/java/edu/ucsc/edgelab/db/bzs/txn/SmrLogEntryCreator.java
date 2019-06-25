@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -23,12 +24,12 @@ public class SmrLogEntryCreator {
             smrLogEntryBuilder = smrLogEntryBuilder.putDepVector(i, dvec.get(i));
     }
 
-    public void addCommittedlWRTxns(Set<Bzs.Transaction> lRWTxns) {
+    public void addCommittedlWRTxns(Collection<Bzs.Transaction> lRWTxns) {
         for (Bzs.Transaction t : lRWTxns)
             smrLogEntryBuilder = smrLogEntryBuilder.addLRWTxns(t);
     }
 
-    public void addPreparedDRWTxns(Set<Bzs.Transaction> dRWTxns) {
+    public void addPreparedDRWTxns(Collection<Bzs.Transaction> dRWTxns) {
         for (Bzs.Transaction t : dRWTxns)
             smrLogEntryBuilder = smrLogEntryBuilder.addPreparedDRWTxns(t);
     }

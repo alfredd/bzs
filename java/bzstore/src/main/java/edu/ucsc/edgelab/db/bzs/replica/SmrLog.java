@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.txn.Epoch;
 import edu.ucsc.edgelab.db.bzs.txn.SmrLogEntryCreator;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,14 +46,14 @@ public class SmrLog {
         return smrEpochData.get(epoch);
     }
 
-    public static void localPrepared(final Integer epoch, Set<Bzs.Transaction> lRWTtids) {
+    public static void localPrepared(final Integer epoch, Collection<Bzs.Transaction> lRWTtids) {
         SmrLogEntryCreator smrData = smrEpochData.get(epoch);
         if (smrData != null) {
             smrData.addCommittedlWRTxns(lRWTtids);
         }
     }
 
-    public static void distributedPrepared(final Integer epoch, Set<Bzs.Transaction> dRWTtids) {
+    public static void distributedPrepared(final Integer epoch, Collection<Bzs.Transaction> dRWTtids) {
         SmrLogEntryCreator smrData = smrEpochData.get(epoch);
         if (smrData != null) {
             smrData.addPreparedDRWTxns(dRWTtids);

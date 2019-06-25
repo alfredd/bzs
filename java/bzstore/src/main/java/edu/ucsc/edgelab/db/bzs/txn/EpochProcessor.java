@@ -9,10 +9,7 @@ import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import io.grpc.stub.StreamObserver;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,8 +22,8 @@ public class EpochProcessor implements Runnable {
     private static final Logger log = Logger.getLogger(EpochProcessor.class.getName());
     private LocalDataVerifier localDataVerifier = new LocalDataVerifier(ID.getClusterID());
 
-    private Set<TransactionID> lRWT = new LinkedHashSet<>();
-    private Set<TransactionID> dRWT = new LinkedHashSet<>();
+//    private Set<TransactionID> lRWT = new LinkedHashSet<>();
+//    private Set<TransactionID> dRWT = new LinkedHashSet<>();
     private final Integer epochNumber;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount) {
@@ -38,9 +35,9 @@ public class EpochProcessor implements Runnable {
         SmrLog.createLogEntry(epochNumber);
         Epoch.setEpochUnderExecution(epochNumber);
 
-        Set<Transaction> allRWT = new LinkedHashSet<>();
-        Set<Transaction> lRWTxns = new LinkedHashSet<>();
-        Set<Transaction> dRWTxns = new LinkedHashSet<>();
+        Map<TransactionID, Transaction> allRWT = new LinkedHashMap<>();
+        Map<TransactionID, Transaction> lRWTxns = new LinkedHashMap<>();
+        Map<TransactionID, Transaction> dRWTxns = new LinkedHashMap<>();
 
         for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
@@ -50,13 +47,13 @@ public class EpochProcessor implements Runnable {
                 if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
-                        dRWT.add(tid);
-                        dRWTxns.add(rwt);
+//                        dRWT.add(tid);
+                        dRWTxns.put(tid, rwt);
                     } else {
-                        lRWT.add(tid);
-                        lRWTxns.add(rwt);
+//                        lRWT.add(tid);
+                        lRWTxns.put(tid, rwt);
                     }
-                    allRWT.add(rwt);
+                    allRWT.put(tid, rwt);
                 } else {
                     log.log(Level.WARNING, "Transaction with TID" + tid + ", not found in transaction cache.");
                 }
@@ -64,24 +61,33 @@ public class EpochProcessor implements Runnable {
         }
 
         // TODO Implementation:  Send dRWT for remote prepare
-        Map<Integer, List<Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWT, ID.getClusterID());
+        Map<Integer, List<Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns.values(), ID.getClusterID());
 
         // BFT Local Prepare everything
 
         final String batchID = String.format("%d:%d", ID.getClusterID(), epochNumber);
-        final TransactionBatch rwtLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT, Bzs.Operation.BFT_PREPARE);
-        TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(rwtLocalBatch);
+        final TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
+        TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
         if (response != null) {
             for (TransactionResponse txnResponse : response.getResponsesList()) {
                 TransactionStatus respStatus = txnResponse.getStatus();
+                TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
                 switch (respStatus) {
                     case ABORTED:
-                        TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
                         StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
                         responseObserver.onNext(txnResponse);
                         responseObserver.onCompleted();
+                        if (lRWTxns.containsKey(transactionID))
+                            lRWTxns.remove(transactionID);
+                        if (dRWTxns.containsKey(transactionID))
+                            dRWTxns.remove(transactionID);
+                        allRWT.remove(transactionID);
                         break;
                     case PREPARED:
+                        Map<TransactionID, Transaction> tempMap = lRWTxns;
+                        if (dRWTxns.containsKey(transactionID))
+                            tempMap = dRWTxns;
+                        updateVersion(tempMap, transactionID, txnResponse);
                 }
             }
         } else {
@@ -89,8 +95,8 @@ public class EpochProcessor implements Runnable {
         }
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
-        SmrLog.localPrepared(epochNumber, lRWTxns);
-        SmrLog.distributedPrepared(epochNumber, dRWTxns);
+        SmrLog.localPrepared(epochNumber, lRWTxns.values());
+        SmrLog.distributedPrepared(epochNumber, dRWTxns.values());
         SmrLog.setLockLCEForEpoch(epochNumber);
         SmrLog.updateLastCommittedEpoch(epochNumber);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
@@ -110,6 +116,12 @@ public class EpochProcessor implements Runnable {
         // TODO: Implementation
         BFTClient.getInstance().commitSMR(epochNumber);
 
+    }
+
+    private void updateVersion(Map<TransactionID, Transaction> rwTxns, TransactionID transactionID, TransactionResponse txnResponse) {
+        for (WriteResponse wrResp: txnResponse.getWriteResponsesList()) {
+
+        }
     }
 
     @Override

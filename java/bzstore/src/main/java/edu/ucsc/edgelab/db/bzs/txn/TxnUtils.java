@@ -1,8 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
-import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -42,10 +40,9 @@ public class TxnUtils {
         return batchBuilder.build();
     }
 
-    public static Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(final Set<TransactionID> dRWTs, final int myClusterID) {
+    public static Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(final Collection<Bzs.Transaction> dRWTs, final int myClusterID) {
         Map<Integer, List<Bzs.Transaction>> tMap = new TreeMap<>();
-        for (TransactionID dRWTid : dRWTs) {
-            Bzs.Transaction drwt = TransactionCache.getTransaction(dRWTid);
+        for (Bzs.Transaction drwt : dRWTs) {
             if (drwt != null) {
                 Set<Integer> cids = getListOfClusterIDs(drwt, myClusterID);
                 for (Integer cid : cids) {
