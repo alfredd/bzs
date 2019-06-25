@@ -19,7 +19,7 @@ class BackendDb {
 
     BackendDb(Integer clusterID, Integer replicaID) throws RocksDBException {
         RocksDB.loadLibrary();
-        String dbPath = "BZS_data_" + clusterID+"_"+replicaID;
+        String dbPath = "BZS_data_" + clusterID + "_" + replicaID;
         Options options = new Options();
         options.setCreateIfMissing(true);
         db = RocksDB.open(options, dbPath);
@@ -36,7 +36,7 @@ class BackendDb {
         try {
             byte[] value = db.get(EPOCH.getBytes());
             epoch = Integer.decode(new String(value));
-        }catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Could not load epoch number from database");
         }
         return epoch;
@@ -47,6 +47,10 @@ class BackendDb {
                 .setValue(dataList.value)
                 .setVersion(dataList.version)
                 .build();
+        commitDBData(key, dbData);
+    }
+
+    void commitDBData(String key, Bzs.DBData dbData) throws InvalidCommitException {
         try {
             db.put(key.getBytes(), dbData.toByteArray());
         } catch (RocksDBException e) {
@@ -97,7 +101,7 @@ class BackendDb {
     public boolean containsKey(String key) {
         boolean found = true;
         try {
-            found = db.get(key.getBytes())!=null;
+            found = db.get(key.getBytes()) != null;
         } catch (RocksDBException e) {
             found = false;
         }
@@ -106,11 +110,11 @@ class BackendDb {
 
     public Bzs.SmrLogEntry getSmrBlock(String epochNumber) {
         byte[] data = getData(epochNumber);
-        if (data!=null) {
+        if (data != null) {
             try {
                 return Bzs.SmrLogEntry.parseFrom(data);
             } catch (InvalidProtocolBufferException e) {
-                LOGGER.log(Level.WARNING, "Could not parse data from database: "+ e.getLocalizedMessage(), e);
+                LOGGER.log(Level.WARNING, "Could not parse data from database: " + e.getLocalizedMessage(), e);
             }
         }
         return null;

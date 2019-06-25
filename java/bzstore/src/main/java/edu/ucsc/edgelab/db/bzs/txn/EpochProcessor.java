@@ -118,12 +118,6 @@ public class EpochProcessor implements Runnable {
 
     }
 
-    private void updateVersion(Map<TransactionID, Transaction> rwTxns, TransactionID transactionID, TransactionResponse txnResponse) {
-        for (WriteResponse wrResp: txnResponse.getWriteResponsesList()) {
-
-        }
-    }
-
     @Override
     public void run() {
         processEpoch();

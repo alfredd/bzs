@@ -28,8 +28,13 @@ public final class BZDatabaseController {
             }
         }
     }
+
     private BZDatabaseController(Integer cid,Integer rid) throws RocksDBException {
         db = new BackendDb(cid,rid);
+    }
+
+    public static void commitDBData(String key, Bzs.DBData dbData) throws InvalidCommitException {
+        BZ_DATABASE_CONTROLLER.db.commitDBData(key,dbData);
     }
 
     public static void commit (String key, BZStoreData data) throws InvalidCommitException {

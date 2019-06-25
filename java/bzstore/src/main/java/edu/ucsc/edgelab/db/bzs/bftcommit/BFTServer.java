@@ -28,7 +28,7 @@ public class BFTServer extends DefaultSingleRecoverable {
     private Logger logger = Logger.getLogger(BFTServer.class.getName());
 
     private Map<String, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
-//    private Integer count;
+    //    private Integer count;
     private Map<Integer, Bzs.SmrLogEntry> smrLogCache = new LinkedHashMap<>();
     private Map<Integer, Map<String, Bzs.DBData>> dbCache = new LinkedHashMap<>();
 
@@ -77,11 +77,25 @@ public class BFTServer extends DefaultSingleRecoverable {
         Integer epoch = Integer.decode(transactionBatch.getID());
         Bzs.SmrLogEntry smrLogEntry = smrLogCache.get(epoch);
         try {
-            BZDatabaseController.commitSmrBlock(epoch,smrLogEntry);
+            BZDatabaseController.commitSmrBlock(epoch, smrLogEntry);
         } catch (InvalidCommitException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE,
+                    String.format("Could not commit to SMR Log: Epoch(%d):%s: ", epoch.intValue(), smrLogEntry.toString()) + e.getLocalizedMessage(), e);
         }
+        commitDBCache(epoch);
         return ByteBuffer.allocate(4).putInt(1).array();
+    }
+
+    private void commitDBCache(Integer epoch) {
+        Map<String, Bzs.DBData> cache = dbCache.get(epoch);
+        for (Map.Entry<String, Bzs.DBData> entry : cache.entrySet()) {
+            try {
+                BZDatabaseController.commitDBData(entry.getKey(), entry.getValue());
+            } catch (InvalidCommitException e) {
+                logger.log(Level.SEVERE,
+                        String.format("Could not commit data: %s:%s: ", entry.getKey(), entry.getValue().toString()) + e.getLocalizedMessage(), e);
+            }
+        }
     }
 
     private byte[] processSMRLogPrepare(Bzs.TransactionBatch transactionBatch) {
