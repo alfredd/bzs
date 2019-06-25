@@ -30,6 +30,7 @@ public class BFTServer extends DefaultSingleRecoverable {
     private Map<String, Bzs.TransactionBatchResponse> tbrCache = new LinkedHashMap<>();
 //    private Integer count;
     private Map<Integer, Bzs.SmrLogEntry> smrLogCache = new LinkedHashMap<>();
+    private Map<Integer, Map<String, Bzs.DBData>> dbCache = new LinkedHashMap<>();
 
     public BFTServer(Integer clusterID, int replicaID, boolean isLeader) {
         logger.info("Starting BFT-Smart Server.");
@@ -111,6 +112,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                             .setWriteOperation(wOp)
                             .setVersion(txn.getEpochNumber())
                             .build();
+                    updateDBCache(wOp.getKey(), wOp.getValue(), txn.getEpochNumber());
                     builder = builder.addWriteResponses(wresp);
                 }
             }
@@ -123,6 +125,13 @@ public class BFTServer extends DefaultSingleRecoverable {
             tbr = tbr.addResponses(builder.build());
         }
         return tbr.build();
+    }
+
+    private void updateDBCache(String key, String value, Integer epochNumber) {
+        if (!dbCache.containsKey(epochNumber)) {
+            dbCache.put(epochNumber, new LinkedHashMap<>());
+        }
+        dbCache.get(epochNumber).put(key, Bzs.DBData.newBuilder().setVersion(epochNumber).setValue(value).build());
     }
 
 

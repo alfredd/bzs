@@ -34,10 +34,9 @@ public class TxnUtils {
         Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
 
         for (Bzs.Transaction transaction : transactions) {
-            batchBuilder.addTransactions(transaction);
+            batchBuilder = batchBuilder.addTransactions(transaction);
         }
-        batchBuilder.setID(batchID).setOperation(operation);
-        return batchBuilder.build();
+        return batchBuilder.setID(batchID).setOperation(operation).build();
     }
 
     public static Map<Integer, List<Bzs.Transaction>> mapTransactionsToCluster(final Collection<Bzs.Transaction> dRWTs, final int myClusterID) {

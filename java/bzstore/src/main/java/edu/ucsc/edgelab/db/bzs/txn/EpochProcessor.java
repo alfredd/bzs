@@ -65,7 +65,7 @@ public class EpochProcessor implements Runnable {
 
         // BFT Local Prepare everything
 
-        final String batchID = String.format("%d:%d", ID.getClusterID(), epochNumber);
+        final String batchID = epochNumber.toString();
         final TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
         TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
         if (response != null) {
@@ -84,10 +84,10 @@ public class EpochProcessor implements Runnable {
                         allRWT.remove(transactionID);
                         break;
                     case PREPARED:
-                        Map<TransactionID, Transaction> tempMap = lRWTxns;
-                        if (dRWTxns.containsKey(transactionID))
-                            tempMap = dRWTxns;
-                        updateVersion(tempMap, transactionID, txnResponse);
+//                        Map<TransactionID, Transaction> tempMap = lRWTxns;
+//                        if (dRWTxns.containsKey(transactionID))
+//                            tempMap = dRWTxns;
+//                        updateVersion(tempMap, transactionID, txnResponse);
                 }
             }
         } else {
