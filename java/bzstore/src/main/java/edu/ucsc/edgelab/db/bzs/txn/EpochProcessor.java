@@ -20,15 +20,15 @@ public class EpochProcessor implements Runnable {
 
     private final Integer txnCount;
     private static final Logger log = Logger.getLogger(EpochProcessor.class.getName());
+    private final WedgeDBThreadPoolExecutor threadPoolExecutor;
     private LocalDataVerifier localDataVerifier = new LocalDataVerifier(ID.getClusterID());
 
-//    private Set<TransactionID> lRWT = new LinkedHashSet<>();
-//    private Set<TransactionID> dRWT = new LinkedHashSet<>();
     private final Integer epochNumber;
 
-    public EpochProcessor(Integer epochNumber, Integer txnCount) {
+    public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
         this.txnCount = txnCount;
+        this.threadPoolExecutor = threadPoolExecutor;
     }
 
     public void processEpoch() {
@@ -60,11 +60,13 @@ public class EpochProcessor implements Runnable {
             }
         }
 
-        // TODO Implementation:  Send dRWT for remote prepare
         Map<Integer, List<Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns.values(), ID.getClusterID());
+        for (Map.Entry<Integer, List<Transaction>> entry: clusterDRWTMap.entrySet()) {
+            DRWTProcessor drwtProcessor = new DRWTProcessor(entry.getKey(), entry.getValue());
+            threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
+        }
 
         // BFT Local Prepare everything
-
         final String batchID = epochNumber.toString();
         final TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
         TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);

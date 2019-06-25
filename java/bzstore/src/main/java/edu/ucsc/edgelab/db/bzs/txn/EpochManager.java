@@ -12,7 +12,8 @@ import java.util.logging.Logger;
 public class EpochManager {
     private volatile Integer epochNumber = 0;
     private volatile Integer sequenceNumber = 0;
-    private EpochThreadPoolExecutor epochThreadPoolExecutor;
+    private WedgeDBThreadPoolExecutor epochThreadPoolExecutor;
+    private WedgeDBThreadPoolExecutor dTxnThreadPoolExecutor;
     public static final int EPOCH_BUFFER = 5;
 
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
@@ -20,7 +21,7 @@ public class EpochManager {
 
 
     public EpochManager() {
-        epochThreadPoolExecutor = new EpochThreadPoolExecutor();
+        epochThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
         TimerTask epochUpdater = new TimerTask() {
 
             @Override
@@ -33,6 +34,7 @@ public class EpochManager {
         epochNumber = BZDatabaseController.getEpochCount();
         Timer t = new Timer();
         t.scheduleAtFixedRate(epochUpdater, Configuration.MAX_EPOCH_DURATION_MS, Configuration.MAX_EPOCH_DURATION_MS);
+        dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
     }
 
     public TransactionID getTID() {
@@ -61,7 +63,8 @@ public class EpochManager {
     }
 
     protected void processEpoch(final Integer epoch, final Integer txnCount) {
-        epochThreadPoolExecutor.addToThreadPool(new EpochProcessor(epoch, txnCount));
+        EpochProcessor processor = new EpochProcessor(epoch, txnCount, dTxnThreadPoolExecutor);
+        epochThreadPoolExecutor.addToFixedQueue(processor);
     }
 
     public void setSerializer(Serializer serializer) {
