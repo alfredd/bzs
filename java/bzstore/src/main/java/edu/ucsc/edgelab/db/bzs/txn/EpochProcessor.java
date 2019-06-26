@@ -9,7 +9,8 @@ import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import io.grpc.stub.StreamObserver;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,7 +56,7 @@ public class EpochProcessor implements Runnable {
                     }
                     allRWT.put(tid, rwt);
                 } else {
-                    log.log(Level.WARNING, "Transaction with TID" + tid + ", not found in transaction cache.");
+                    log.log(Level.WARNING, "Transaction with TID" + tid + ", not found in transaction inProgressTxnMap.");
                 }
             }
         }
