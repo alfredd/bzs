@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
+import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
@@ -76,6 +77,8 @@ public class EpochProcessor implements Runnable {
                         StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
                         responseObserver.onNext(txnResponse);
                         responseObserver.onCompleted();
+                        Transaction txn = TransactionCache.getTransaction(transactionID);
+                        LockManager.releaseLocks(txn);
                         if (lRWTxns.containsKey(transactionID))
                             lRWTxns.remove(transactionID);
                         if (dRWTxns.containsKey(transactionID))

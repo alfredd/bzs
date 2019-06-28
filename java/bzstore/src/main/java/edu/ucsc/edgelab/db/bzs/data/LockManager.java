@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.data;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.replica.ID;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,13 +45,16 @@ public class LockManager {
 
     public static void acquireLocks(Bzs.Transaction t) {
         if (t != null) {
-
+            Integer cid = ID.getClusterID();
             for (int i = 0; i < t.getWriteOperationsCount(); i++) {
-                lock(t.getWriteOperations(i).getKey());
+                Bzs.Write writeOp = t.getWriteOperations(i);
+                if (writeOp.getClusterID() == cid)
+                    lock(writeOp.getKey());
             }
-            for (int i = 0; i < t.getReadHistoryCount(); i++) {
-                lock(t.getReadHistory(i).getKey());
-            }
+/*            for (int i = 0; i < t.getReadHistoryCount(); i++) {
+                Bzs.ReadHistory readHistory = t.getReadHistory(i);
+                lock(readHistory.getKey());
+            }*/
         }
     }
 
