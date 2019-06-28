@@ -21,43 +21,32 @@ public class ClusterClient {
         return null;
     }
 
-    /**
-     * This is a call to the server to commit the data.
-     *
-     * @param transaction
-     * @param clusterID
-     * @return
-     */
-    public Bzs.TransactionResponse commit(Bzs.Transaction transaction, Integer clusterID) {
-        if (this.clients.containsKey(clusterID))
-            return getClusterServiceClient(clusterID).commit(transaction);
-        LOG.info("Cluster client for cluster ID: " + clusterID + ", not found");
-        return null;
-    }
-
     private ClusterServiceClient getClusterServiceClient(Integer clusterID) {
         return this.clients.get(clusterID);
-    }
-
-    /**
-     * Call is exactly the same as commit but execution at server is different. This is a prepare message.
-     *
-     * @param transaction
-     * @param clusterID
-     * @return
-     */
-    public Bzs.TransactionResponse prepare(Bzs.Transaction transaction, Integer clusterID) {
-        return getClusterServiceClient(clusterID).prepare(transaction);
-    }
-
-    public Bzs.TransactionResponse abort(Bzs.Transaction transaction, Integer clusterID) {
-        return getClusterServiceClient(clusterID).abort(transaction);
     }
 
     public static enum DRWT_Operations {
         PREPARE_BATCH,
         COMMIT_BATCH,
-        ABORT_BATCH
+        ABORT_BATCH,
+        PREPARE,
+        COMMIT,
+        ABORT
+    }
+
+    public Bzs.TransactionResponse execute(DRWT_Operations operation, Bzs.Transaction batch, Integer clusterID) {
+        ClusterServiceClient clusterServiceClient = getClusterServiceClient(clusterID);
+        if (clusterServiceClient != null) {
+            switch (operation) {
+                case COMMIT:
+                    return clusterServiceClient.commit(batch);
+                case PREPARE:
+                    return clusterServiceClient.prepare(batch);
+                case ABORT:
+                    return clusterServiceClient.abort(batch);
+            }
+        }
+        return null;
     }
 
     public Bzs.TransactionBatchResponse execute(DRWT_Operations operation, Bzs.TransactionBatch batch, Integer clusterID) {
