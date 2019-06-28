@@ -96,6 +96,9 @@ enum Operation {
     BFT_ABORT = 2;
     BFT_SMR_PREPARE = 3;
     BFT_SMR_COMMIT = 4;
+    DRWT_PREPARE = 5;
+    DRWT_COMMIT= 6;
+    DRWT_ABORT= 7;
 }
 
 message Write {

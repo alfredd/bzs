@@ -27,7 +27,8 @@ public class DRWTProcessor implements Runnable{
     @Override
     public void run() {
         ClusterClient clusterClient = ClusterConnector.getClusterClientInstance();
-        TxnUtils.getTransactionBatch(cid.toString(), txns.values(), Bzs.Operation.BFT_PREPARE);
+        Bzs.TransactionBatch prepareBatch = TxnUtils.getTransactionBatch(cid.toString(), txns.values(), Bzs.Operation.DRWT_PREPARE);
+
 //        clusterClient.prepareAll(cid, epochNumber, txns.values());
     }
 }
