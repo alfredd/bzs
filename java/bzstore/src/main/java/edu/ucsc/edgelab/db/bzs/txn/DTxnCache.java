@@ -39,6 +39,14 @@ public class DTxnCache {
 
     }
 
+    public static void addToAbortQueue(Integer epochNumber, Set<TransactionID> abortSet) {
+        if (!txnCache.containsKey(epochNumber)) {
+            logger.log(Level.WARNING, String.format("No transactions available for epoch: %d.", epochNumber.intValue()));
+            return;
+        }
+        CacheKeeper cache = txnCache.get(epochNumber);
+        cache.addToAborted(epochNumber, abortSet);
+    }
 }
 
 class CacheKeeper {
@@ -56,5 +64,9 @@ class CacheKeeper {
     public void addToInProgress(final Integer clusterID, final Map<TransactionID, Bzs.Transaction> transactions) {
 
         inProgressTxnMap.put(clusterID, transactions);
+    }
+
+    public void addToAborted(Integer epochNumber, Set<TransactionID> abortSet) {
+        addToCompleted(epochNumber, abortSet);
     }
 }

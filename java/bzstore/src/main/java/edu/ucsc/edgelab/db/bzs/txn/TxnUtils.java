@@ -1,7 +1,9 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
+import io.grpc.stub.StreamObserver;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -54,5 +56,11 @@ public class TxnUtils {
             }
         }
         return tMap;
+    }
+
+    public static void sendAbortToClient(Bzs.TransactionResponse txnResponse, TransactionID transactionID) {
+        StreamObserver<Bzs.TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
+        responseObserver.onNext(txnResponse);
+        responseObserver.onCompleted();
     }
 }

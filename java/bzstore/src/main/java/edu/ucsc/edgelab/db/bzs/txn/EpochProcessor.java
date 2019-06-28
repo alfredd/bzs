@@ -74,9 +74,7 @@ public class EpochProcessor implements Runnable {
                 TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
                 switch (respStatus) {
                     case ABORTED:
-                        StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
-                        responseObserver.onNext(txnResponse);
-                        responseObserver.onCompleted();
+                        TxnUtils.sendAbortToClient(txnResponse, transactionID);
                         Transaction txn = TransactionCache.getTransaction(transactionID);
                         LockManager.releaseLocks(txn);
                         if (lRWTxns.containsKey(transactionID))
