@@ -25,7 +25,7 @@ public class ClusterClient {
         return this.clients.get(clusterID);
     }
 
-    public static enum DRWT_Operations {
+    public enum DRWT_Operations {
         PREPARE_BATCH,
         COMMIT_BATCH,
         ABORT_BATCH,
