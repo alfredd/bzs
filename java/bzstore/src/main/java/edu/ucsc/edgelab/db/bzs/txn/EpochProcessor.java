@@ -61,11 +61,7 @@ public class EpochProcessor implements Runnable {
             }
         }
 
-        Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns, ID.getClusterID());
-        for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
-            DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
-            threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
-        }
+
 
         // BFT Local Prepare everything
         final String batchID = epochNumber.toString();
@@ -96,6 +92,14 @@ public class EpochProcessor implements Runnable {
         } else {
             // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
         }
+
+        Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns, ID.getClusterID());
+        for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
+            DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
+            threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
+        }
+
+
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
         SmrLog.localPrepared(epochNumber, lRWTxns.values());

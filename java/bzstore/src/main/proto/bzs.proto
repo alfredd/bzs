@@ -15,13 +15,16 @@ service Cluster {
     rpc Commit (Transaction) returns (TransactionResponse);
     rpc ReadOperation (Read) returns (ReadResponse);
     rpc Abort (Transaction) returns (TransactionResponse);
+
+    rpc PrepareAll (TransactionBatch) returns (TransactionBatchResponse);
+    rpc CommitAll (TransactionBatch) returns (TransactionBatchResponse);
+    rpc AbortAll (TransactionBatch) returns (TransactionBatchResponse);
 }
 
 service DTxnProcessor {
-    rpc Prepare (TransactionBatch) returns (TransactionBatchResponse);
-    rpc Commit (TransactionBatch) returns (TransactionBatchResponse);
-    rpc Abort (TransactionBatch) returns (TransactionBatchResponse);
-
+    rpc PrepareAll (TransactionBatch) returns (TransactionBatchResponse);
+    rpc CommitAll (TransactionBatch) returns (TransactionBatchResponse);
+    rpc AbortAll (TransactionBatch) returns (TransactionBatchResponse);
 }
 
 service Replica {

@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.cluster;
 
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.replica.ID;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -70,5 +71,12 @@ public class ClusterConnector extends TimerTask {
 
     public ClusterClient getClusterClient() {
         return new ClusterClient(clients);
+    }
+
+
+    private static final ClusterConnector connector = new ClusterConnector(ID.getClusterID());
+
+    public static ClusterClient getClusterClientInstance() {
+        return connector.getClusterClient();
     }
 }

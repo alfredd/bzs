@@ -62,8 +62,36 @@ public class ClusterServiceClient {
 
     public Bzs.TransactionResponse prepare(Bzs.Transaction transaction) {
         log.log(Level.INFO, "Beginning prepare commit for : " + transaction.toString());
-        Bzs.TransactionResponse response = blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commitPrepare(transaction);
+        Bzs.TransactionResponse response =
+                blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commitPrepare(transaction);
         log.log(Level.INFO, "prepare completed with status: " + response.getStatus().name());
+        return response;
+    }
+
+    public Bzs.TransactionBatchResponse commitAll(Bzs.TransactionBatch transactionBatch) {
+        log.log(Level.INFO, "Beginning transaction batch commit for : " + transactionBatch.toString());
+
+        Bzs.TransactionBatchResponse response =
+                blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commitAll(transactionBatch);
+        log.log(Level.INFO, "Transaction batch commit response: " + response);
+        return response;
+    }
+
+    public Bzs.TransactionBatchResponse prepareAll(Bzs.TransactionBatch transactionBatch) {
+        log.log(Level.INFO, "Beginning transaction batch prepare for : " + transactionBatch.toString());
+
+        Bzs.TransactionBatchResponse response =
+                blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).prepareAll(transactionBatch);
+        log.log(Level.INFO, "TransactionBatch prepared response: " + response);
+        return response;
+    }
+
+    public Bzs.TransactionBatchResponse abortAll(Bzs.TransactionBatch transactionBatch) {
+        log.log(Level.INFO, "Beginning transaction batch abort for : " + transactionBatch.toString());
+
+        Bzs.TransactionBatchResponse response =
+                blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).abortAll(transactionBatch);
+        log.log(Level.INFO, "TransactionBatch abort response: " + response);
         return response;
     }
 }
