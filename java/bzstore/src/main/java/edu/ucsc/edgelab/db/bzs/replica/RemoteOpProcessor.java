@@ -5,7 +5,10 @@ import edu.ucsc.edgelab.db.bzs.MessageType;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterClient;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -52,10 +55,10 @@ public abstract class RemoteOpProcessor implements Runnable {
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
                 if (messageType == MessageType.Prepare) {
-                    Bzs.TransactionResponse response = clusterConnector.prepare(remoteTransaction, cid);
+                    Bzs.TransactionResponse response = clusterConnector.execute(ClusterClient.DRWT_Operations.PREPARE, remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 } else if (messageType == MessageType.Abort) {
-                    Bzs.TransactionResponse response = clusterConnector.abort(remoteTransaction, cid);
+                    Bzs.TransactionResponse response = clusterConnector.execute(ClusterClient.DRWT_Operations.ABORT, remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 }
             });

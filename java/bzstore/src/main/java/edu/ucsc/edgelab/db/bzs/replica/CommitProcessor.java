@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.MessageType;
+import edu.ucsc.edgelab.db.bzs.cluster.ClusterClient;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 
@@ -25,12 +26,12 @@ public class CommitProcessor extends RemoteOpProcessor {
 
     @Override
     public void run() {
-        Set<Integer> remoteCIDs = TxnUtils.getListOfClusterIDs(remoteTransaction,cid);
+        Set<Integer> remoteCIDs = TxnUtils.getListOfClusterIDs(remoteTransaction, cid);
         List<Thread> remoteThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Commit);
 
         joinAllThreads(remoteThreads);
         boolean prepared = true;
-        LOG.info("Remote responses size: "+ remoteResponses.size());
+        LOG.info("Remote responses size: " + remoteResponses.size());
         for (Map.Entry<Integer, Bzs.TransactionResponse> entrySet : remoteResponses.entrySet()) {
             prepared = prepared && entrySet.getValue().getStatus().equals(Bzs.TransactionStatus.COMMITTED);
             if (!prepared)
@@ -53,7 +54,7 @@ public class CommitProcessor extends RemoteOpProcessor {
         for (int cid : remoteCIDs) {
             Thread t = new Thread(() -> {
                 if (messageType == MessageType.Commit) {
-                    Bzs.TransactionResponse response = clusterConnector.commit(remoteTransaction, cid);
+                    Bzs.TransactionResponse response = clusterConnector.execute(ClusterClient.DRWT_Operations.COMMIT, remoteTransaction, cid);
                     remoteResponses.put(cid, response);
                 }
             });
