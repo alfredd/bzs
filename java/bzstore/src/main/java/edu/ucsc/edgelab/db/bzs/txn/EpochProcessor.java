@@ -99,6 +99,7 @@ public class EpochProcessor implements Runnable {
             DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
             threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
         }
+        DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
 
 
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.

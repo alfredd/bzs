@@ -18,14 +18,14 @@ public class DTxnCache {
         epochQueue.add(epochNumber);
     }
 
-    public static void addToInProgressQueue(final Integer epochNumber, final Integer clusterID,
+    public static void addToInProgressQueue(final Integer epochNumber,
                                             final Map<TransactionID, Bzs.Transaction> transactions) {
         if (!txnCache.containsKey(epochNumber)) {
             txnCache.put(epochNumber, new CacheKeeper());
             addEpochToQueue(epochNumber);
         }
         CacheKeeper cache = txnCache.get(epochNumber);
-        cache.addToInProgress(clusterID, transactions);
+        cache.addToInProgress(transactions);
         txnCache.put(epochNumber, cache);
     }
 
@@ -35,7 +35,7 @@ public class DTxnCache {
             return;
         }
         CacheKeeper cache = txnCache.get(epochNumber);
-        cache.addToCompleted(epochNumber, completed);
+        cache.addToCompleted(completed);
 
     }
 
@@ -50,23 +50,23 @@ public class DTxnCache {
 }
 
 class CacheKeeper {
-    private Map<Integer, Map<TransactionID, Bzs.Transaction>> inProgressTxnMap = new LinkedHashMap<>();
-
+    private Map<TransactionID, Bzs.Transaction> inProgressTxnMap = new LinkedHashMap<>();
     private List<Integer> completedQueue = new LinkedList<>();
-    boolean isCompleted = true;
 
-    public void addToCompleted(final Integer epochNumber, Collection<TransactionID> completed) {
-        Map<TransactionID, Bzs.Transaction> txnMap = inProgressTxnMap.get(epochNumber);
+    public void addToCompleted(Collection<TransactionID> completed) {
         for (TransactionID tid : completed)
-            txnMap.remove(tid);
+            inProgressTxnMap.remove(tid);
     }
 
-    public void addToInProgress(final Integer clusterID, final Map<TransactionID, Bzs.Transaction> transactions) {
-
-        inProgressTxnMap.put(clusterID, transactions);
+    public void addToInProgress(final Map<TransactionID, Bzs.Transaction> transactions) {
+        inProgressTxnMap.putAll(transactions);
     }
 
     public void addToAborted(Integer epochNumber, Set<TransactionID> abortSet) {
-        addToCompleted(epochNumber, abortSet);
+        addToCompleted(abortSet);
+    }
+
+    public boolean allCompleted() {
+        return inProgressTxnMap.size()==0;
     }
 }
