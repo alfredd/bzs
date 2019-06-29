@@ -45,7 +45,7 @@ public class DTxnCache {
             return;
         }
         CacheKeeper cache = txnCache.get(epochNumber);
-        cache.addToAborted(epochNumber, abortSet);
+        cache.addToAborted(abortSet);
     }
 }
 
@@ -62,7 +62,7 @@ class CacheKeeper {
         inProgressTxnMap.putAll(transactions);
     }
 
-    public void addToAborted(Integer epochNumber, Set<TransactionID> abortSet) {
+    public void addToAborted(Set<TransactionID> abortSet) {
         addToCompleted(abortSet);
     }
 
