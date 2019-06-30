@@ -16,11 +16,12 @@ public class DependencyVectorManager {
             if (clusterID > (dvec.size() - 1)) {
                 int count = clusterID - dvec.size();
                 while (count >= 0) {
-                    dvec.add(0);
+                    dvec.add(-1);
                     count--;
                 }
             }
-            dvec.set(clusterID, timestamp);
+            if (dvec.get(clusterID) < timestamp)
+                dvec.set(clusterID, timestamp);
         }
     }
 
@@ -39,9 +40,16 @@ public class DependencyVectorManager {
             int epoch = Epoch.getEpochUnderExecution();
             dvec.set(ID.getClusterID(), epoch);
             Map<Integer, Integer> dv = new LinkedHashMap<>();
-            for(int key=0;key<dvec.size();key++)
+            for (int key = 0; key < dvec.size(); key++)
                 dv.put(key, dvec.get(key));
             return dv;
+        }
+    }
+
+    public static void updateLocalClock(Map<Integer, Integer> remoteClusterDepVectorMap) {
+        //TODO Update local clock with the values of the remote vector data
+        for (Map.Entry<Integer, Integer> t : remoteClusterDepVectorMap.entrySet()) {
+            setValue(t.getKey(), t.getValue());
         }
     }
 }

@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.cluster.ClusterClient;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
+import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.LinkedHashSet;
@@ -32,6 +33,11 @@ public class DRWTProcessor implements Runnable {
         ClusterClient clusterClient = ClusterConnector.getClusterClientInstance();
         Bzs.TransactionBatch prepareBatch = TxnUtils.getTransactionBatch(epochNumber.toString(), txns.values(), Bzs.Operation.DRWT_PREPARE);
         Bzs.TransactionBatchResponse batchResponse = clusterClient.execute(ClusterClient.DRWT_Operations.PREPARE_BATCH, prepareBatch, cid);
+
+        Map<Integer, Integer> remoteClusterDepVectorMap = batchResponse.getDepVectorMap();
+
+        DependencyVectorManager.updateLocalClock(remoteClusterDepVectorMap);
+
 
         Set<TransactionID> abortSet = new LinkedHashSet<>();
         for (Bzs.TransactionResponse response : batchResponse.getResponsesList()) {

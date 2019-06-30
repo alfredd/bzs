@@ -35,6 +35,7 @@ public class EpochProcessor implements Runnable {
     public void processEpoch() {
         SmrLog.createLogEntry(epochNumber);
         Epoch.setEpochUnderExecution(epochNumber);
+        DependencyVectorManager.setValue(ID.getClusterID(), epochNumber);
 
         Map<TransactionID, Transaction> allRWT = new LinkedHashMap<>();
         Map<TransactionID, Transaction> lRWTxns = new LinkedHashMap<>();

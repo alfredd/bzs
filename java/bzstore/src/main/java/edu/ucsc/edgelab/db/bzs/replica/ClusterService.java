@@ -35,6 +35,24 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         serializer = new Serializer(clusterID, replicaID);
     }
 
+
+    @Override
+    public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
+        super.commitAll(request, responseObserver);
+    }
+
+    @Override
+    public void prepareAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
+        super.prepareAll(request, responseObserver);
+    }
+
+    @Override
+    public void abortAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
+        super.abortAll(request, responseObserver);
+    }
+
+
+
     @Override
     public void commitPrepare(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         Bzs.TransactionResponse response;
