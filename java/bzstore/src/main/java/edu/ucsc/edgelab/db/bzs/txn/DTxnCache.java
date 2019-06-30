@@ -18,6 +18,20 @@ public class DTxnCache {
         epochQueue.add(epochNumber);
     }
 
+    public static Collection<Bzs.Transaction> getCommittedTransactions() {
+        Set<Bzs.Transaction> committedTxns = new LinkedHashSet<>();
+        if (epochQueue.size()>0) {
+            Integer head = epochQueue.get(0);
+            if (head!=null) {
+                CacheKeeper cache = txnCache.get(head);
+                if(cache.allCompleted()) {
+                    return cache.getCompletedTxns();
+                }
+            }
+        }
+        return committedTxns;
+    }
+
     public static void addToInProgressQueue(final Integer epochNumber,
                                             final Map<TransactionID, Bzs.Transaction> transactions) {
         if (!txnCache.containsKey(epochNumber)) {
@@ -50,8 +64,8 @@ public class DTxnCache {
 }
 
 class CacheKeeper {
-    private Map<TransactionID, Bzs.Transaction> inProgressTxnMap = new LinkedHashMap<>();
-    private List<Integer> completedQueue = new LinkedList<>();
+    private Set<TransactionID> inProgressTxnMap = new LinkedHashSet<>();
+    private Set<Bzs.Transaction> transactions = new LinkedHashSet<>();
 
     public void addToCompleted(Collection<TransactionID> completed) {
         for (TransactionID tid : completed)
@@ -59,7 +73,8 @@ class CacheKeeper {
     }
 
     public void addToInProgress(final Map<TransactionID, Bzs.Transaction> transactions) {
-        inProgressTxnMap.putAll(transactions);
+        inProgressTxnMap.addAll(transactions.keySet());
+        this.transactions.addAll(transactions.values());
     }
 
     public void addToAborted(Set<TransactionID> abortSet) {
@@ -68,5 +83,9 @@ class CacheKeeper {
 
     public boolean allCompleted() {
         return inProgressTxnMap.size()==0;
+    }
+
+    public Set<Bzs.Transaction> getCompletedTxns() {
+        return this.transactions;
     }
 }

@@ -8,7 +8,6 @@ import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
 import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
-import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -108,6 +107,7 @@ public class EpochProcessor implements Runnable {
         SmrLog.distributedPrepared(epochNumber, dRWTxns.values());
         SmrLog.setLockLCEForEpoch(epochNumber);
         SmrLog.updateLastCommittedEpoch(epochNumber);
+        SmrLog.committedDRWT(DTxnCache.getCommittedTransactions());
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
         int status = -1;
 
