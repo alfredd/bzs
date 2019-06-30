@@ -50,18 +50,18 @@ message TransactionBatch {
     repeated Transaction transactions = 1;
     repeated ROTransaction rotransaction = 2;
     SmrLogEntry smrLogEntry = 3;
-    //    BFTCommit bftCommit = 3;
     string ID = 4;
     Operation operation = 5;
+    map<int32, int32> depVector = 6;
 }
 
 message TransactionBatchResponse {
     repeated TransactionResponse responses = 1;
     repeated ROTransactionResponse readresponses = 2;
-    //    BFTCommitResponse bftCommitResponse = 3;
     SmrLogEntry smrLogEntry = 3;
     string ID = 4;
     Operation operation = 5;
+    map<int32, int32> depVector = 6;
 }
 
 message BFTCommit {

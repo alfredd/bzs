@@ -2,6 +2,7 @@ package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
+import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import io.grpc.stub.StreamObserver;
 
@@ -39,7 +40,8 @@ public class TxnUtils {
         for (Bzs.Transaction transaction : transactions) {
             batchBuilder = batchBuilder.addTransactions(transaction);
         }
-        return batchBuilder.setID(batchID).setOperation(operation).build();
+        Map<Integer, Integer> dvecMap = DependencyVectorManager.getCurrentTimeVectorAsMap();
+        return batchBuilder.setID(batchID).setOperation(operation).putAllDepVector(dvecMap).build();
     }
 
     public static Map<Integer, Map<TransactionID, Bzs.Transaction>> mapTransactionsToCluster(final Map<TransactionID, Bzs.Transaction> dRWTs, final int myClusterID) {

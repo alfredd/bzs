@@ -2,8 +2,10 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.txn.Epoch;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class DependencyVectorManager {
 
@@ -28,6 +30,17 @@ public class DependencyVectorManager {
             dvec.set(ID.getClusterID(), epoch);
             LinkedList<Integer> dv = new LinkedList<Integer>();
             dv.addAll(dvec);
+            return dv;
+        }
+    }
+
+    public static Map<Integer, Integer> getCurrentTimeVectorAsMap() {
+        synchronized (dvec) {
+            int epoch = Epoch.getEpochUnderExecution();
+            dvec.set(ID.getClusterID(), epoch);
+            Map<Integer, Integer> dv = new LinkedHashMap<>();
+            for(int key=0;key<dvec.size();key++)
+                dv.put(key, dvec.get(key));
             return dv;
         }
     }
