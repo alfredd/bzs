@@ -60,20 +60,20 @@ public class SmrLog {
         }
     }
 
-    public static void committedDRWT(Bzs.Transaction tid) {
+    public static void committedDRWT(Bzs.Transaction transaction) {
         int commitToEpoch = Epoch.getEpochUnderExecution();
-        int lce = tid.getEpochNumber();
+        int lce = transaction.getEpochNumber();
         if (lockLCEForEpoch == commitToEpoch) {
             commitToEpoch = Epoch.getEpochNumber();
             if (lceMap.containsKey(commitToEpoch)) {
-                if (lceMap.get(commitToEpoch) > tid.getEpochNumber())
+                if (lceMap.get(commitToEpoch) > transaction.getEpochNumber())
                     lce = lceMap.get(commitToEpoch);
             }
         }
         lceMap.put(commitToEpoch, lce);
         SmrLogEntryCreator smrData = getSMRData(commitToEpoch);
         if (smrData != null) {
-            smrData.addCommittedDRWTxns(tid);
+            smrData.addCommittedDRWTxns(transaction);
         }
     }
 

@@ -67,12 +67,12 @@ public class BZStoreServer {
         this.replicaID = id;
         this.clusterID = clusterId;
         ID.setIDs(clusterID,replicaID);
-        transactionProcessor = new TxnProcessor(this.replicaID, this.clusterID);
         try {
             BZDatabaseController.initDB(clusterId,replicaID);
         } catch (RocksDBException e) {
             throw new RuntimeException(e.getLocalizedMessage(),e);
         }
+        transactionProcessor = new TxnProcessor(this.replicaID, this.clusterID);
     }
 
     private void setServerPort(int serverPort) {
