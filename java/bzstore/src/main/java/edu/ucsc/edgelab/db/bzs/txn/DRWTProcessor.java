@@ -34,9 +34,7 @@ public class DRWTProcessor implements Runnable {
         Bzs.TransactionBatch prepareBatch = TxnUtils.getTransactionBatch(String.format("%d:%d", cid.intValue(), epochNumber.intValue()), txns.values(), Bzs.Operation.DRWT_PREPARE);
         Bzs.TransactionBatchResponse batchResponse = clusterClient.execute(ClusterClient.DRWT_Operations.PREPARE_BATCH, prepareBatch, cid);
 
-        Map<Integer, Integer> remoteClusterDepVectorMap = batchResponse.getDepVectorMap();
-
-        DependencyVectorManager.updateLocalClock(remoteClusterDepVectorMap);
+        DependencyVectorManager.updateLocalClock(batchResponse.getDepVectorMap());
 
 
         Set<TransactionID> abortSet = new LinkedHashSet<>();
