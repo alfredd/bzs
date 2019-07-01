@@ -11,6 +11,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     private Bzs.TransactionBatch request;
     private StreamObserver<Bzs.TransactionBatchResponse> response;
     private final TxnProcessor processor;
+    private String id;
     private Map<TransactionID, Bzs.Transaction> txnMap = new LinkedHashMap<>();
 
 
@@ -27,6 +28,11 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     }
 
     @Override
+    public String getID() {
+        return id;
+    }
+
+    @Override
     public Bzs.TransactionBatch getRequest() {
         return request;
     }
@@ -39,6 +45,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     @Override
     public void setRequest(Bzs.TransactionBatch request) {
         this.request = request;
+        id = request.getID();
         for (Bzs.Transaction transaction : request.getTransactionsList()) {
             txnMap.put(TransactionID.getTransactionID(transaction.getTransactionID()), transaction);
         }

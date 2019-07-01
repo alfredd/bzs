@@ -4,6 +4,9 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import io.grpc.stub.StreamObserver;
 
 public interface ClusterDRWTProcessor {
+
+    String getID();
+
     Bzs.TransactionBatch getRequest();
 
     StreamObserver<Bzs.TransactionBatchResponse> getResponse();
