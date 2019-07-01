@@ -5,10 +5,7 @@ import edu.ucsc.edgelab.db.bzs.ClusterGrpc;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
-import edu.ucsc.edgelab.db.bzs.txn.Epoch;
-import edu.ucsc.edgelab.db.bzs.txn.LocalDataVerifier;
-import edu.ucsc.edgelab.db.bzs.txn.MetaInfo;
-import edu.ucsc.edgelab.db.bzs.txn.TxnProcessor;
+import edu.ucsc.edgelab.db.bzs.txn.*;
 import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
@@ -24,7 +21,8 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private boolean amILeader;
     private Serializer serializer;
     private Map<String, EpochTransactionID> transactionIDMap = new LinkedHashMap<>();
-    public static final Logger log = Logger.getLogger(ClusterService.class.getName());
+    private static final Logger log = Logger.getLogger(ClusterService.class.getName());
+    private Map<String, ClusterDRWTProcessor> remoteJobProcessor = new LinkedHashMap<>();
 
 
     public ClusterService(Integer clusterID, Integer replicaID, TxnProcessor processor, boolean isLeader) {
@@ -38,12 +36,19 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        super.commitAll(request, responseObserver);
+        ClusterDRWTProcessor clusterDRWTProcessor = remoteJobProcessor.get(request.getID());
+        if (clusterDRWTProcessor==null) {
+            // TODO Send abort message.
+            return;
+        }
+        clusterDRWTProcessor.commit();
     }
 
     @Override
     public void prepareAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        super.prepareAll(request, responseObserver);
+        ClusterDRWTProcessor clusterDRWTProcessor = new ClusterDRWTProcessor(request, responseObserver);
+        remoteJobProcessor.put(request.getID(), clusterDRWTProcessor);
+        clusterDRWTProcessor.prepare();
     }
 
     @Override
