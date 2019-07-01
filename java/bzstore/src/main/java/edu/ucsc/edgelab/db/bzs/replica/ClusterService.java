@@ -38,7 +38,12 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
         ClusterDRWTProcessor clusterDRWTProcessor = remoteJobProcessor.get(request.getID());
         if (clusterDRWTProcessor==null) {
-            // TODO Send abort message.
+            Bzs.TransactionBatchResponse.Builder responseBuilder = Bzs.TransactionBatchResponse.newBuilder().setID(request.getID());
+            for (Bzs.Transaction txn : request.getTransactionsList()) {
+                responseBuilder.addResponses(Bzs.TransactionResponse.newBuilder().setTransactionID(txn.getTransactionID()).setStatus(Bzs.TransactionStatus.FAILURE).build());
+            }
+            responseObserver.onNext(responseBuilder.build());
+            responseObserver.onCompleted();
             return;
         }
         clusterDRWTProcessor.commit();
