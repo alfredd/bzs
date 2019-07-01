@@ -49,4 +49,11 @@ public class TxnProcessor {
             TransactionCache.add(tid, transaction, responseObserver);
         }
     }
+
+    public void prepareTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
+
+    }
+
+    public void commitTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
+    }
 }

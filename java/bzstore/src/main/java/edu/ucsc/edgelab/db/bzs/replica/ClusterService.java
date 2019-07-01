@@ -22,7 +22,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private Serializer serializer;
     private Map<String, EpochTransactionID> transactionIDMap = new LinkedHashMap<>();
     private static final Logger log = Logger.getLogger(ClusterService.class.getName());
-    private Map<String, ClusterDRWTProcessor> remoteJobProcessor = new LinkedHashMap<>();
+    private Map<String, ClusterDRWTProcessorImpl> remoteJobProcessor = new LinkedHashMap<>();
 
 
     public ClusterService(Integer clusterID, Integer replicaID, TxnProcessor processor, boolean isLeader) {
@@ -36,22 +36,30 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        ClusterDRWTProcessor clusterDRWTProcessor = remoteJobProcessor.get(request.getID());
+        ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessor.get(request.getID());
         if (clusterDRWTProcessor==null) {
-            Bzs.TransactionBatchResponse.Builder responseBuilder = Bzs.TransactionBatchResponse.newBuilder().setID(request.getID());
-            for (Bzs.Transaction txn : request.getTransactionsList()) {
-                responseBuilder.addResponses(Bzs.TransactionResponse.newBuilder().setTransactionID(txn.getTransactionID()).setStatus(Bzs.TransactionStatus.FAILURE).build());
-            }
-            responseObserver.onNext(responseBuilder.build());
-            responseObserver.onCompleted();
+            sendBatchAbort(request, responseObserver);
             return;
         }
+        clusterDRWTProcessor.setResponse(responseObserver);
+        clusterDRWTProcessor.setRequest(request);
         clusterDRWTProcessor.commit();
+    }
+
+    private void sendBatchAbort(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
+        Bzs.TransactionBatchResponse.Builder responseBuilder = Bzs.TransactionBatchResponse.newBuilder().setID(request.getID());
+        for (Bzs.Transaction txn : request.getTransactionsList()) {
+            responseBuilder.addResponses(Bzs.TransactionResponse.newBuilder().setTransactionID(txn.getTransactionID()).setStatus(Bzs.TransactionStatus.FAILURE).build());
+        }
+        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onCompleted();
     }
 
     @Override
     public void prepareAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        ClusterDRWTProcessor clusterDRWTProcessor = new ClusterDRWTProcessor(request, responseObserver);
+        ClusterDRWTProcessorImpl clusterDRWTProcessor = new ClusterDRWTProcessorImpl(processor);
+        clusterDRWTProcessor.setRequest(request);
+        clusterDRWTProcessor.setResponse(responseObserver);
         remoteJobProcessor.put(request.getID(), clusterDRWTProcessor);
         clusterDRWTProcessor.prepare();
     }
