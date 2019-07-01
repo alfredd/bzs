@@ -56,4 +56,9 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
         this.response = response;
     }
 
+    @Override
+    public void addToFailedList(Bzs.Transaction t) {
+
+    }
+
 }

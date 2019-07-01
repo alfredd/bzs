@@ -10,7 +10,10 @@ import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,11 +28,13 @@ public class EpochProcessor implements Runnable {
     private LocalDataVerifier localDataVerifier = new LocalDataVerifier(ID.getClusterID());
 
     private final Integer epochNumber;
+    private List<ClusterPC> clusterPrepareList;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
         this.txnCount = txnCount;
         this.threadPoolExecutor = threadPoolExecutor;
+        clusterPrepareList = new LinkedList<>();
     }
 
     public void processEpoch() {
@@ -130,4 +135,10 @@ public class EpochProcessor implements Runnable {
     public void run() {
         processEpoch();
     }
+
+    public void addClusterPrepare(final LinkedBlockingQueue<ClusterPC> clusterPrepareBatch) {
+        clusterPrepareList.addAll(clusterPrepareBatch);
+    }
+
 }
+

@@ -8,6 +8,9 @@ import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,6 +54,17 @@ public class TxnProcessor {
     }
 
     public void prepareTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
+        Set<Bzs.Transaction> txnsToPrepare = new LinkedHashSet<>();
+        for(Bzs.Transaction t: clusterDRWTProcessor.getRequest().getTransactionsList()) {
+            if (!serializer.serialize(t)) {
+                clusterDRWTProcessor.addToFailedList(t);
+            } else {
+                LockManager.acquireLocks(t);
+                txnsToPrepare.add(t);
+
+            }
+        }
+        epochManager.clusterPrepare(txnsToPrepare, clusterDRWTProcessor);
 
     }
 

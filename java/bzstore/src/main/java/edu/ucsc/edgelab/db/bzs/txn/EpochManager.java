@@ -1,12 +1,13 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
+import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 public class EpochManager {
@@ -15,6 +16,8 @@ public class EpochManager {
     private WedgeDBThreadPoolExecutor epochThreadPoolExecutor;
     private WedgeDBThreadPoolExecutor dTxnThreadPoolExecutor;
     public static final int EPOCH_BUFFER = 5;
+
+    private LinkedBlockingQueue<ClusterPC> clusterPrepareBatch = new LinkedBlockingQueue<>();
 
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
     private Serializer serializer;
@@ -64,10 +67,27 @@ public class EpochManager {
 
     protected void processEpoch(final Integer epoch, final Integer txnCount) {
         EpochProcessor processor = new EpochProcessor(epoch, txnCount, dTxnThreadPoolExecutor);
+        processor.addClusterPrepare(clusterPrepareBatch);
+        clusterPrepareBatch.clear();
+
         epochThreadPoolExecutor.addToFixedQueue(processor);
     }
 
     public void setSerializer(Serializer serializer) {
         this.serializer = serializer;
     }
+
+    public void clusterPrepare(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
+        synchronized (this) {
+            ClusterPC clusterPC = new ClusterPC();
+            clusterPC.batch=txnsToPrepare;
+            clusterPC.callback = clusterDRWTProcessor;
+            clusterPrepareBatch.add(clusterPC);
+        }
+    }
+}
+
+class ClusterPC {
+    Set<Bzs.Transaction> batch;
+    ClusterDRWTProcessor callback;
 }
