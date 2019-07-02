@@ -6,7 +6,9 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
-import java.util.*;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
@@ -18,6 +20,7 @@ public class EpochManager {
     public static final int EPOCH_BUFFER = 5;
 
     private LinkedBlockingQueue<ClusterPC> clusterPrepareBatch = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<ClusterPC> clusterCommitBatch = new LinkedBlockingQueue<>();
 
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
     private Serializer serializer;
@@ -69,6 +72,8 @@ public class EpochManager {
         EpochProcessor processor = new EpochProcessor(epoch, txnCount, dTxnThreadPoolExecutor);
         processor.addClusterPrepare(clusterPrepareBatch);
         clusterPrepareBatch.clear();
+        processor.addClusterCommit(clusterCommitBatch);
+        clusterCommitBatch.clear();
 
         epochThreadPoolExecutor.addToFixedQueue(processor);
     }
@@ -79,10 +84,22 @@ public class EpochManager {
 
     public void clusterPrepare(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
         synchronized (this) {
-            ClusterPC clusterPC = new ClusterPC();
-            clusterPC.batch=txnsToPrepare;
-            clusterPC.callback = clusterDRWTProcessor;
+            ClusterPC clusterPC = createClusterPCObj(txnsToPrepare, clusterDRWTProcessor);
             clusterPrepareBatch.add(clusterPC);
+        }
+    }
+
+    private ClusterPC createClusterPCObj(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
+        ClusterPC clusterPC = new ClusterPC();
+        clusterPC.batch=txnsToPrepare;
+        clusterPC.callback = clusterDRWTProcessor;
+        return clusterPC;
+    }
+
+    public void clusterCommit(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
+        synchronized (this) {
+            ClusterPC clusterPC = createClusterPCObj(txnsToPrepare, clusterDRWTProcessor);
+            clusterCommitBatch.add(clusterPC);
         }
     }
 }

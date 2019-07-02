@@ -8,7 +8,6 @@ import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import io.grpc.stub.StreamObserver;
 
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -54,6 +53,12 @@ public class TxnProcessor {
     }
 
     public void prepareTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
+        Set<Bzs.Transaction> txnsToPrepare = commonRemoteTxnProcessCode(clusterDRWTProcessor);
+        epochManager.clusterPrepare(txnsToPrepare, clusterDRWTProcessor);
+
+    }
+
+    private Set<Bzs.Transaction> commonRemoteTxnProcessCode(ClusterDRWTProcessor clusterDRWTProcessor) {
         Set<Bzs.Transaction> txnsToPrepare = new LinkedHashSet<>();
         for(Bzs.Transaction t: clusterDRWTProcessor.getRequest().getTransactionsList()) {
             if (!serializer.serialize(t)) {
@@ -64,10 +69,11 @@ public class TxnProcessor {
 
             }
         }
-        epochManager.clusterPrepare(txnsToPrepare, clusterDRWTProcessor);
-
+        return txnsToPrepare;
     }
 
     public void commitTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
+        Set<Bzs.Transaction> txnsToPrepare = commonRemoteTxnProcessCode(clusterDRWTProcessor);
+        epochManager.clusterCommit(txnsToPrepare, clusterDRWTProcessor);
     }
 }

@@ -47,21 +47,34 @@ message Key {
 }
 
 message TransactionBatch {
-    repeated Transaction transactions = 1;
-    repeated ROTransaction rotransaction = 2;
-    SmrLogEntry smrLogEntry = 3;
-    string ID = 4;
-    Operation operation = 5;
-    map<int32, int32> depVector = 6;
+    string ID = 1;
+    Operation operation = 2;
+    repeated Transaction transactions = 3;
+    repeated ClusterPC remotePrepareTxn = 4;
+    repeated ClusterPC remoteCommitTxn = 5;
+    repeated ROTransaction rotransaction = 6;
+    SmrLogEntry smrLogEntry = 7;
+    map<int32, int32> depVector = 8;
+}
+
+message ClusterPC {
+    Operation operation = 1;
+    repeated Transaction transactions = 2;
+}
+
+message ClusterPCResponse {
+    repeated TransactionResponse responses = 2;
 }
 
 message TransactionBatchResponse {
-    repeated TransactionResponse responses = 1;
-    repeated ROTransactionResponse readresponses = 2;
-    SmrLogEntry smrLogEntry = 3;
-    string ID = 4;
-    Operation operation = 5;
-    map<int32, int32> depVector = 6;
+    string ID = 1;
+    Operation operation = 2;
+    repeated TransactionResponse responses = 3;
+    repeated ClusterPCResponse remotePrepareTxnResponse = 4;
+    repeated ClusterPCResponse remoteCommitTxnResponse = 5;
+    repeated ROTransactionResponse readresponses = 6;
+    SmrLogEntry smrLogEntry = 7;
+    map<int32, int32> depVector = 8;
 }
 
 message BFTCommit {

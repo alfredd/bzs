@@ -29,12 +29,14 @@ public class EpochProcessor implements Runnable {
 
     private final Integer epochNumber;
     private List<ClusterPC> clusterPrepareList;
+    private List<ClusterPC> clusterCommitList;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
         this.txnCount = txnCount;
         this.threadPoolExecutor = threadPoolExecutor;
         clusterPrepareList = new LinkedList<>();
+        clusterCommitList = new LinkedList<>();
     }
 
     public void processEpoch() {
@@ -68,10 +70,16 @@ public class EpochProcessor implements Runnable {
         }
 
 
-
         // BFT Local Prepare everything
         final String batchID = epochNumber.toString();
-        final TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
+        TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
+        if (clusterPrepareList.size() > 0) {
+            for (ClusterPC pc : clusterPrepareList) {
+                Bzs.ClusterPC clusterPC = Bzs.ClusterPC.newBuilder().addAllTransactions(pc.batch).setOperation(Operation.DRWT_PREPARE).build();
+                allRWTxnLocalBatch = TransactionBatch.newBuilder(allRWTxnLocalBatch).addRemotePrepareTxn(clusterPC).build();
+            }
+        }
+
         TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
         if (response != null) {
             for (TransactionResponse txnResponse : response.getResponsesList()) {
@@ -140,5 +148,8 @@ public class EpochProcessor implements Runnable {
         clusterPrepareList.addAll(clusterPrepareBatch);
     }
 
+    public void addClusterCommit(LinkedBlockingQueue<ClusterPC> clusterCommitBatch) {
+        clusterCommitList.addAll(clusterCommitBatch);
+    }
 }
 
