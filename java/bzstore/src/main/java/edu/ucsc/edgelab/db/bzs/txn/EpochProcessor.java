@@ -103,6 +103,9 @@ public class EpochProcessor implements Runnable {
 //                        updateVersion(tempMap, transactionID, txnResponse);
                 }
             }
+            if (response.getRemotePrepareTxnResponseCount()> 0) {
+
+            }
         } else {
             // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
         }
