@@ -131,6 +131,21 @@ public class EpochProcessor implements Runnable {
         }
         DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
 
+        if (clusterCommitMap.size() > 0) {
+            for (Map.Entry<String, ClusterPC> cpcEntry : clusterCommitMap.entrySet()) {
+                ClusterPC cpc = cpcEntry.getValue();
+                String id = cpcEntry.getKey();
+                Set<Transaction> prepared2PCTxns = new LinkedHashSet<>();
+                for (Transaction t : cpc.batch) {
+                    if (RemoteTxnCache.isTIDInPreparedBatch(id, TransactionID.getTransactionID(t.getTransactionID()))) {
+                        prepared2PCTxns.add(t);
+                    } else {
+                        cpc.callback.addToFailedList(t);
+                    }
+                }
+                SmrLog.twoPCCommitted(epochNumber, prepared2PCTxns, id);
+            }
+        }
 
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
@@ -162,13 +177,13 @@ public class EpochProcessor implements Runnable {
     }
 
     public void addClusterPrepare(final LinkedBlockingQueue<ClusterPC> clusterPrepareBatch) {
-        for(ClusterPC cpc : clusterPrepareBatch) {
+        for (ClusterPC cpc : clusterPrepareBatch) {
             clusterPrepareMap.put(cpc.callback.getID(), cpc);
         }
     }
 
     public void addClusterCommit(LinkedBlockingQueue<ClusterPC> clusterCommitBatch) {
-        for(ClusterPC cpc : clusterCommitBatch) {
+        for (ClusterPC cpc : clusterCommitBatch) {
             clusterCommitMap.put(cpc.callback.getID(), cpc);
         }
 
