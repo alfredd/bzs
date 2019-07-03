@@ -33,6 +33,16 @@ public class SmrLogEntryCreator {
             smrLogEntryBuilder = smrLogEntryBuilder.addPreparedDRWTxns(t);
     }
 
+    public void add2PCPrepared(Collection<Bzs.Transaction> txns, String id) {
+        Bzs.TwoPCDRWTxn entry = Bzs.TwoPCDRWTxn.newBuilder().addAllTransactions(txns).setID(id).build();
+        smrLogEntryBuilder = smrLogEntryBuilder.addRemotePreparedDRWTs(entry);
+    }
+
+    public void add2PCCommitted(Collection<Bzs.Transaction> txns, String id) {
+        Bzs.TwoPCDRWTxn entry = Bzs.TwoPCDRWTxn.newBuilder().addAllTransactions(txns).setID(id).build();
+        smrLogEntryBuilder = smrLogEntryBuilder.addRemoteCommittedDRWTs(entry);
+    }
+
     public void addCommittedDRWTxns(Bzs.Transaction dRWTxns) {
         smrLogEntryBuilder = smrLogEntryBuilder.addCommittedDRWTxns(dRWTxns);
     }

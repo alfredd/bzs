@@ -52,6 +52,20 @@ public class SmrLog {
         }
     }
 
+    public static void twoPCPrepared(final Integer epoch, Collection<Bzs.Transaction> twoPCPreparedTxns, String ID) {
+        SmrLogEntryCreator smrData = smrEpochData.get(epoch);
+        if (smrData != null) {
+            smrData.add2PCPrepared(twoPCPreparedTxns, ID);
+        }
+    }
+
+    public static void twoPCCommitted(final Integer epoch, Collection<Bzs.Transaction> twoPCPreparedTxns, String ID) {
+        SmrLogEntryCreator smrData = smrEpochData.get(epoch);
+        if (smrData != null) {
+            smrData.add2PCCommitted(twoPCPreparedTxns, ID);
+        }
+    }
+
     public static void distributedPrepared(final Integer epoch, Collection<Bzs.Transaction> dRWTtids) {
         SmrLogEntryCreator smrData = smrEpochData.get(epoch);
         if (smrData != null) {

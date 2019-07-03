@@ -210,8 +210,15 @@ message Timestamp {
 message SmrLogEntry {
     int32 epochNumber = 1;
     repeated Transaction lRWTxns = 2;
-    repeated Transaction preparedDRWTxns = 3;
-    repeated Transaction committedDRWTxns = 4;
-    map<int32, int32> depVector = 5;
-    int32 lce = 6;
+    repeated TwoPCDRWTxn remotePreparedDRWTs =3;
+    repeated TwoPCDRWTxn remoteCommittedDRWTs =4;
+    repeated Transaction preparedDRWTxns = 5;
+    repeated Transaction committedDRWTxns = 6;
+    map<int32, int32> depVector = 7;
+    int32 lce = 8;
+}
+
+message TwoPCDRWTxn {
+    repeated Transaction transactions = 2;
+    string ID = 3;
 }
