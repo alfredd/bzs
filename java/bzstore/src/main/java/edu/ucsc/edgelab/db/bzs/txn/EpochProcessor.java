@@ -70,6 +70,8 @@ public class EpochProcessor implements Runnable {
         // BFT Local Prepare everything
         final String batchID = epochNumber.toString();
         TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
+
+        // Add 2PC remote transactions part of prepare batch.
         if (clusterPrepareList.size() > 0) {
             for (ClusterPC pc : clusterPrepareList) {
                 Bzs.ClusterPC clusterPC = Bzs.ClusterPC.newBuilder().addAllTransactions(pc.batch).setOperation(Operation.DRWT_PREPARE).build();
@@ -149,11 +151,6 @@ public class EpochProcessor implements Runnable {
     }
 
     public void addClusterCommit(LinkedBlockingQueue<ClusterPC> clusterCommitBatch) {
-        for (ClusterPC cpc : clusterCommitBatch) {
-            String id = cpc.callback.getRequest().getID();
-            if (!RemoteTxnCache.isPrepared(id)) {
-            }
-        }
         clusterCommitList.addAll(clusterCommitBatch);
     }
 }

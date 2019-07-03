@@ -37,7 +37,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     @Override
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
         ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessorMap.get(request.getID());
-        if (clusterDRWTProcessor==null) {
+        if (clusterDRWTProcessor==null || (!RemoteTxnCache.isPrepared(clusterDRWTProcessor.getID()))) {
             sendBatchAbort(request, responseObserver);
             return;
         }
