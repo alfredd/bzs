@@ -60,10 +60,13 @@ message TransactionBatch {
 message ClusterPC {
     Operation operation = 1;
     repeated Transaction transactions = 2;
+    string ID = 3;
 }
 
 message ClusterPCResponse {
-    repeated TransactionResponse responses = 2;
+    OperationStatus status = 3;
+    repeated TransactionResponse responses = 1;
+    string ID = 2;
 }
 
 message TransactionBatchResponse {
@@ -101,6 +104,7 @@ enum OperationStatus {
     COMMIT_SUCCESS = 3;
     ABORT = 4;
     PREPARE_SUCCESS = 5;
+    PARTIAL_SUCCESS = 6;
 }
 
 enum Operation {
@@ -110,8 +114,8 @@ enum Operation {
     BFT_SMR_PREPARE = 3;
     BFT_SMR_COMMIT = 4;
     DRWT_PREPARE = 5;
-    DRWT_COMMIT= 6;
-    DRWT_ABORT= 7;
+    DRWT_COMMIT = 6;
+    DRWT_ABORT = 7;
 }
 
 message Write {
@@ -122,14 +126,14 @@ message Write {
 }
 
 message WriteResponse {
-//    string key = 1;
-//    string value = 2;
+    //    string key = 1;
+    //    string value = 2;
     Write writeOperation = 1;
     int64 version = 2;
     string responseDigest = 3;
     OperationStatus status = 4;
-//    int32 clusterID = 6;
-//    int32 replicaID = 7;
+    //    int32 clusterID = 6;
+    //    int32 replicaID = 7;
 }
 
 message Read {
@@ -139,14 +143,14 @@ message Read {
 }
 
 message ReadResponse {
-//    string key = 1;
+    //    string key = 1;
     Read readOperation = 1;
     string value = 2;
     int64 version = 3;
     string responseDigest = 4;
     OperationStatus status = 5;
-//    int32 clusterID = 6;
-//    int32 replicaID = 7;
+    //    int32 clusterID = 6;
+    //    int32 replicaID = 7;
 }
 
 message ReadHistory {
@@ -172,7 +176,7 @@ message Transaction {
     repeated Write writeOperations = 2;
     string transactionID = 3;
     int32 epochNumber = 4;
-    VectorClock clock = 5;
+    //    VectorClock clock = 5;
 }
 
 message TransactionResponse {
@@ -180,7 +184,7 @@ message TransactionResponse {
     repeated WriteResponse writeResponses = 2;
     string transactionID = 3;
     int32 epochNumber = 4;
-    VectorClock clock = 5;
+    //    VectorClock clock = 5;
 }
 
 message DBData {
