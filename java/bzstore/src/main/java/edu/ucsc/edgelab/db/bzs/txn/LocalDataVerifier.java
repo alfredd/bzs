@@ -1,7 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.txn.MetaInfo;
 
 public class LocalDataVerifier {
 
@@ -26,11 +25,12 @@ public class LocalDataVerifier {
                 break;
         }
         for (Bzs.ReadHistory readHistory : transaction.getReadHistoryList()) {
+            Bzs.Read readOperation = readHistory.getReadOperation();
             if (!metaInfo.localRead)
-                metaInfo.localRead = readHistory.getClusterID() == clusterID;
+                metaInfo.localRead = readOperation.getClusterID() == clusterID;
 
             if (!metaInfo.remoteRead)
-                metaInfo.remoteRead = readHistory.getClusterID() != clusterID;
+                metaInfo.remoteRead = readOperation.getClusterID() != clusterID;
 
             if (metaInfo.remoteRead && metaInfo.localRead)
                 break;

@@ -37,7 +37,7 @@ public class LockManager {
                 unlock(t.getWriteOperations(i).getKey());
             }
             for (int i = 0; i < t.getReadHistoryCount(); i++) {
-                unlock(t.getReadHistory(i).getKey());
+                unlock(t.getReadHistory(i).getReadOperation().getKey());
             }
         }
     }

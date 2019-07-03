@@ -18,7 +18,7 @@ public class TxnUtils {
         Set<Integer> cidSet = new HashSet<>();
 
         for (int i = 0; i < remoteTransaction.getReadHistoryCount(); i++) {
-            int clusterID = remoteTransaction.getReadHistory(i).getClusterID();
+            int clusterID = remoteTransaction.getReadHistory(i).getReadOperation().getClusterID();
             addToCidSet(cidSet, clusterID, cid);
         }
         for (int i = 0; i < remoteTransaction.getWriteOperationsCount(); i++) {

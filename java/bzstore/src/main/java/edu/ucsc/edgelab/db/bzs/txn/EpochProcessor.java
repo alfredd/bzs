@@ -7,8 +7,6 @@ import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.*;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -25,15 +23,15 @@ public class EpochProcessor implements Runnable {
     private LocalDataVerifier localDataVerifier = new LocalDataVerifier(ID.getClusterID());
 
     private final Integer epochNumber;
-    private List<ClusterPC> clusterPrepareList;
-    private List<ClusterPC> clusterCommitList;
+    private Map<String, ClusterPC> clusterPrepareMap;
+    private Map<String, ClusterPC> clusterCommitMap;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
         this.txnCount = txnCount;
         this.threadPoolExecutor = threadPoolExecutor;
-        clusterPrepareList = new LinkedList<>();
-        clusterCommitList = new LinkedList<>();
+        clusterPrepareMap = new LinkedHashMap<>();
+        clusterCommitMap = new LinkedHashMap<>();
     }
 
     public void processEpoch() {
@@ -72,9 +70,13 @@ public class EpochProcessor implements Runnable {
         TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
 
         // Add 2PC remote transactions part of prepare batch.
-        if (clusterPrepareList.size() > 0) {
-            for (ClusterPC pc : clusterPrepareList) {
-                Bzs.ClusterPC clusterPC = Bzs.ClusterPC.newBuilder().addAllTransactions(pc.batch).setOperation(Operation.DRWT_PREPARE).build();
+        if (clusterPrepareMap.size() > 0) {
+            for (Map.Entry<String, ClusterPC> pc : clusterPrepareMap.entrySet()) {
+                Bzs.ClusterPC clusterPC = Bzs.ClusterPC.newBuilder()
+                        .addAllTransactions(pc.getValue().batch)
+                        .setOperation(Operation.DRWT_PREPARE)
+                        .setID(pc.getKey())
+                        .build();
                 allRWTxnLocalBatch = TransactionBatch.newBuilder(allRWTxnLocalBatch).addRemotePrepareTxn(clusterPC).build();
             }
         }
@@ -147,11 +149,16 @@ public class EpochProcessor implements Runnable {
     }
 
     public void addClusterPrepare(final LinkedBlockingQueue<ClusterPC> clusterPrepareBatch) {
-        clusterPrepareList.addAll(clusterPrepareBatch);
+        for(ClusterPC cpc : clusterPrepareBatch) {
+            clusterPrepareMap.put(cpc.callback.getID(), cpc);
+        }
     }
 
     public void addClusterCommit(LinkedBlockingQueue<ClusterPC> clusterCommitBatch) {
-        clusterCommitList.addAll(clusterCommitBatch);
+        for(ClusterPC cpc : clusterCommitBatch) {
+            clusterCommitMap.put(cpc.callback.getID(), cpc);
+        }
+
     }
 }
 

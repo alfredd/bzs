@@ -7,7 +7,6 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,15 +62,16 @@ public class Serializer {
     public boolean readConflicts(Bzs.ReadHistory c) {
         //Needs to be changes where the version is fetched from the datastore and not the first key.
         BZStoreData data;
-        data = BZDatabaseController.getlatest(c.getKey());
+        Bzs.Read readOperation = c.getReadOperation();
+        data = BZDatabaseController.getlatest(readOperation.getKey());
         if (data.version == 0) {
             return true;
         }
-        if (!readMap.containsKey(c.getKey())) {
-            readMap.put(c.getKey(), Long.valueOf(data.version));
+        if (!readMap.containsKey(readOperation.getKey())) {
+            readMap.put(readOperation.getKey(), Long.valueOf(data.version));
         }
         // Handling case 2 and 3 from the table in the google doc
-        if (readMap.get(c.getKey()) > c.getVersion() && checkLocks && LockManager.isLocked(c.getKey())) {
+        if (readMap.get(readOperation.getKey()) > c.getVersion() && checkLocks && LockManager.isLocked(readOperation.getKey())) {
             return true;
         }
         return false;
@@ -80,7 +80,7 @@ public class Serializer {
     public boolean serialize(Bzs.Transaction t) {
 
         for (Bzs.ReadHistory readHistory : t.getReadHistoryList()) {
-            if (readHistory.getClusterID() == this.clusterID && readConflicts(readHistory))
+            if (readHistory.getReadOperation().getClusterID() == this.clusterID && readConflicts(readHistory))
                 return false;
         }
         // Handling case 2 from the table in the google doc

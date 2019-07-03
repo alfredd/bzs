@@ -154,12 +154,13 @@ message ReadResponse {
 }
 
 message ReadHistory {
-    string key = 1;
+    Read readOperation = 1;
     string value = 2;
     int64 version = 3;
     string responseDigest = 4;
-    int32 clusterID = 5;
-    int32 replicaID = 6;
+    //    string key = 1;
+    //    int32 clusterID = 5;
+//    int32 replicaID = 6;
 }
 
 message ROTransaction {
