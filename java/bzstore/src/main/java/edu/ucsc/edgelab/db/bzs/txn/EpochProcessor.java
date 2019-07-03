@@ -113,7 +113,9 @@ public class EpochProcessor implements Runnable {
                             preparedTIDs.add(TransactionID.getTransactionID(txnResponse.getTransactionID()));
                         }
                     }
+                    SmrLog.twoPCPrepared(epochNumber, cpc.batch, cpc.callback.getID());
                     RemoteTxnCache.addTIDsToPreparedBatch(responseClusterPC.getID(), preparedTIDs);
+                    cpc.callback.setPreparedEpoch(epochNumber);
                     cpc.callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
                     cpc.callback.sendResponseToClient();
                 }

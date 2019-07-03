@@ -26,4 +26,6 @@ public interface ClusterDRWTProcessor {
     void addProcessedResponse(Bzs.TransactionResponse txnResponse);
 
     void sendResponseToClient();
+
+    void setPreparedEpoch(Integer epochNumber);
 }

@@ -14,6 +14,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     private String id;
     private Map<TransactionID, Bzs.Transaction> txnMap = new LinkedHashMap<>();
     private Bzs.TransactionBatchResponse.Builder batchResponseBuilder;
+    private Integer preparedEpoch = -1;
 
 
     public ClusterDRWTProcessorImpl(TxnProcessor processor) {
@@ -26,7 +27,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     }
 
     public void commit() {
-        processor.commitTransactionBatch( this);
+        processor.commitTransactionBatch(this);
     }
 
     @Override
@@ -88,6 +89,11 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     public void sendResponseToClient() {
         getResponseObserver().onNext(batchResponseBuilder.build());
         getResponseObserver().onCompleted();
+    }
+
+    @Override
+    public void setPreparedEpoch(Integer epochNumber) {
+        this.preparedEpoch = epochNumber;
     }
 
 }
