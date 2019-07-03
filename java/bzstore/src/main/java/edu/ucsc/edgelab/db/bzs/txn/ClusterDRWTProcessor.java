@@ -5,15 +5,21 @@ import io.grpc.stub.StreamObserver;
 
 public interface ClusterDRWTProcessor {
 
+    void clear();
+
     String getID();
 
     Bzs.TransactionBatch getRequest();
 
-    StreamObserver<Bzs.TransactionBatchResponse> getResponse();
+    StreamObserver<Bzs.TransactionBatchResponse> getResponseObserver();
 
     void setRequest(Bzs.TransactionBatch request);
 
     void setResponseObserver(StreamObserver<Bzs.TransactionBatchResponse> response);
 
     void addToFailedList(Bzs.Transaction t);
+
+    void addToProcessedList(Bzs.TransactionResponse txnResponse);
+
+    void sendResponseToClient();
 }

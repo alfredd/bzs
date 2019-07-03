@@ -18,7 +18,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
 
     public ClusterDRWTProcessorImpl(TxnProcessor processor) {
         this.processor = processor;
-        batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
+        clear();
     }
 
     public void prepare() {
@@ -27,6 +27,11 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
 
     public void commit() {
         processor.commitTransactionBatch( this);
+    }
+
+    @Override
+    public void clear() {
+        batchResponseBuilder = Bzs.TransactionBatchResponse.newBuilder();
     }
 
     @Override
@@ -40,7 +45,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     }
 
     @Override
-    public StreamObserver<Bzs.TransactionBatchResponse> getResponse() {
+    public StreamObserver<Bzs.TransactionBatchResponse> getResponseObserver() {
         return response;
     }
 
@@ -67,6 +72,17 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
                 .setStatus(Bzs.TransactionStatus.FAILURE)
                 .build();
         batchResponseBuilder.addResponses(tr);
+    }
+
+    @Override
+    public void addToProcessedList(Bzs.TransactionResponse txnResponse) {
+        batchResponseBuilder = batchResponseBuilder.addResponses(txnResponse);
+    }
+
+    @Override
+    public void sendResponseToClient() {
+        getResponseObserver().onNext(batchResponseBuilder.build());
+        getResponseObserver().onCompleted();
     }
 
 }

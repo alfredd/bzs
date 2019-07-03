@@ -41,6 +41,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
             sendBatchAbort(request, responseObserver);
             return;
         }
+        clusterDRWTProcessor.clear();
         clusterDRWTProcessor.setResponseObserver(responseObserver);
         clusterDRWTProcessor.setRequest(request);
         clusterDRWTProcessor.commit();
