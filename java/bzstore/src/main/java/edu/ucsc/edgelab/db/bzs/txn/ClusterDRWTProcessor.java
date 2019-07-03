@@ -3,6 +3,8 @@ package edu.ucsc.edgelab.db.bzs.txn;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Map;
+
 public interface ClusterDRWTProcessor {
 
     void clear();
@@ -19,7 +21,9 @@ public interface ClusterDRWTProcessor {
 
     void addToFailedList(Bzs.Transaction t);
 
-    void addToProcessedList(Bzs.TransactionResponse txnResponse);
+    void setDepVector(Map<Integer, Integer> depVector);
+
+    void addProcessedResponse(Bzs.TransactionResponse txnResponse);
 
     void sendResponseToClient();
 }

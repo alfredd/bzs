@@ -71,11 +71,16 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
                 .setEpochNumber(t.getEpochNumber())
                 .setStatus(Bzs.TransactionStatus.FAILURE)
                 .build();
-        batchResponseBuilder.addResponses(tr);
+        batchResponseBuilder = batchResponseBuilder.addResponses(tr);
     }
 
     @Override
-    public void addToProcessedList(Bzs.TransactionResponse txnResponse) {
+    public void setDepVector(Map<Integer, Integer> depVector) {
+        batchResponseBuilder = batchResponseBuilder.putAllDepVector(depVector);
+    }
+
+    @Override
+    public void addProcessedResponse(Bzs.TransactionResponse txnResponse) {
         batchResponseBuilder = batchResponseBuilder.addResponses(txnResponse);
     }
 

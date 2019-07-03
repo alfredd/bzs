@@ -105,7 +105,16 @@ public class EpochProcessor implements Runnable {
                 }
             }
             if (response.getRemotePrepareTxnResponseCount() > 0) {
+                for (ClusterPCResponse responseClusterPC : response.getRemotePrepareTxnResponseList()) {
+                    ClusterPC cpc = clusterPrepareMap.get(responseClusterPC.getID());
+                    for (TransactionResponse txnResponse : responseClusterPC.getResponsesList()) {
+                        if (!txnResponse.getStatus().equals(TransactionStatus.PREPARED)) {
+                            cpc.callback.addProcessedResponse(txnResponse);
+                        } else {
 
+                        }
+                    }
+                }
             }
         } else {
             // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
