@@ -6,8 +6,7 @@ import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.*;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -107,13 +106,15 @@ public class EpochProcessor implements Runnable {
             if (response.getRemotePrepareTxnResponseCount() > 0) {
                 for (ClusterPCResponse responseClusterPC : response.getRemotePrepareTxnResponseList()) {
                     ClusterPC cpc = clusterPrepareMap.get(responseClusterPC.getID());
+                    Set<TransactionID> preparedTIDs = new LinkedHashSet<>();
                     for (TransactionResponse txnResponse : responseClusterPC.getResponsesList()) {
-                        if (!txnResponse.getStatus().equals(TransactionStatus.PREPARED)) {
-                            cpc.callback.addProcessedResponse(txnResponse);
-                        } else {
-
+                        cpc.callback.addProcessedResponse(txnResponse);
+                        if (txnResponse.getStatus().equals(TransactionStatus.PREPARED)) {
+                            preparedTIDs.add(TransactionID.getTransactionID(txnResponse.getTransactionID()));
                         }
                     }
+                    RemoteTxnCache.addTIDsToPreparedBatch(responseClusterPC.getID(), preparedTIDs);
+                    cpc.callback.sendResponseToClient();
                 }
             }
         } else {
