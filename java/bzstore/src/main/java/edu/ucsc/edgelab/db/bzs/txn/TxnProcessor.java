@@ -53,27 +53,28 @@ public class TxnProcessor {
     }
 
     public void prepareTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
-        Set<Bzs.Transaction> txnsToPrepare = commonRemoteTxnProcessCode(clusterDRWTProcessor);
+        Set<Bzs.Transaction> txnsToPrepare = commonRemoteTxnProcessCode(clusterDRWTProcessor, true);
         epochManager.clusterPrepare(txnsToPrepare, clusterDRWTProcessor);
 
     }
 
-    private Set<Bzs.Transaction> commonRemoteTxnProcessCode(ClusterDRWTProcessor clusterDRWTProcessor) {
-        Set<Bzs.Transaction> txnsToPrepare = new LinkedHashSet<>();
-        for(Bzs.Transaction t: clusterDRWTProcessor.getRequest().getTransactionsList()) {
+    private Set<Bzs.Transaction> commonRemoteTxnProcessCode(ClusterDRWTProcessor clusterDRWTProcessor, boolean acquireLocks) {
+        Set<Bzs.Transaction> txnsToProcess = new LinkedHashSet<>();
+        for (Bzs.Transaction t : clusterDRWTProcessor.getRequest().getTransactionsList()) {
             if (!serializer.serialize(t)) {
                 clusterDRWTProcessor.addToFailedList(t);
             } else {
-                LockManager.acquireLocks(t);
-                txnsToPrepare.add(t);
 
+                txnsToProcess.add(t);
+                if (acquireLocks)
+                    LockManager.acquireLocks(t);
             }
         }
-        return txnsToPrepare;
+        return txnsToProcess;
     }
 
     public void commitTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
-        Set<Bzs.Transaction> txnsToPrepare = commonRemoteTxnProcessCode(clusterDRWTProcessor);
+        Set<Bzs.Transaction> txnsToPrepare = commonRemoteTxnProcessCode(clusterDRWTProcessor, false);
         epochManager.clusterCommit(txnsToPrepare, clusterDRWTProcessor);
     }
 }

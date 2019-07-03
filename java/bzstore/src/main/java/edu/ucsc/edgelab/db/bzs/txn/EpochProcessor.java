@@ -4,10 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
-import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
-import edu.ucsc.edgelab.db.bzs.replica.ID;
-import edu.ucsc.edgelab.db.bzs.replica.SmrLog;
-import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
+import edu.ucsc.edgelab.db.bzs.replica.*;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -103,7 +100,7 @@ public class EpochProcessor implements Runnable {
 //                        updateVersion(tempMap, transactionID, txnResponse);
                 }
             }
-            if (response.getRemotePrepareTxnResponseCount()> 0) {
+            if (response.getRemotePrepareTxnResponseCount() > 0) {
 
             }
         } else {
@@ -152,6 +149,11 @@ public class EpochProcessor implements Runnable {
     }
 
     public void addClusterCommit(LinkedBlockingQueue<ClusterPC> clusterCommitBatch) {
+        for (ClusterPC cpc : clusterCommitBatch) {
+            String id = cpc.callback.getRequest().getID();
+            if (!RemoteTxnCache.isPrepared(id)) {
+            }
+        }
         clusterCommitList.addAll(clusterCommitBatch);
     }
 }

@@ -22,7 +22,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private Serializer serializer;
     private Map<String, EpochTransactionID> transactionIDMap = new LinkedHashMap<>();
     private static final Logger log = Logger.getLogger(ClusterService.class.getName());
-    private Map<String, ClusterDRWTProcessorImpl> remoteJobProcessor = new LinkedHashMap<>();
+    private Map<String, ClusterDRWTProcessorImpl> remoteJobProcessorMap = new LinkedHashMap<>();
 
 
     public ClusterService(Integer clusterID, Integer replicaID, TxnProcessor processor, boolean isLeader) {
@@ -36,12 +36,12 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessor.get(request.getID());
+        ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessorMap.get(request.getID());
         if (clusterDRWTProcessor==null) {
             sendBatchAbort(request, responseObserver);
             return;
         }
-        clusterDRWTProcessor.setResponse(responseObserver);
+        clusterDRWTProcessor.setResponseObserver(responseObserver);
         clusterDRWTProcessor.setRequest(request);
         clusterDRWTProcessor.commit();
     }
@@ -59,8 +59,8 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     public void prepareAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
         ClusterDRWTProcessorImpl clusterDRWTProcessor = new ClusterDRWTProcessorImpl(processor);
         clusterDRWTProcessor.setRequest(request);
-        clusterDRWTProcessor.setResponse(responseObserver);
-        remoteJobProcessor.put(request.getID(), clusterDRWTProcessor);
+        clusterDRWTProcessor.setResponseObserver(responseObserver);
+        remoteJobProcessorMap.put(request.getID(), clusterDRWTProcessor);
         clusterDRWTProcessor.prepare();
     }
 

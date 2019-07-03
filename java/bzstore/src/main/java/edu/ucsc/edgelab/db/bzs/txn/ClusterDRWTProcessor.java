@@ -13,7 +13,7 @@ public interface ClusterDRWTProcessor {
 
     void setRequest(Bzs.TransactionBatch request);
 
-    void setResponse(StreamObserver<Bzs.TransactionBatchResponse> response);
+    void setResponseObserver(StreamObserver<Bzs.TransactionBatchResponse> response);
 
     void addToFailedList(Bzs.Transaction t);
 }
