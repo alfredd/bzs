@@ -114,6 +114,7 @@ public class EpochProcessor implements Runnable {
                         }
                     }
                     RemoteTxnCache.addTIDsToPreparedBatch(responseClusterPC.getID(), preparedTIDs);
+                    cpc.callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
                     cpc.callback.sendResponseToClient();
                 }
             }
