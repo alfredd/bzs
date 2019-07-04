@@ -105,9 +105,26 @@ public class BFTServer extends DefaultSingleRecoverable {
     }
 
     private Bzs.TransactionBatchResponse processBFTPrepare(Bzs.TransactionBatch transactionBatch) {
-        Serializer serializer = new Serializer(clusterID, replicaID);
+        List<Bzs.TransactionResponse.Builder> responseList = getTransactionResponseBuilders(transactionBatch.getTransactionsList());
+
+        Bzs.TransactionBatchResponse.Builder tbr = Bzs.TransactionBatchResponse.newBuilder();
+
+        for (Bzs.TransactionResponse.Builder builder : responseList) {
+            tbr = tbr.addResponses(builder.build());
+        }
+        if (transactionBatch.getRemotePrepareTxnCount() > 0) {
+            List<Bzs.ClusterPCResponse> cpcResponses = processClusterPrepareRequests(transactionBatch.getRemotePrepareTxnList());
+            for (Bzs.ClusterPCResponse cpcResponse : cpcResponses) {
+                tbr = tbr.addRemotePrepareTxnResponse(cpcResponse);
+            }
+        }
+        return tbr.build();
+    }
+
+    private List<Bzs.TransactionResponse.Builder> getTransactionResponseBuilders(List<Bzs.Transaction> transactionsList) {
         List<Bzs.TransactionResponse.Builder> responseList = new LinkedList<>();
-        for (Bzs.Transaction txn : transactionBatch.getTransactionsList()) {
+        Serializer serializer = new Serializer(clusterID, replicaID);
+        for (Bzs.Transaction txn : transactionsList) {
             TransactionID tid = TransactionID.getTransactionID(txn.getTransactionID());
             Bzs.TransactionStatus status = Bzs.TransactionStatus.ABORTED;
             if (serializer.serialize(txn)) {
@@ -132,13 +149,24 @@ public class BFTServer extends DefaultSingleRecoverable {
             }
             responseList.add(builder);
         }
+        return responseList;
+    }
 
-        Bzs.TransactionBatchResponse.Builder tbr = Bzs.TransactionBatchResponse.newBuilder();
-
-        for (Bzs.TransactionResponse.Builder builder : responseList) {
-            tbr = tbr.addResponses(builder.build());
+    private List<Bzs.ClusterPCResponse> processClusterPrepareRequests(List<Bzs.ClusterPC> remotePrepareTxnList) {
+        List<Bzs.ClusterPCResponse> cpcResponses = new LinkedList<>();
+        for (Bzs.ClusterPC cpc : remotePrepareTxnList) {
+            Bzs.ClusterPCResponse.Builder cpcResponseBuilder = Bzs.ClusterPCResponse.newBuilder();
+            if (cpc.getTransactionsCount() > 0) {
+                List<Bzs.TransactionResponse.Builder> responseBuilders = getTransactionResponseBuilders(cpc.getTransactionsList());
+                for (Bzs.TransactionResponse.Builder builder : responseBuilders) {
+                    cpcResponseBuilder = cpcResponseBuilder.addResponses(builder.build());
+                }
+                cpcResponses.add(cpcResponseBuilder.build());
+            } else {
+                cpcResponses.add(Bzs.ClusterPCResponse.newBuilder().setStatus(Bzs.OperationStatus.INVALID).build());
+            }
         }
-        return tbr.build();
+        return cpcResponses;
     }
 
     private void updateDBCache(String key, String value, Integer epochNumber) {
