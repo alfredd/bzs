@@ -150,6 +150,7 @@ public class EpochProcessor implements Runnable {
                 SmrLog.twoPCCommitted(epochNumber, prepared2PCTxns, id);
             }
         }
+        SmrLog.updateLastCommittedEpoch(epochLCE);
 
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
