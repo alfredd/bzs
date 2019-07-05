@@ -96,4 +96,9 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
         this.preparedEpoch = epochNumber;
     }
 
+    @Override
+    public int getPreparedEpoch() {
+        return preparedEpoch;
+    }
+
 }

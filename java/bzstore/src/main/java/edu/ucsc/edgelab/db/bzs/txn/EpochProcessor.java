@@ -131,6 +131,7 @@ public class EpochProcessor implements Runnable {
         }
         DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
 
+        int epochLCE = -1;
         if (clusterCommitMap.size() > 0) {
             for (Map.Entry<String, ClusterPC> cpcEntry : clusterCommitMap.entrySet()) {
                 ClusterPC cpc = cpcEntry.getValue();
@@ -142,6 +143,9 @@ public class EpochProcessor implements Runnable {
                     } else {
                         cpc.callback.addToFailedList(t);
                     }
+                    int cpcPreparedEpoch = cpc.callback.getPreparedEpoch();
+                    if (epochLCE < cpcPreparedEpoch)
+                        epochLCE = cpcPreparedEpoch;
                 }
                 SmrLog.twoPCCommitted(epochNumber, prepared2PCTxns, id);
             }

@@ -47,7 +47,7 @@ public class SmrLogEntryCreator {
         smrLogEntryBuilder = smrLogEntryBuilder.addCommittedDRWTxns(dRWTxns);
     }
 
-    public void addLastCommittedEpoch(int lce) {
+    public void updateLastCommittedEpoch(int lce) {
         smrLogEntryBuilder = smrLogEntryBuilder.setLce(lce);
     }
 

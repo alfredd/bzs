@@ -28,4 +28,6 @@ public interface ClusterDRWTProcessor {
     void sendResponseToClient();
 
     void setPreparedEpoch(Integer epochNumber);
+
+    int getPreparedEpoch();
 }

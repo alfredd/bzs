@@ -17,21 +17,30 @@ public class SmrLog {
 
     private static final Map<Integer, SmrLogEntryCreator> smrEpochData = new ConcurrentHashMap<>();
     private static int lastLCE = -1;
+    private static int lockLCEForEpoch = -1;
+    private static Map<Integer, Integer> lceMap = new ConcurrentHashMap<>();
 
+
+    public static void updateEpochLCE(Integer epochNumber, int lce) {
+        if (!lceMap.containsKey(epochNumber)) {
+            lceMap.put(epochNumber, lce);
+        } else {
+            Integer epochLCE = lceMap.get(epochNumber);
+            if (epochLCE< lce)
+                lceMap.put(epochNumber, lce);
+        }
+    }
 
     public static void setLockLCEForEpoch(int lockLCEForEpoch) {
         SmrLog.lockLCEForEpoch = lockLCEForEpoch;
     }
 
-    private static int lockLCEForEpoch = -1;
-    private static Map<Integer, Integer> lceMap = new ConcurrentHashMap<>();
-
-
     public static void createLogEntry(final Integer epochNumber) {
         if (!smrEpochData.containsKey(epochNumber)) {
             SmrLogEntryCreator smrData = new SmrLogEntryCreator();
             smrData.setEpochNumber(epochNumber);
-            smrData.addLastCommittedEpoch(lastLCE);
+//            smrData.updateLastCommittedEpoch(lastLCE);
+            lceMap.put(epochNumber, lastLCE);
             smrEpochData.put(epochNumber, smrData);
         } else {
             log.log(Level.WARNING, "Log entry already exists for " + epochNumber);
@@ -112,7 +121,7 @@ public class SmrLog {
             } else {
                 lceMap.put(epoch, lastLCE);
             }
-            smrData.addLastCommittedEpoch(lce);
+            smrData.updateLastCommittedEpoch(lce);
             final Integer lce1 = lceMap.get(epoch);
             if (lce1 > lastLCE)
                 lastLCE = lce1;
