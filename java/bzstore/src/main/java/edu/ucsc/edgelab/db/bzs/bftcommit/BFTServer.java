@@ -76,14 +76,27 @@ public class BFTServer extends DefaultSingleRecoverable {
     private byte[] commitSMRLogEntry(Bzs.TransactionBatch transactionBatch) {
         Integer epoch = Integer.decode(transactionBatch.getID());
         Bzs.SmrLogEntry smrLogEntry = smrLogCache.get(epoch);
+        boolean committed = false;
         try {
             BZDatabaseController.commitSmrBlock(epoch, smrLogEntry);
-            smrLogCache.remove(epoch);
+            committed = true;
         } catch (InvalidCommitException e) {
             logger.log(Level.SEVERE,
-                    String.format("Could not commit to SMR Log: Epoch(%d):%s: ", epoch.intValue(), smrLogEntry.toString()) + e.getLocalizedMessage(), e);
+                    String.format("Could not commit to SMR Log: Epoch(%d). Exception message: %s. Retrying...  ", epoch.intValue(),  e.getLocalizedMessage()), e);
+            try {
+                BZDatabaseController.commitSmrBlock(epoch, smrLogEntry);
+                committed = true;
+            } catch (InvalidCommitException e1) {
+                logger.log(Level.SEVERE,
+                        String.format("Could not commit to SMR Log: Epoch(%d):%s: ", epoch.intValue(), smrLogEntry.toString()) + e.getLocalizedMessage(), e);
+            }
         }
-        commitDBCache(epoch);
+        if (committed) {
+            smrLogCache.remove(epoch);
+            commitDBCache(epoch);
+            logger.info(String.format("Committed SMR log for epoch %d. Smr Log Entry: %s", epoch.intValue(), smrLogEntry.toString()));
+        }
+
         return ByteBuffer.allocate(4).putInt(1).array();
     }
 
