@@ -1,7 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.txn.Epoch;
@@ -18,13 +17,13 @@ public class DependencyVectorManager {
     public static void init() {
         int clusterCount = Configuration.clusterCount();
         for (int i = 0; i < clusterCount; i++) {
-            dvec.set(i, -1);
+            dvec.add(-1);
         }
 
         Bzs.DVec depVec = BZDatabaseController.getDepVector();
         if (depVec != null) {
             for (Map.Entry<Integer, Integer> entry : depVec.getDepVectorMap().entrySet()) {
-                dvec.set(entry.getKey(), entry.getValue());
+                setValue(entry.getKey(), entry.getValue());
             }
         }
     }
