@@ -25,11 +25,11 @@ public class SerializerTest {
 //            obj1.digest = "hello";
 
             Bzs.ReadHistory h1 =
-                    Bzs.ReadHistory.newBuilder().setKey(testKey).setVersion(obj1.version).setValue(obj1.value).build();
+                    Bzs.ReadHistory.newBuilder().setReadOperation(Bzs.Read.newBuilder().setKey(testKey).build()).setVersion(obj1.version).setValue(obj1.value).build();
             Bzs.Write w1 = Bzs.Write.newBuilder().setKey(testKey).setValue("newval").build();
             Bzs.Transaction t1 = Bzs.Transaction.newBuilder().addReadHistory(h1).addWriteOperations(w1).build();
 
-            Bzs.ReadHistory h2 = Bzs.ReadHistory.newBuilder().setKey(testKey).setVersion(1).build();
+            Bzs.ReadHistory h2 = Bzs.ReadHistory.newBuilder().setReadOperation(Bzs.Read.newBuilder().setKey(testKey).build()).setVersion(1).build();
             Bzs.Transaction t2 = Bzs.Transaction.newBuilder().addReadHistory(h2).build();
 
             BZDatabaseController.commit(testKey, obj1);
@@ -47,12 +47,12 @@ public class SerializerTest {
             assertTrue(s1.serialize(t1) == true);
 
             s1.resetEpoch();
-            Bzs.ReadHistory h3 = Bzs.ReadHistory.newBuilder().setKey(testKey).setVersion(-1).build();
+            Bzs.ReadHistory h3 = Bzs.ReadHistory.newBuilder().setReadOperation(Bzs.Read.newBuilder().setKey(testKey).build()).setVersion(-1).build();
             Bzs.Transaction t3 = Bzs.Transaction.newBuilder().addReadHistory(h3).build();
             assertTrue(s1.serialize(t3) == false);
 
             s1.resetEpoch();
-            Bzs.ReadHistory h4 = Bzs.ReadHistory.newBuilder().setKey(testKey).setVersion(0).build();
+            Bzs.ReadHistory h4 = Bzs.ReadHistory.newBuilder().setReadOperation(Bzs.Read.newBuilder().setKey(testKey).build()).setVersion(0).build();
             Bzs.Transaction t4 = Bzs.Transaction.newBuilder().addReadHistory(h4).build();
             assertTrue(s1.serialize(t2) == true);
             assertTrue(s1.serialize(t4) == false);
