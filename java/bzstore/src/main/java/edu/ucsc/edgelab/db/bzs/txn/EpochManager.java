@@ -37,7 +37,7 @@ public class EpochManager {
 //                logger.info("Epoch updated.");
             }
         };
-        epochNumber = BZDatabaseController.getEpochCount();
+        epochNumber = BZDatabaseController.getEpochCount()+1;
         Timer t = new Timer();
         t.scheduleAtFixedRate(epochUpdater, Configuration.MAX_EPOCH_DURATION_MS, Configuration.MAX_EPOCH_DURATION_MS);
         dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
