@@ -178,6 +178,7 @@ public class EpochProcessor implements Runnable {
         // Commit SMR log entry
         BFTClient.getInstance().commitSMR(epochNumber);
         BZDatabaseController.setEpochCount(epochNumber);
+        log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
     }
 
     @Override
