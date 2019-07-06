@@ -64,7 +64,7 @@ public class Serializer {
         BZStoreData data;
         Bzs.Read readOperation = c.getReadOperation();
         data = BZDatabaseController.getlatest(readOperation.getKey());
-        if (data.version == 0) {
+        if (data.version < 0) {
             return true;
         }
         if (!readMap.containsKey(readOperation.getKey())) {
