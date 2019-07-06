@@ -15,12 +15,13 @@ public final class BZDatabaseController {
 
     public static void initDB(Integer cid,Integer rid) throws RocksDBException {
         BZ_DATABASE_CONTROLLER = new BZDatabaseController(cid,rid);
-//        Integer latestEpochCount = BZ_DATABASE_CONTROLLER.db.getEpochNumber();
-        /*for (int e = 0; e <= latestEpochCount; e++) {
+        Integer latestEpochCount = BZ_DATABASE_CONTROLLER.db.getEpochNumber();
+        for (int e = 0; e <= latestEpochCount; e++) {
             Bzs.SmrLogEntry smrEntry = getSmrBlock(e);
             if (smrEntry != null) {
+                LOGGER.log(Level.INFO, String.format("Smr Log entry #%d: %s", e, smrEntry.toString()));
             }
-        }*/
+        }
     }
 
     private BZDatabaseController(Integer cid,Integer rid) throws RocksDBException {
@@ -85,14 +86,17 @@ public final class BZDatabaseController {
     }
 
     public static void commitSmrBlock(Integer epochNumber, Bzs.SmrLogEntry logEntry) throws InvalidCommitException {
-        BZ_DATABASE_CONTROLLER.db.commit(epochNumber.toString(),logEntry);
+        BZ_DATABASE_CONTROLLER.db.commit(getSMRLogKey(epochNumber),logEntry);
     }
 
     public static Bzs.SmrLogEntry getSmrBlock(Integer epochNumber) {
-        return BZ_DATABASE_CONTROLLER.db.getSmrBlock(epochNumber.toString());
+        return BZ_DATABASE_CONTROLLER.db.getSmrBlock(getSMRLogKey(epochNumber));
 
     }
 
+    private static String getSMRLogKey(Integer epochNumber) {
+        return String.format("S.%d", epochNumber.intValue());
+    }
 //    public static void rollbackForKeys(List<String> keys) {
 //        synchronized (BZ_DATABASE_CONTROLLER) {
 //            for(String key: keys) {
