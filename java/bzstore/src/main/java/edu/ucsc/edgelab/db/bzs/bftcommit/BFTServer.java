@@ -78,6 +78,7 @@ public class BFTServer extends DefaultSingleRecoverable {
         Bzs.SmrLogEntry smrLogEntry = smrLogCache.get(epoch);
         try {
             BZDatabaseController.commitSmrBlock(epoch, smrLogEntry);
+            smrLogCache.remove(epoch);
         } catch (InvalidCommitException e) {
             logger.log(Level.SEVERE,
                     String.format("Could not commit to SMR Log: Epoch(%d):%s: ", epoch.intValue(), smrLogEntry.toString()) + e.getLocalizedMessage(), e);
@@ -143,8 +144,10 @@ public class BFTServer extends DefaultSingleRecoverable {
                             .setWriteOperation(wOp)
                             .setVersion(txn.getEpochNumber())
                             .build();
-                    updateDBCache(wOp.getKey(), wOp.getValue(), txn.getEpochNumber());
                     builder = builder.addWriteResponses(wresp);
+
+                    // Update DB data cache.
+                    updateDBCache(wOp.getKey(), wOp.getValue(), txn.getEpochNumber());
                 }
             }
             responseList.add(builder);

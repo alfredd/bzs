@@ -5,8 +5,6 @@ import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.rocksdb.RocksDBException;
 
 import java.io.ByteArrayInputStream;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,18 +13,14 @@ public final class BZDatabaseController {
     private static final Logger LOGGER = Logger.getLogger(BZDatabaseController.class.getName());
     private static BZDatabaseController BZ_DATABASE_CONTROLLER;
 
-    private Map<String, BZStoreData> localCache = new ConcurrentHashMap<>();
-
-
     public static void initDB(Integer cid,Integer rid) throws RocksDBException {
         BZ_DATABASE_CONTROLLER = new BZDatabaseController(cid,rid);
-        Integer latestEpochCount = BZ_DATABASE_CONTROLLER.db.getEpochNumber();
-        for (int e=0;e<=latestEpochCount;e++) {
+//        Integer latestEpochCount = BZ_DATABASE_CONTROLLER.db.getEpochNumber();
+        /*for (int e = 0; e <= latestEpochCount; e++) {
             Bzs.SmrLogEntry smrEntry = getSmrBlock(e);
-            if (smrEntry !=null) {
-
+            if (smrEntry != null) {
             }
-        }
+        }*/
     }
 
     private BZDatabaseController(Integer cid,Integer rid) throws RocksDBException {
