@@ -94,6 +94,8 @@ public class BFTServer extends DefaultSingleRecoverable {
         if (committed) {
             smrLogCache.remove(epoch);
             commitDBCache(epoch);
+            BZDatabaseController.setEpochCount(epoch);
+            BZDatabaseController.commitDepVector(smrLogEntry.getDepVectorMap());
             logger.info(String.format("Committed SMR log for epoch %d. Smr Log Entry: %s", epoch.intValue(), smrLogEntry.toString()));
         }
 
