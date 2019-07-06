@@ -207,6 +207,10 @@ message Timestamp {
     int32 epochNumber = 2;
 }
 
+message DVec {
+    map<int32, int32> depVector = 1;
+}
+
 message SmrLogEntry {
     int32 epochNumber = 1;
     repeated Transaction lRWTxns = 2;

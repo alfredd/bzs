@@ -72,6 +72,7 @@ public class BZStoreServer {
         } catch (RocksDBException e) {
             throw new RuntimeException(e.getLocalizedMessage(),e);
         }
+        DependencyVectorManager.init();
         transactionProcessor = new TxnProcessor(this.replicaID, this.clusterID);
     }
 

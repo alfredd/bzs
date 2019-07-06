@@ -34,4 +34,15 @@ public class Configuration {
         return DEFAULT_EPOCH_TIME_IN_MS;
     }
 
+    public static int clusterCount() {
+        Integer clusterCount = 2;
+        try {
+            BZStoreProperties bzsProperties = new BZStoreProperties();
+            clusterCount = Integer.valueOf(bzsProperties.getProperty(BZStoreProperties.Configuration.cluster_count));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return clusterCount;
+    }
+
 }

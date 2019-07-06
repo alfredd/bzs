@@ -119,4 +119,8 @@ class BackendDb {
         }
         return null;
     }
+
+    public void commit(String dv, byte[] data) throws RocksDBException {
+        db.put(dv.getBytes(), data);
+    }
 }

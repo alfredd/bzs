@@ -36,6 +36,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
+        log.info(String.format("Received batch prepare request: %s", request.toString()));
         ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessorMap.get(request.getID());
         if (clusterDRWTProcessor==null || (!RemoteTxnCache.isPrepared(clusterDRWTProcessor.getID()))) {
             sendBatchAbort(request, responseObserver);
@@ -58,6 +59,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void prepareAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
+        log.info(String.format("Received batch prepare request: %s", request.toString()));
         ClusterDRWTProcessorImpl clusterDRWTProcessor = new ClusterDRWTProcessorImpl(processor);
         clusterDRWTProcessor.setRequest(request);
         clusterDRWTProcessor.setResponseObserver(responseObserver);

@@ -1,10 +1,12 @@
 package edu.ucsc.edgelab.db.bzs.data;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.rocksdb.RocksDBException;
 
 import java.io.ByteArrayInputStream;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,8 +15,8 @@ public final class BZDatabaseController {
     private static final Logger LOGGER = Logger.getLogger(BZDatabaseController.class.getName());
     private static BZDatabaseController BZ_DATABASE_CONTROLLER;
 
-    public static void initDB(Integer cid,Integer rid) throws RocksDBException {
-        BZ_DATABASE_CONTROLLER = new BZDatabaseController(cid,rid);
+    public static void initDB(Integer cid, Integer rid) throws RocksDBException {
+        BZ_DATABASE_CONTROLLER = new BZDatabaseController(cid, rid);
         Integer latestEpochCount = BZ_DATABASE_CONTROLLER.db.getEpochNumber();
         for (int e = 0; e <= latestEpochCount; e++) {
             Bzs.SmrLogEntry smrEntry = getSmrBlock(e);
@@ -24,17 +26,17 @@ public final class BZDatabaseController {
         }
     }
 
-    private BZDatabaseController(Integer cid,Integer rid) throws RocksDBException {
-        db = new BackendDb(cid,rid);
+    private BZDatabaseController(Integer cid, Integer rid) throws RocksDBException {
+        db = new BackendDb(cid, rid);
     }
 
     public static void commitDBData(String key, Bzs.DBData dbData) throws InvalidCommitException {
-        BZ_DATABASE_CONTROLLER.db.commitDBData(key,dbData);
+        BZ_DATABASE_CONTROLLER.db.commitDBData(key, dbData);
     }
 
-    public static void commit (String key, BZStoreData data) throws InvalidCommitException {
+    public static void commit(String key, BZStoreData data) throws InvalidCommitException {
 //        LOGGER.info("Committing data with key: {"+key+"}");
-        BZ_DATABASE_CONTROLLER.db.commit(key,data);
+        BZ_DATABASE_CONTROLLER.db.commit(key, data);
 //        LOGGER.info("Committed data with key: {"+key+"}");
     }
 
@@ -42,7 +44,7 @@ public final class BZDatabaseController {
         try {
             BZ_DATABASE_CONTROLLER.db.commitEpochNumber(epochNumber);
         } catch (RocksDBException e) {
-            LOGGER.log(Level.WARNING, e.getLocalizedMessage(),e);
+            LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
         }
     }
 
@@ -55,13 +57,13 @@ public final class BZDatabaseController {
         if (dataHistory == null) {
 //            String message = String.format("No data available for key=%s.", key);
 //            LOGGER.log(Level.WARNING, message);
-           return new BZStoreData();
+            return new BZStoreData();
         }
         return dataHistory;
     }
 
     public static boolean containsKey(String key) {
-        boolean status=false;
+        boolean status = false;
         BZ_DATABASE_CONTROLLER.db.containsKey(key);
         return status;
     }
@@ -86,7 +88,7 @@ public final class BZDatabaseController {
     }
 
     public static void commitSmrBlock(Integer epochNumber, Bzs.SmrLogEntry logEntry) throws InvalidCommitException {
-        BZ_DATABASE_CONTROLLER.db.commit(getSMRLogKey(epochNumber),logEntry);
+        BZ_DATABASE_CONTROLLER.db.commit(getSMRLogKey(epochNumber), logEntry);
     }
 
     public static Bzs.SmrLogEntry getSmrBlock(Integer epochNumber) {
@@ -96,6 +98,25 @@ public final class BZDatabaseController {
 
     private static String getSMRLogKey(Integer epochNumber) {
         return String.format("S.%d", epochNumber.intValue());
+    }
+
+    public static void commitDepVector(Map<Integer, Integer> depVec) {
+        Bzs.DVec dVec = Bzs.DVec.newBuilder().putAllDepVector(depVec).build();
+        try {
+            BZ_DATABASE_CONTROLLER.db.commit("DV", dVec.toByteArray());
+        } catch (RocksDBException e) {
+            LOGGER.log(Level.SEVERE, String.format("Could not commit dependency vector information to Database: %s", dVec.toString()));
+        }
+    }
+
+    public static Bzs.DVec getDepVector() {
+        Bzs.DVec depVec = null;
+        try {
+            depVec = Bzs.DVec.parseFrom(BZ_DATABASE_CONTROLLER.db.getData("DV"));
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+        }
+        return depVec;
     }
 //    public static void rollbackForKeys(List<String> keys) {
 //        synchronized (BZ_DATABASE_CONTROLLER) {
