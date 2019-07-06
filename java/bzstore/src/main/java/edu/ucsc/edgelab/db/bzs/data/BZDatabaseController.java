@@ -113,8 +113,8 @@ public final class BZDatabaseController {
         Bzs.DVec depVec = null;
         try {
             depVec = Bzs.DVec.parseFrom(BZ_DATABASE_CONTROLLER.db.getData("DV"));
-        } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Could not parse dependency vector data from DB. "+e.getLocalizedMessage(), e);
         }
         return depVec;
     }
