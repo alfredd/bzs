@@ -177,7 +177,7 @@ public class EpochProcessor implements Runnable {
 
         // Send response to clients
         for (TransactionResponse txnResponse : response.getResponsesList()) {
-            String id = response.getID();
+            String id = txnResponse.getTransactionID();
             log.info("Sending a response for transaction with ID " + id + ": " + response);
             StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(id));
             if (responseObserver != null) {
