@@ -185,7 +185,7 @@ message TransactionResponse {
     repeated WriteResponse writeResponses = 2;
     string transactionID = 3;
     int32 epochNumber = 4;
-    //    VectorClock clock = 5;
+    map<int32, int32> depVector = 5;
 }
 
 message DBData {

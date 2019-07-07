@@ -6,6 +6,7 @@ import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     private Bzs.TransactionBatch request;
@@ -15,6 +16,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     private Map<TransactionID, Bzs.Transaction> txnMap = new LinkedHashMap<>();
     private Bzs.TransactionBatchResponse.Builder batchResponseBuilder;
     private Integer preparedEpoch = -1;
+    private static final Logger logger = Logger.getLogger(ClusterDRWTProcessorImpl.class.getName());
 
 
     public ClusterDRWTProcessorImpl(TxnProcessor processor) {
@@ -87,7 +89,10 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
 
     @Override
     public void sendResponseToClient() {
-        getResponseObserver().onNext(batchResponseBuilder.build());
+
+        Bzs.TransactionBatchResponse response = batchResponseBuilder.build();
+        logger.info("Sending 2PC transaction response: "+ response);
+        getResponseObserver().onNext(response);
         getResponseObserver().onCompleted();
     }
 

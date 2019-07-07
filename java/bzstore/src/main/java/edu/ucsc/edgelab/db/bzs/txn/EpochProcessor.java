@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.*;
+import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -91,14 +92,14 @@ public class EpochProcessor implements Runnable {
                 TransactionStatus respStatus = txnResponse.getStatus();
                 TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
                 if (respStatus != TransactionStatus.PREPARED) {
-                        TxnUtils.sendAbortToClient(txnResponse, transactionID);
-                        Transaction txn = TransactionCache.getTransaction(transactionID);
-                        LockManager.releaseLocks(txn);
-                        if (lRWTxns.containsKey(transactionID))
-                            lRWTxns.remove(transactionID);
-                        if (dRWTxns.containsKey(transactionID))
-                            dRWTxns.remove(transactionID);
-                        allRWT.remove(transactionID);
+                    TxnUtils.sendAbortToClient(txnResponse, transactionID);
+                    Transaction txn = TransactionCache.getTransaction(transactionID);
+                    LockManager.releaseLocks(txn);
+                    if (lRWTxns.containsKey(transactionID))
+                        lRWTxns.remove(transactionID);
+                    if (dRWTxns.containsKey(transactionID))
+                        dRWTxns.remove(transactionID);
+                    allRWT.remove(transactionID);
                 }
             }
             if (response.getRemotePrepareTxnResponseCount() > 0) {
@@ -167,13 +168,35 @@ public class EpochProcessor implements Runnable {
         // Perform BFT Consensus on the SMR Log entry
         status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
         if (status < 0) {
-            log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch "+epochNumber);
+            log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch " + epochNumber);
         } else {
             // Commit SMR log entry
             BFTClient.getInstance().commitSMR(epochNumber);
             log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
         }
-        System.out.println("Epoch processed in "+(System.currentTimeMillis()-startTime)+"ms");
+
+        // Send response to clients
+        for (TransactionResponse txnResponse : response.getResponsesList()) {
+            StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(response.getID()));
+            if (responseObserver != null) {
+                TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
+                        .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
+                        .build();
+                responseObserver.onNext(newResponse);
+                responseObserver.onCompleted();
+            } else {
+                log.log(Level.WARNING, "Could not find appropriate response observer for transaction request: " + response);
+            }
+        }
+
+        if (clusterCommitMap.size() > 0) {
+            for (Map.Entry<String, ClusterPC> cpcEntry: clusterCommitMap.entrySet()) {
+                cpcEntry.getValue().callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
+                cpcEntry.getValue().callback.sendResponseToClient();
+            }
+        }
+
+        System.out.println("Epoch processed in " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     @Override
