@@ -191,8 +191,9 @@ public class EpochProcessor implements Runnable {
 
         if (clusterCommitMap.size() > 0) {
             for (Map.Entry<String, ClusterPC> cpcEntry: clusterCommitMap.entrySet()) {
-                cpcEntry.getValue().callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
-                cpcEntry.getValue().callback.sendResponseToClient();
+                ClusterDRWTProcessor callback = cpcEntry.getValue().callback;
+                callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
+                callback.sendResponseToClient();
             }
         }
 
