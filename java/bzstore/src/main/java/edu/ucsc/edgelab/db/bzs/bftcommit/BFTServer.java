@@ -125,7 +125,9 @@ public class BFTServer extends DefaultSingleRecoverable {
     }
 
     private Bzs.TransactionBatchResponse processBFTPrepare(Bzs.TransactionBatch transactionBatch) {
-        List<Bzs.TransactionResponse.Builder> responseList = getTransactionResponseBuilders(transactionBatch.getTransactionsList());
+        Integer epochNumber = Integer.decode(transactionBatch.getID());
+        List<Bzs.TransactionResponse.Builder> responseList =
+                getTransactionResponseBuilders(transactionBatch.getTransactionsList(), epochNumber);
 
         Bzs.TransactionBatchResponse.Builder tbr = Bzs.TransactionBatchResponse.newBuilder();
 
@@ -133,7 +135,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             tbr = tbr.addResponses(builder.build());
         }
         if (transactionBatch.getRemotePrepareTxnCount() > 0) {
-            List<Bzs.ClusterPCResponse> cpcResponses = processClusterPrepareRequests(transactionBatch.getRemotePrepareTxnList());
+            List<Bzs.ClusterPCResponse> cpcResponses = processClusterPrepareRequests(transactionBatch.getRemotePrepareTxnList(), epochNumber);
             for (Bzs.ClusterPCResponse cpcResponse : cpcResponses) {
                 tbr = tbr.addRemotePrepareTxnResponse(cpcResponse);
             }
@@ -141,7 +143,7 @@ public class BFTServer extends DefaultSingleRecoverable {
         return tbr.build();
     }
 
-    private List<Bzs.TransactionResponse.Builder> getTransactionResponseBuilders(List<Bzs.Transaction> transactionsList) {
+    private List<Bzs.TransactionResponse.Builder> getTransactionResponseBuilders(List<Bzs.Transaction> transactionsList, int epochNumber) {
         List<Bzs.TransactionResponse.Builder> responseList = new LinkedList<>();
         Serializer serializer = new Serializer(clusterID, replicaID);
         for (Bzs.Transaction txn : transactionsList) {
@@ -166,7 +168,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                     builder = builder.addWriteResponses(wresp);
 
                     // Update DB data cache.
-                    updateDBCache(wOp.getKey(), wOp.getValue(), txn.getEpochNumber());
+                    updateDBCache(epochNumber, wOp.getKey(), wOp.getValue(), txn.getEpochNumber());
                 }
             }
             responseList.add(builder);
@@ -174,12 +176,12 @@ public class BFTServer extends DefaultSingleRecoverable {
         return responseList;
     }
 
-    private List<Bzs.ClusterPCResponse> processClusterPrepareRequests(List<Bzs.ClusterPC> remotePrepareTxnList) {
+    private List<Bzs.ClusterPCResponse> processClusterPrepareRequests(List<Bzs.ClusterPC> remotePrepareTxnList, Integer epochNumber) {
         List<Bzs.ClusterPCResponse> cpcResponses = new LinkedList<>();
         for (Bzs.ClusterPC cpc : remotePrepareTxnList) {
             Bzs.ClusterPCResponse.Builder cpcResponseBuilder = Bzs.ClusterPCResponse.newBuilder();
             if (cpc.getTransactionsCount() > 0) {
-                List<Bzs.TransactionResponse.Builder> responseBuilders = getTransactionResponseBuilders(cpc.getTransactionsList());
+                List<Bzs.TransactionResponse.Builder> responseBuilders = getTransactionResponseBuilders(cpc.getTransactionsList(), epochNumber);
                 for (Bzs.TransactionResponse.Builder builder : responseBuilders) {
                     cpcResponseBuilder = cpcResponseBuilder.addResponses(builder.build());
                 }
@@ -191,11 +193,11 @@ public class BFTServer extends DefaultSingleRecoverable {
         return cpcResponses;
     }
 
-    private void updateDBCache(String key, String value, Integer epochNumber) {
+    private void updateDBCache(Integer epochNumber, String key, String value, Integer version) {
         if (!dbCache.containsKey(epochNumber)) {
             dbCache.put(epochNumber, new LinkedHashMap<>());
         }
-        dbCache.get(epochNumber).put(key, Bzs.DBData.newBuilder().setVersion(epochNumber).setValue(value).build());
+        dbCache.get(epochNumber).put(key, Bzs.DBData.newBuilder().setVersion(version).setValue(value).build());
     }
 
 
