@@ -2,11 +2,10 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.cluster.ClusterConnector;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 
 import java.util.Timer;
 import java.util.logging.Logger;
-
-import static edu.ucsc.edgelab.db.bzs.replica.EpochManager.getEpochTimeInMS;
 
 public class RemoteTransactionProcessor {
 
@@ -21,8 +20,8 @@ public class RemoteTransactionProcessor {
         this.clusterID = clusterID;
         this.replicaID = replicaID;
 
-        Integer epochTimeInMS = getEpochTimeInMS();
-        clusterConnector = new ClusterConnector(this.clusterID);
+        Integer epochTimeInMS = Configuration.getEpochTimeInMS();
+        clusterConnector = new ClusterConnector();
         Timer interClusterConnectorTimer = new Timer("InterClusterConnector", true);
         interClusterConnectorTimer.scheduleAtFixedRate(clusterConnector, epochTimeInMS* 500, epochTimeInMS * 1000 * 10);
     }

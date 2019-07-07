@@ -6,6 +6,7 @@ import edu.ucsc.edgelab.db.bzs.replica.ID;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,8 +17,8 @@ public class ClusterConnector extends TimerTask {
 
     public static final Logger LOGGER = Logger.getLogger(ClusterConnector.class.getName());
 
-    public ClusterConnector(Integer clusterID) {
-        this.clusterID = clusterID;
+    public ClusterConnector() {
+        this.clusterID = ID.getClusterID();
         clients = new LinkedHashMap<>();
     }
 
@@ -44,7 +45,7 @@ public class ClusterConnector extends TimerTask {
             if (!bzStoreClient.isConnected()) {
                 try {
                     bzStoreClient.shutdown();
-                } catch (InterruptedException e) {
+                } catch (Exception e) {
                     LOGGER.log(Level.WARNING,
                             "Exception occurred when trying to shutdown a client." + e.getLocalizedMessage());
                 }
@@ -76,10 +77,15 @@ public class ClusterConnector extends TimerTask {
 
     private static ClusterConnector connector = null;
 
-    public static ClusterClient getClusterClientInstance() {
+    public static void init() {
         if (connector == null) {
-            connector = new ClusterConnector(ID.getClusterID());
+            connector = new ClusterConnector();
         }
+        Timer t = new Timer();
+        t.scheduleAtFixedRate(connector, 300, 15000);
+    }
+
+    public static ClusterClient getClusterClientInstance() {
         return connector.getClusterClient();
     }
 }

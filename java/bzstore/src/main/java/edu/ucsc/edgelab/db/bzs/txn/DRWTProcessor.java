@@ -35,6 +35,7 @@ public class DRWTProcessor implements Runnable {
         ClusterClient clusterClient = ClusterConnector.getClusterClientInstance();
         Bzs.TransactionBatch prepareBatch = TxnUtils.getTransactionBatch(String.format("%d:%d", cid.intValue(), epochNumber.intValue()), txns.values(), Bzs.Operation.DRWT_PREPARE);
 
+        logger.info(String.format("DRWT Prepare batch: %s", prepareBatch));
         Bzs.TransactionBatchResponse batchResponse = clusterClient.execute(ClusterClient.DRWT_Operations.PREPARE_BATCH, prepareBatch, cid);
 
 

@@ -1,11 +1,9 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
-import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class EpochManager {
@@ -20,20 +18,10 @@ public class EpochManager {
     }
 
     private EpochManager() {
-        this.epochTimeInMS = getEpochTimeInMS();
+        this.epochTimeInMS = Configuration.getEpochTimeInMS();
     }
 
-    public static Integer getEpochTimeInMS() {
-        int epochTime;
-        try {
-            BZStoreProperties properties = new BZStoreProperties();
-            epochTime = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_time_ms));
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception occurred while getting epoch time. " + e.getLocalizedMessage());
-            epochTime = edu.ucsc.edgelab.db.bzs.configuration.Configuration.getDefaultEpochTimeInMS();
-        }
-        return epochTime;
-    }
+
 
     public void startEpochMaintenance() {
         TimedEpochMaintainer epochMaintainer = new TimedEpochMaintainer();
