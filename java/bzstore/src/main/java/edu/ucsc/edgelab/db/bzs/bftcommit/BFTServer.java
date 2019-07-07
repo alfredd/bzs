@@ -117,9 +117,13 @@ public class BFTServer extends DefaultSingleRecoverable {
     }
 
     private byte[] processSMRLogPrepare(Bzs.TransactionBatch transactionBatch) {
+        long startTime = System.currentTimeMillis();
         Bzs.SmrLogEntry smrLogEntry = transactionBatch.getSmrLogEntry();
         smrLogCache.put(smrLogEntry.getEpochNumber(), smrLogEntry);
-        return DigestUtils.md5(smrLogEntry.toByteArray());
+        byte[] bytes = DigestUtils.md5(smrLogEntry.toByteArray());
+        long duration = System.currentTimeMillis() - startTime;
+        logger.info("Time to generate Hash: "+duration);
+        return bytes;
     }
 
     private Bzs.TransactionBatchResponse processBFTPrepare(Bzs.TransactionBatch transactionBatch) {
