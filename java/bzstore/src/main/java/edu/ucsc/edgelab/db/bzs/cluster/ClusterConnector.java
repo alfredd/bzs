@@ -74,9 +74,12 @@ public class ClusterConnector extends TimerTask {
     }
 
 
-    private static final ClusterConnector connector = new ClusterConnector(ID.getClusterID());
+    private static ClusterConnector connector = null;
 
     public static ClusterClient getClusterClientInstance() {
+        if (connector == null) {
+            connector = new ClusterConnector(ID.getClusterID());
+        }
         return connector.getClusterClient();
     }
 }

@@ -56,11 +56,11 @@ public class EpochManager {
         synchronized (this) {
             Integer seq = sequenceNumber;
             if (seq > 0) {
-                serializer.resetEpoch();
                 final int epoch = epochNumber;
                 seq = sequenceNumber-1;
                 sequenceNumber = 0;
                 epochNumber += 1;
+                serializer.resetEpoch();
                 Epoch.setEpochNumber(epochNumber);
                 processEpoch(epoch, seq+EPOCH_BUFFER);
             }

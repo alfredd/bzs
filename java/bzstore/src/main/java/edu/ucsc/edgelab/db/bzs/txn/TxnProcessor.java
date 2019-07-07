@@ -29,7 +29,7 @@ public class TxnProcessor {
 
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {
         synchronized (this) {
-
+            log.info(String.format("Received transaction request: %s", request.toString()));
             if (!serializer.serialize(request)) {
                 log.info("Transaction cannot be serialized. Will abort. Request: " + request);
                 Bzs.TransactionResponse response =

@@ -11,12 +11,14 @@ import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class DRWTProcessor implements Runnable {
 
     private final Integer cid;
     private Map<TransactionID, Bzs.Transaction> txns;
     private final Integer epochNumber;
+    public static final Logger logger = Logger.getLogger(DRWTProcessor.class.getName());
 
     public DRWTProcessor(final Integer epochNumber, final Integer clusterID, final Map<TransactionID, Bzs.Transaction> transactions) {
         this.cid = clusterID;
@@ -32,7 +34,9 @@ public class DRWTProcessor implements Runnable {
     public void run() {
         ClusterClient clusterClient = ClusterConnector.getClusterClientInstance();
         Bzs.TransactionBatch prepareBatch = TxnUtils.getTransactionBatch(String.format("%d:%d", cid.intValue(), epochNumber.intValue()), txns.values(), Bzs.Operation.DRWT_PREPARE);
+
         Bzs.TransactionBatchResponse batchResponse = clusterClient.execute(ClusterClient.DRWT_Operations.PREPARE_BATCH, prepareBatch, cid);
+
 
         DependencyVectorManager.updateLocalClock(batchResponse.getDepVectorMap());
 
