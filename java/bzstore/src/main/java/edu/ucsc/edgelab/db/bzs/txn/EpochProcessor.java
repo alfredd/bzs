@@ -2,7 +2,6 @@ package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
-import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.*;
@@ -86,6 +85,7 @@ public class EpochProcessor implements Runnable {
 
         TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
         if (response != null) {
+            log.info(String.format("BFT Prepare response: %s", response.toString()));
             for (TransactionResponse txnResponse : response.getResponsesList()) {
                 TransactionStatus respStatus = txnResponse.getStatus();
                 TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
@@ -186,6 +186,7 @@ public class EpochProcessor implements Runnable {
     }
 
     public void addClusterPrepare(final LinkedBlockingQueue<ClusterPC> clusterPrepareBatch) {
+        log.info("Adding clusterPrepareBatch to prepare map: " + clusterPrepareBatch);
         for (ClusterPC cpc : clusterPrepareBatch) {
             clusterPrepareMap.put(cpc.callback.getID(), cpc);
         }

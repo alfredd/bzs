@@ -48,7 +48,7 @@ public class BFTClient {
     }
 
     public byte[] sendBytesToBFTServer(byte[] data) {
-        LOGGER.info("Starting db commit from client.");
+        LOGGER.info("Sending request to BFTServer.");
         byte[] reply;
         reply = serviceProxy.invokeOrdered(data);
         return reply;//Bzs.TransactionBatchResponse.parseFrom(reply);
