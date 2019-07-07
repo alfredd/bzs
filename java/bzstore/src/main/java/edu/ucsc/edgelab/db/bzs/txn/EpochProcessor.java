@@ -177,7 +177,9 @@ public class EpochProcessor implements Runnable {
 
         // Send response to clients
         for (TransactionResponse txnResponse : response.getResponsesList()) {
-            StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(response.getID()));
+            String id = response.getID();
+            log.info("Sending a response for transaction with ID " + id + ": " + response);
+            StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(id));
             if (responseObserver != null) {
                 TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
                         .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
@@ -190,7 +192,7 @@ public class EpochProcessor implements Runnable {
         }
 
         if (clusterCommitMap.size() > 0) {
-            for (Map.Entry<String, ClusterPC> cpcEntry: clusterCommitMap.entrySet()) {
+            for (Map.Entry<String, ClusterPC> cpcEntry : clusterCommitMap.entrySet()) {
                 ClusterDRWTProcessor callback = cpcEntry.getValue().callback;
                 callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
                 callback.sendResponseToClient();

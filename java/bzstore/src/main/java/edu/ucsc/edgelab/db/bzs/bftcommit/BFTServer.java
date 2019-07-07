@@ -145,13 +145,12 @@ public class BFTServer extends DefaultSingleRecoverable {
         List<Bzs.TransactionResponse.Builder> responseList = new LinkedList<>();
         Serializer serializer = new Serializer(clusterID, replicaID);
         for (Bzs.Transaction txn : transactionsList) {
-            TransactionID tid = TransactionID.getTransactionID(txn.getTransactionID());
             Bzs.TransactionStatus status = Bzs.TransactionStatus.ABORTED;
             if (serializer.serialize(txn)) {
                 status = Bzs.TransactionStatus.PREPARED;
             }
             Bzs.TransactionResponse.Builder builder = Bzs.TransactionResponse.newBuilder()
-                    .setTransactionID(tid.getTiD())
+                    .setTransactionID(txn.getTransactionID())
                     .setStatus(status);
             if (status.equals(Bzs.TransactionStatus.ABORTED)) {
                 responseList.add(builder);
