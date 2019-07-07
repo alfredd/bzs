@@ -51,9 +51,10 @@ public class BFTServer extends DefaultSingleRecoverable {
             logger.log(Level.SEVERE, "Exception occurred while parsing request: " + e.getLocalizedMessage(), e);
         }
         if (transactionBatch == null) {
+            logger.log(Level.WARNING, "Received BFT request is null");
             return getRandomBytes();
         }
-
+        logger.info("Received BFT request: "+ transactionBatch.toString());
 
         Bzs.Operation operation = transactionBatch.getOperation();
         switch (operation) {

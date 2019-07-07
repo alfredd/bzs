@@ -85,18 +85,31 @@ public class DistributedClient {
         } catch (Exception e) {
             LOGGER.log(Level.INFO, e.getMessage());
         }
+        String key = "Niger";
+        String key2 = "Tajikistan";
+        dclient.createNewTransactions();
+        dclient.write(key, "98");
+        dclient.commit();
+
+        dclient.createNewTransactions();
+        dclient.write(key2, "44");
+        dclient.commit();
+
         dclient.createNewTransactions();
 
-        String key = "Niger";
-        BZStoreData data = dclient.read(key);
+        BZStoreData data = null;
+        data = dclient.read(key);
         LOGGER.info("Data from db: " + data);
-        String key2 = "Tajikistan";
+
         data = dclient.read(key2);
         LOGGER.info("Data from db: " + data);
-        dclient.write(key, "99");
-        dclient.write(key2, "99");
+
+        dclient.write(key, "2");
+        dclient.write(key2, "3");
+
         Bzs.Transaction t = dclient.transaction.getTransaction();
         long startTime = System.currentTimeMillis();
+
         dclient.commit();
         System.out.println("Commit processed in "+(System.currentTimeMillis()-startTime)+"ms");
 

@@ -166,11 +166,12 @@ public class EpochProcessor implements Runnable {
         // Perform BFT Consensus on the SMR Log entry
         status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
         if (status < 0) {
-            log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch = %d.");
+            log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch "+epochNumber);
+        } else {
+            // Commit SMR log entry
+            BFTClient.getInstance().commitSMR(epochNumber);
+            log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
         }
-        // Commit SMR log entry
-        BFTClient.getInstance().commitSMR(epochNumber);
-        log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
     }
 
     @Override
