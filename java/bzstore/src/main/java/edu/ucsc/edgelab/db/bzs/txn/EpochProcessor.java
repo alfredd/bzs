@@ -37,6 +37,7 @@ public class EpochProcessor implements Runnable {
     }
 
     public void processEpoch() {
+        long startTime = System.currentTimeMillis();
         SmrLog.createLogEntry(epochNumber);
         Epoch.setEpochUnderExecution(epochNumber);
         DependencyVectorManager.setValue(ID.getClusterID(), epochNumber);
@@ -172,6 +173,7 @@ public class EpochProcessor implements Runnable {
             BFTClient.getInstance().commitSMR(epochNumber);
             log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
         }
+        System.out.println("Epoch processed in "+(System.currentTimeMillis()-startTime)+"ms");
     }
 
     @Override

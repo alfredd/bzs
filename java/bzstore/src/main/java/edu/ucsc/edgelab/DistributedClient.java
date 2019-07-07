@@ -87,11 +87,16 @@ public class DistributedClient {
         }
         String key = "Niger";
         String key2 = "Tajikistan";
-        dclient.createNewTransactions();
-        dclient.write(key, "98");
-        dclient.commit();
 
         dclient.createNewTransactions();
+        dclient.read(key);
+        dclient.write(key, "42");
+
+        long startTime = System.currentTimeMillis();
+        dclient.commit();
+        System.out.println("Commit processed in "+(System.currentTimeMillis()-startTime)+"ms");
+
+        /*dclient.createNewTransactions();
         dclient.write(key2, "44");
         dclient.commit();
 
@@ -108,10 +113,8 @@ public class DistributedClient {
         dclient.write(key2, "3");
 
         Bzs.Transaction t = dclient.transaction.getTransaction();
-        long startTime = System.currentTimeMillis();
 
-        dclient.commit();
-        System.out.println("Commit processed in "+(System.currentTimeMillis()-startTime)+"ms");
+        dclient.commit();*/
 
 //        dclient.createNewTransactions();
 //        key="Zambia";
