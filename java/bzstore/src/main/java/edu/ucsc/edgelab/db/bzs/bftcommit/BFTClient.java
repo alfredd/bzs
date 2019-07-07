@@ -48,7 +48,7 @@ public class BFTClient {
     }
 
     public byte[] sendBytesToBFTServer(byte[] data) {
-        LOGGER.info("Sending request to BFTServer.");
+        LOGGER.info("Sending request to BFTServer. Data length: "+ data.length+" bytes");
         byte[] reply;
         long smrCommitStartTime = System.currentTimeMillis();
         reply = serviceProxy.invokeOrdered(data);
