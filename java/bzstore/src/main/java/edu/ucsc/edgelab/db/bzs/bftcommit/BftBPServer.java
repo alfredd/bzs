@@ -9,6 +9,8 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -43,5 +45,18 @@ public class BftBPServer extends DefaultSingleRecoverable {
     @Override
     public byte[] appExecuteUnordered(byte[] bytes, MessageContext messageContext) {
         return new byte[0];
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        List<Thread> threads = new LinkedList<>();
+        for (int i = 0; i < 4; i++) {
+            int finalI = i;
+            Thread thread = new Thread(() -> new BftBPServer(finalI));
+            thread.start();
+            threads.add(thread);
+        }
+
+        for(Thread t: threads)
+            t.join();
     }
 }
