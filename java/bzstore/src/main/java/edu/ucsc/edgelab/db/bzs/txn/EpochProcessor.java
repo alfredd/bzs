@@ -89,8 +89,7 @@ public class EpochProcessor implements Runnable {
             for (TransactionResponse txnResponse : response.getResponsesList()) {
                 TransactionStatus respStatus = txnResponse.getStatus();
                 TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
-                switch (respStatus) {
-                    case ABORTED:
+                if (respStatus != TransactionStatus.PREPARED) {
                         TxnUtils.sendAbortToClient(txnResponse, transactionID);
                         Transaction txn = TransactionCache.getTransaction(transactionID);
                         LockManager.releaseLocks(txn);
@@ -99,12 +98,6 @@ public class EpochProcessor implements Runnable {
                         if (dRWTxns.containsKey(transactionID))
                             dRWTxns.remove(transactionID);
                         allRWT.remove(transactionID);
-                        break;
-                    case PREPARED:
-//                        Map<TransactionID, Transaction> tempMap = lRWTxns;
-//                        if (dRWTxns.containsKey(transactionID))
-//                            tempMap = dRWTxns;
-//                        updateVersion(tempMap, transactionID, txnResponse);
                 }
             }
             if (response.getRemotePrepareTxnResponseCount() > 0) {
