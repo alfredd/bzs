@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 public class Configuration {
 
-    public static final int WAIT_TIMEOUT = 5000;
+    public static final int WAIT_TIMEOUT = 30000;
     private static final int DEFAULT_EPOCH_TIME_IN_MS = 50;
     public static final int MAX_EPOCH_TXN = 2000;
     public static final long MAX_EPOCH_DURATION_MS = 30;
