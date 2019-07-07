@@ -168,9 +168,9 @@ public class EpochProcessor implements Runnable {
         // Perform BFT Consensus on the SMR Log entry
         long smrCommitStartTime = System.currentTimeMillis();
         status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
-        long smrCommitEndTime = System.currentTimeMillis();
+        long duration = System.currentTimeMillis()-smrCommitStartTime;
 
-        log.info("Time to prepare SMR log: "+(smrCommitEndTime-smrCommitStartTime)+"ms.");
+        log.info("Time to prepare SMR log: "+(duration)+"ms.");
         if (status < 0) {
             log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch " + epochNumber);
         } else {

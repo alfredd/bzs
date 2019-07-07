@@ -50,7 +50,11 @@ public class BFTClient {
     public byte[] sendBytesToBFTServer(byte[] data) {
         LOGGER.info("Sending request to BFTServer.");
         byte[] reply;
+        long smrCommitStartTime = System.currentTimeMillis();
         reply = serviceProxy.invokeOrdered(data);
+        long duration = System.currentTimeMillis()-smrCommitStartTime;
+
+        LOGGER.info("Time to Receive response from BFT Server: "+(duration)+"ms.");
         return reply;//Bzs.TransactionBatchResponse.parseFrom(reply);
     }
 
