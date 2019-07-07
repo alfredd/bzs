@@ -37,7 +37,7 @@ public class EpochManager {
 //                logger.info("Epoch updated.");
             }
         };
-        epochNumber = BZDatabaseController.getEpochCount()+1;
+        epochNumber = BZDatabaseController.getEpochCount() + 1;
         Timer t = new Timer();
         t.scheduleAtFixedRate(epochUpdater, Configuration.MAX_EPOCH_DURATION_MS, Configuration.MAX_EPOCH_DURATION_MS);
         dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
@@ -55,14 +55,14 @@ public class EpochManager {
     private Integer updateEpoch() {
         synchronized (this) {
             Integer seq = sequenceNumber;
-            if (seq > 0) {
+            if (seq > 0 || clusterCommitBatch.size() > 0 || clusterPrepareBatch.size() > 0 || DTxnCache.completedDRWTxnsExist()) {
                 final int epoch = epochNumber;
-                seq = sequenceNumber-1;
+                seq = sequenceNumber - 1;
                 sequenceNumber = 0;
                 epochNumber += 1;
                 serializer.resetEpoch();
                 Epoch.setEpochNumber(epochNumber);
-                processEpoch(epoch, seq+EPOCH_BUFFER);
+                processEpoch(epoch, seq + EPOCH_BUFFER);
             }
             return seq;
         }
@@ -91,7 +91,7 @@ public class EpochManager {
 
     private ClusterPC createClusterPCObj(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
         ClusterPC clusterPC = new ClusterPC();
-        clusterPC.batch=txnsToPrepare;
+        clusterPC.batch = txnsToPrepare;
         clusterPC.callback = clusterDRWTProcessor;
         return clusterPC;
     }
