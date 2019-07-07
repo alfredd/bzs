@@ -9,6 +9,7 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.data.MerkleBTreeManager;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
+import edu.ucsc.edgelab.db.bzs.replica.ID;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -32,11 +33,11 @@ public class BFTServer extends DefaultSingleRecoverable {
     private Map<Integer, Bzs.SmrLogEntry> smrLogCache = new LinkedHashMap<>();
     private Map<Integer, Map<String, Bzs.DBData>> dbCache = new LinkedHashMap<>();
 
-    public BFTServer(Integer clusterID, int replicaID, boolean isLeader) {
+    public BFTServer(boolean isLeader) {
         logger.info("Starting BFT-Smart Server.");
 //        count = 0;
-        this.replicaID = replicaID;
-        this.clusterID = clusterID;
+        this.replicaID = ID.getReplicaID();
+        this.clusterID = ID.getClusterID();
         this.checkLocks = isLeader;
         new ServiceReplica(replicaID, this, this);
         logger.info("Started: BFT-Smart Server.");
@@ -82,7 +83,8 @@ public class BFTServer extends DefaultSingleRecoverable {
             committed = true;
         } catch (InvalidCommitException e) {
             logger.log(Level.SEVERE,
-                    String.format("Could not commit to SMR Log: Epoch(%d). Exception message: %s. Retrying...  ", epoch.intValue(),  e.getLocalizedMessage()), e);
+                    String.format("Could not commit to SMR Log: Epoch(%d). Exception message: %s. Retrying...  ", epoch.intValue(),
+                            e.getLocalizedMessage()), e);
             try {
                 BZDatabaseController.commitSmrBlock(epoch, smrLogEntry);
                 committed = true;
@@ -104,19 +106,21 @@ public class BFTServer extends DefaultSingleRecoverable {
 
     private void commitDBCache(Integer epoch) {
         Map<String, Bzs.DBData> cache = dbCache.get(epoch);
-        for (Map.Entry<String, Bzs.DBData> entry : cache.entrySet()) {
-            try {
-                BZDatabaseController.commitDBData(entry.getKey(), entry.getValue());
-            } catch (InvalidCommitException e) {
-                logger.log(Level.SEVERE,
-                        String.format("Could not commit data: %s:%s: ", entry.getKey(), entry.getValue().toString()) + e.getLocalizedMessage(), e);
+        if (cache != null)
+            for (Map.Entry<String, Bzs.DBData> entry : cache.entrySet()) {
+                try {
+                    BZDatabaseController.commitDBData(entry.getKey(), entry.getValue());
+                } catch (InvalidCommitException e) {
+                    logger.log(Level.SEVERE,
+                            String.format("Could not commit data: %s:%s: ", entry.getKey(), entry.getValue().toString()) + e.getLocalizedMessage(),
+                            e);
+                }
             }
-        }
     }
 
     private byte[] processSMRLogPrepare(Bzs.TransactionBatch transactionBatch) {
         Bzs.SmrLogEntry smrLogEntry = transactionBatch.getSmrLogEntry();
-        smrLogCache.put(Integer.valueOf(smrLogEntry.getEpochNumber()), smrLogEntry);
+        smrLogCache.put(smrLogEntry.getEpochNumber(), smrLogEntry);
         return DigestUtils.md5(smrLogEntry.toByteArray());
     }
 

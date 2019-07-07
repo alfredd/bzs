@@ -98,7 +98,7 @@ public class BZStoreServer {
             BZStoreServer.this.stop();
         }));
         logger.info("Starting up BFTServer for "+ID.string());
-        BFTServer bftServer = new BFTServer(clusterID, replicaID, isLeader);
+        BFTServer bftServer = new BFTServer(isLeader);
         logger.info("Creating connection to BFT Server. ");
         BFTClient.createConnection();
         ClusterConnector.init();
