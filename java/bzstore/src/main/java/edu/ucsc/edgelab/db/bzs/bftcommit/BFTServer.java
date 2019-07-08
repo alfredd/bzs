@@ -123,6 +123,7 @@ public class BFTServer extends DefaultSingleRecoverable {
         byte[] bytes = DigestUtils.md5(smrLogEntry.toByteArray());
         long duration = System.currentTimeMillis() - startTime;
         logger.info("Time to generate Hash: "+duration);
+        logger.info("Generated Hash: " + Arrays.toString(bytes));
         return bytes;
     }
 
