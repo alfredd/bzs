@@ -90,10 +90,10 @@ message BFTCommitResponse {
 }
 
 enum TransactionStatus {
-    COMMITTED = 0;
+    TIMEOUT = 0;
     ABORTED = 1;
     PREPARED = 2;
-    TIMEOUT = 3;
+    COMMITTED = 3;
     FAILURE = 4;
 }
 
