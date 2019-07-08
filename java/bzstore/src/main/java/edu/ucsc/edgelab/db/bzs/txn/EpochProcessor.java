@@ -171,13 +171,17 @@ public class EpochProcessor implements Runnable {
         long duration = System.currentTimeMillis()-smrCommitStartTime;
 
         log.info("Time to prepare SMR log: "+(duration)+"ms.");
+        TransactionStatus commitStatus = TransactionStatus.COMMITTED;
         if (status < 0) {
             log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch " + epochNumber);
+            commitStatus = TransactionStatus.ABORTED;
         } else {
             // Commit SMR log entry
             BFTClient.getInstance().commitSMR(epochNumber);
             log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
         }
+
+
 
         // Send response to clients
         for (TransactionResponse txnResponse : response.getResponsesList()) {
@@ -187,6 +191,7 @@ public class EpochProcessor implements Runnable {
             if (responseObserver != null) {
                 TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
                         .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
+                        .setStatus(commitStatus)
                         .build();
                 responseObserver.onNext(newResponse);
                 responseObserver.onCompleted();

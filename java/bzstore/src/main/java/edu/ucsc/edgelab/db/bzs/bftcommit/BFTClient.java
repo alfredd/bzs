@@ -102,6 +102,7 @@ public class BFTClient {
         return sendBytesToBftServer(batch);
     }
 
+    @Deprecated
     private int sendBytesToBftServer(Bzs.TransactionBatch batch) {
         byte[] reply = sendBytesToBFTServer(batch.toByteArray());
         int id = -10;
@@ -121,12 +122,15 @@ public class BFTClient {
         String id = Integer.toString(logEntry.getEpochNumber());
         Bzs.TransactionBatch batch =
                 Bzs.TransactionBatch.newBuilder().setID(id).setOperation(Bzs.Operation.BFT_SMR_PREPARE).setSmrLogEntry(logEntry).build();
-        return sendBytesToBftServer(batch);
+        byte[] response = sendBytesToBFTServer(batch.toByteArray());
+
+        // TODO: How to know when the BFT consensus has failed?
+        return response.length;
     }
 
     public void commitSMR(final Integer epochNumber) {
         String id = Integer.toString(epochNumber);
         Bzs.TransactionBatch batch = Bzs.TransactionBatch.newBuilder().setOperation(Bzs.Operation.BFT_SMR_COMMIT).setID(id).build();
-        sendBytesToBftServer(batch);
+        sendBytesToBFTServer(batch.toByteArray());
     }
 }
