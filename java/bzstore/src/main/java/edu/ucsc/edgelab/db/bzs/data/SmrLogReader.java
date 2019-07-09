@@ -20,6 +20,7 @@ public class SmrLogReader {
             else
                 System.out.println(String.format("Error. SMRLOG[%d] is null or not present in the log.", i));
         }
+        db.close();
     }
 }
 

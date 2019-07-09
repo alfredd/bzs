@@ -112,6 +112,7 @@ public class BZStoreServer {
         if (server != null) {
             server.shutdown();
         }
+        BZDatabaseController.close();
     }
 
     private void blockUntilShutdown() throws InterruptedException {

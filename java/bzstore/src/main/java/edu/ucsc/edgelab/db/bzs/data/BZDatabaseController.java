@@ -118,6 +118,10 @@ public final class BZDatabaseController {
         }
         return depVec;
     }
+
+    public static void close() {
+        BZ_DATABASE_CONTROLLER.db.close();
+    }
 //    public static void rollbackForKeys(List<String> keys) {
 //        synchronized (BZ_DATABASE_CONTROLLER) {
 //            for(String key: keys) {
