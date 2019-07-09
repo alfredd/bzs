@@ -3,6 +3,8 @@ package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
+import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
@@ -32,12 +34,11 @@ public class Serializer {
         this.clusterID = clusterID;
         this.replicaID = replicaID;
         try {
-            BZStoreProperties properties = new BZStoreProperties();
-            Integer leader = Integer.decode(properties.getProperty(clusterID, BZStoreProperties.Configuration.leader));
-            checkLocks= leader==replicaID;
+            ServerInfo leaderInfo = Configuration.getLeaderInfo(clusterID);
+            checkLocks = leaderInfo.replicaID == replicaID;
         } catch (Exception e) {
-            log.log(Level.WARNING, "Exception occurred while getting the leader replica id: "+e.getLocalizedMessage(), e);
-            checkLocks = replicaID==0;
+            log.log(Level.WARNING, "Exception occurred while getting the leader replica id: " + e.getLocalizedMessage(), e);
+            checkLocks = replicaID == 0;
         }
     }
 
