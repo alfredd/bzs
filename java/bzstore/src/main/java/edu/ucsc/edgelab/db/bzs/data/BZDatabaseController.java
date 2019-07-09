@@ -1,6 +1,5 @@
 package edu.ucsc.edgelab.db.bzs.data;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.exceptions.InvalidCommitException;
 import org.rocksdb.RocksDBException;
@@ -18,10 +17,13 @@ public final class BZDatabaseController {
     public static void initDB(Integer cid, Integer rid) throws RocksDBException {
         BZ_DATABASE_CONTROLLER = new BZDatabaseController(cid, rid);
         Integer latestEpochCount = BZ_DATABASE_CONTROLLER.db.getEpochNumber();
+        LOGGER.info("Printing SMR log");
         for (int e = 0; e <= latestEpochCount; e++) {
             Bzs.SmrLogEntry smrEntry = getSmrBlock(e);
             if (smrEntry != null) {
                 LOGGER.log(Level.INFO, String.format("Smr Log entry #%d: %s", e, smrEntry.toString()));
+            } else {
+                LOGGER.log(Level.WARNING, String.format("Error. SMRLOG[%d] is null or not present in the log.", e));
             }
         }
     }
