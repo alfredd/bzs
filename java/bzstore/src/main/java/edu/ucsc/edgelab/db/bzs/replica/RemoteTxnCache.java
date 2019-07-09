@@ -4,11 +4,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.logging.Logger;
 
 public class RemoteTxnCache {
 
     private RemoteTxnCache() {
     }
+
+    public static final Logger logger = Logger.getLogger(RemoteTxnCache.class.getName());
 
     private static Set<String> batchIDs = new ConcurrentSkipListSet<>();
 
@@ -19,7 +22,9 @@ public class RemoteTxnCache {
     }
 
     public static boolean isPrepared(String id) {
-        return batchIDs.contains(id);
+        boolean found = batchIDs.contains(id);
+        logger.info(String.format("ID: %s found: ", id)+found +". Prepared batch IDs: "+ batchIDs);
+        return found;
     }
 
     public static boolean isTIDInPreparedBatch(String id, TransactionID tid) {
@@ -30,7 +35,7 @@ public class RemoteTxnCache {
 
     public static void addTIDsToPreparedBatch(String id, Set<TransactionID> preparedTIDs) {
         if (!isPrepared(id)) {
-            batchIDs.add(id);
+            addBatchIDToPrepared(id);
             preparedTIDsForBatch.put(id, preparedTIDs);
         } else {
             preparedTIDsForBatch.get(id).addAll(preparedTIDs);

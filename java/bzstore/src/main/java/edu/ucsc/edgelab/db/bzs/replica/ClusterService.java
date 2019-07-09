@@ -50,7 +50,10 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private void sendBatchAbort(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
         Bzs.TransactionBatchResponse.Builder responseBuilder = Bzs.TransactionBatchResponse.newBuilder().setID(request.getID());
         for (Bzs.Transaction txn : request.getTransactionsList()) {
-            responseBuilder.addResponses(Bzs.TransactionResponse.newBuilder().setTransactionID(txn.getTransactionID()).setStatus(Bzs.TransactionStatus.FAILURE).build());
+            responseBuilder.addResponses(Bzs.TransactionResponse.newBuilder()
+                    .setTransactionID(txn.getTransactionID())
+                    .setStatus(Bzs.TransactionStatus.FAILURE)
+                    .build());
         }
         responseObserver.onNext(responseBuilder.build());
         responseObserver.onCompleted();
