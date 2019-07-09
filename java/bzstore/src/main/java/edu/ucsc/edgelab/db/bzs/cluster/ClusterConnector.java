@@ -82,7 +82,7 @@ public class ClusterConnector extends TimerTask {
             connector = new ClusterConnector();
         }
         Timer t = new Timer();
-        t.scheduleAtFixedRate(connector, 300, 15000);
+        t.scheduleAtFixedRate(connector, 300, 15*1000*20);
     }
 
     public static ClusterClient getClusterClientInstance() {
