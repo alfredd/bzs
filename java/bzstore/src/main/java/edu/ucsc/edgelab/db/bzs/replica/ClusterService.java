@@ -38,7 +38,9 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
         log.info(String.format("Received batch commit request: %s", request.toString()));
         ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessorMap.get(request.getID());
-        if (clusterDRWTProcessor==null || (!RemoteTxnCache.isPrepared(clusterDRWTProcessor.getID()))) {
+        if (clusterDRWTProcessor == null || (!RemoteTxnCache.isPrepared(clusterDRWTProcessor.getID()))) {
+            log.info(String.format("Transaction batch with Request ID: %s not found in prepared jobs cache. Reqeust: %s", request.getID(),
+                    request.toString()));
             sendBatchAbort(request, responseObserver);
             return;
         }
@@ -75,7 +77,6 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     }
 
 
-
     @Override
     public void commitPrepare(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         Bzs.TransactionResponse response;
@@ -83,7 +84,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         String transactionID = request.getTransactionID();
         boolean serializable = serializer.serialize(request);
         if (!serializable) {
-            log.info("Transaction is not serializable: "+request);
+            log.info("Transaction is not serializable: " + request);
             sendResponseToCluster(request.getTransactionID(), responseObserver, Bzs.TransactionStatus.ABORTED,
                     Bzs.TransactionResponse.newBuilder(), 0);
 //            performOperationAndSendResponse(transactionID, responseObserver, null, Bzs.TransactionStatus.ABORTED);
@@ -100,7 +101,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 try {
                     batch = createTransactionBatch(request, operation);
                     batchResponse = BFTClient.getInstance().performCommitPrepare(batch);
-                    log.info("Response of ClusterService Prepare: "+ batchResponse);
+                    log.info("Response of ClusterService Prepare: " + batchResponse);
                 } catch (InvalidCommitException e) {
                     log.log(Level.WARNING, e.getLocalizedMessage());
                 }
