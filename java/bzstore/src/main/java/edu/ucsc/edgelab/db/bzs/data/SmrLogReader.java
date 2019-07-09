@@ -13,7 +13,7 @@ public class SmrLogReader {
         BackendDb db = new BackendDb(cid, rid);
         Integer epoch = db.getEpochNumber();
         for (int i = 0; i <= epoch; i++) {
-            Bzs.SmrLogEntry smrlogEntry = db.getSmrBlock(epoch.toString());
+            Bzs.SmrLogEntry smrlogEntry = db.getSmrBlock(Integer.toString(i));
             if (smrlogEntry != null)
                 System.out.println(String.format("Epoch: %d, SMR LOG[%d]: %s", epoch.intValue(), epoch.intValue(), smrlogEntry.toString()));
             else
