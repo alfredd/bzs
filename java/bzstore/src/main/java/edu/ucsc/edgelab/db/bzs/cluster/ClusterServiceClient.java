@@ -94,12 +94,4 @@ public class ClusterServiceClient {
         log.log(Level.INFO, "TransactionBatch abort response: " + response);
         return response;
     }
-
-
-    public static void main(String[] args) {
-        ClusterServiceClient csc = new ClusterServiceClient("localhost", 45033);
-        Bzs.TransactionBatchResponse response = csc.prepareAll(Bzs.TransactionBatch.newBuilder().setID("55:32").build());
-        System.out.println(response);
-
-    }
 }
