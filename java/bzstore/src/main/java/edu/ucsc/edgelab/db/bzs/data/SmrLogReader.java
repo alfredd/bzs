@@ -13,11 +13,12 @@ public class SmrLogReader {
         BackendDb db = new BackendDb(cid, rid);
         Integer epoch = db.getEpochNumber();
         for (int i = 0; i <= epoch; i++) {
-            Bzs.SmrLogEntry smrlogEntry = db.getSmrBlock(Integer.toString(i));
+            String epochNumber = Integer.toString(i);
+            Bzs.SmrLogEntry smrlogEntry = db.getSmrBlock(epochNumber);
             if (smrlogEntry != null)
-                System.out.println(String.format("Epoch: %d, SMR LOG[%d]: %s", epoch.intValue(), epoch.intValue(), smrlogEntry.toString()));
+                System.out.println(String.format("Epoch: %d, SMR LOG[%d]: %s", i, i, smrlogEntry.toString()));
             else
-                System.out.println(String.format("Error. SMRLOG[%d] is null or not present in the log.", epoch.intValue()));
+                System.out.println(String.format("Error. SMRLOG[%d] is null or not present in the log.", i));
         }
     }
 }
