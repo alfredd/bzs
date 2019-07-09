@@ -23,7 +23,7 @@ public class BZStoreProperties {
 
         bzsProperties = new Properties();
         String pathname = System.getProperty("user.dir") + "/" + CONFIG_PROPERTIES;
-//        LOGGER.info("Properties path: " + pathname);
+        LOGGER.info("Properties path: " + pathname);
         FileInputStream inStream = null;
         try {
             inStream = new FileInputStream(new File(pathname));
@@ -52,8 +52,7 @@ public class BZStoreProperties {
     public String getProperty(Integer clusterID, Configuration property) throws UnknownConfiguration {
         String property_value = bzsProperties.getProperty(property.name() + "." + clusterID);
         if (property_value == null) {
-            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.",
-                    property.name()));
+            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
         }
         return property_value;
     }
@@ -61,8 +60,7 @@ public class BZStoreProperties {
     public String getProperty(Configuration property) throws UnknownConfiguration {
         String property_value = bzsProperties.getProperty(property.name());
         if (property_value == null) {
-            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.",
-                    property.name()));
+            throw new UnknownConfiguration(String.format("Property '%s' not found in configurations.", property.name()));
         }
         return property_value;
     }
