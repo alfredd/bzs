@@ -58,7 +58,8 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
         id = request.getID();
         batchResponseBuilder = batchResponseBuilder.setID(id);
         for (Bzs.Transaction transaction : request.getTransactionsList()) {
-            txnMap.put(TransactionID.getTransactionID(transaction.getTransactionID()), transaction);
+            TransactionID transactionID = TransactionID.getTransactionID(transaction.getTransactionID());
+            txnMap.put(transactionID, transaction);
         }
     }
 
@@ -69,11 +70,13 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
 
     @Override
     public void addToFailedList(Bzs.Transaction t) {
+//        TransactionID transactionID = TransactionID.getTransactionID(t.getTransactionID());
         Bzs.TransactionResponse tr = Bzs.TransactionResponse.newBuilder()
                 .setTransactionID(t.getTransactionID())
                 .setEpochNumber(t.getEpochNumber())
                 .setStatus(Bzs.TransactionStatus.FAILURE)
                 .build();
+//        txnMap.remove(transactionID);
         batchResponseBuilder = batchResponseBuilder.addResponses(tr);
     }
 

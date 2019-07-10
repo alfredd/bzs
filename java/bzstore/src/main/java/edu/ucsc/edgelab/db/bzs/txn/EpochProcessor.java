@@ -55,10 +55,8 @@ public class EpochProcessor implements Runnable {
                 if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
-//                        dRWT.add(tid);
                         dRWTxns.put(tid, rwt);
                     } else {
-//                        lRWT.add(tid);
                         lRWTxns.put(tid, rwt);
                     }
                     allRWT.put(tid, rwt);
@@ -86,63 +84,76 @@ public class EpochProcessor implements Runnable {
                 allRWTxnLocalBatch = TransactionBatch.newBuilder(allRWTxnLocalBatch).addRemotePrepareTxn(clusterPC).build();
             }
         }
-        if (actualTxnPrepareCount<=0) {
-            log.log(Level.WARNING, "No transactions found in this Epoch: "+ epochNumber);
-        }
 
-        TransactionBatchResponse transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
-        if (transactionBatchResponse != null) {
-            log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
-            for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
-                TransactionStatus respStatus = txnResponse.getStatus();
-                TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
-                if (respStatus != TransactionStatus.PREPARED) {
-                    TxnUtils.sendAbortToClient(txnResponse, transactionID);
-                    Transaction txn = TransactionCache.getTransaction(transactionID);
-                    LockManager.releaseLocks(txn);
-                    if (lRWTxns.containsKey(transactionID))
-                        lRWTxns.remove(transactionID);
-                    if (dRWTxns.containsKey(transactionID))
-                        dRWTxns.remove(transactionID);
-                    allRWT.remove(transactionID);
-                }
-            }
-            if (transactionBatchResponse.getRemotePrepareTxnResponseCount() > 0) {
-                for (ClusterPCResponse responseClusterPC : transactionBatchResponse.getRemotePrepareTxnResponseList()) {
-                    ClusterPC cpc = clusterPrepareMap.get(responseClusterPC.getID());
-                    Set<TransactionID> preparedTIDs = new LinkedHashSet<>();
-                    for (TransactionResponse txnResponse : responseClusterPC.getResponsesList()) {
-                        cpc.callback.addProcessedResponse(txnResponse);
-                        if (txnResponse.getStatus().equals(TransactionStatus.PREPARED)) {
-                            preparedTIDs.add(TransactionID.getTransactionID(txnResponse.getTransactionID()));
-                        }
-                    }
-                    SmrLog.twoPCPrepared(epochNumber, cpc.batch, cpc.callback.getID());
-                    RemoteTxnCache.addTIDsToPreparedBatch(responseClusterPC.getID(), preparedTIDs);
-                    cpc.callback.setPreparedEpoch(epochNumber);
-                    cpc.callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
-                    cpc.callback.sendResponseToClient();
-                }
-            }
+        TransactionBatchResponse transactionBatchResponse = null;
+
+        if (actualTxnPrepareCount <= 0) {
+            log.log(Level.WARNING, "No transactions found in this Epoch: " + epochNumber);
         } else {
-            // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
-        }
+            log.info("Preparing transactions.");
+            transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
+            if (transactionBatchResponse != null) {
+                log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
+                for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
+                    TransactionStatus respStatus = txnResponse.getStatus();
+                    TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
+                    if (respStatus != TransactionStatus.PREPARED) {
+                        TxnUtils.sendAbortToClient(txnResponse, transactionID);
+                        Transaction txn = TransactionCache.getTransaction(transactionID);
+                        LockManager.releaseLocks(txn);
+                        if (lRWTxns.containsKey(transactionID)) {
+                            lRWTxns.remove(transactionID);
+                        }
+                        if (dRWTxns.containsKey(transactionID)) {
+                            dRWTxns.remove(transactionID);
+                        }
+                        allRWT.remove(transactionID);
+                    }
+                }
+                if (transactionBatchResponse.getRemotePrepareTxnResponseCount() > 0) {
+                    for (ClusterPCResponse responseClusterPC : transactionBatchResponse.getRemotePrepareTxnResponseList()) {
+                        ClusterPC cpc = clusterPrepareMap.get(responseClusterPC.getID());
+                        Set<TransactionID> preparedTIDs = new LinkedHashSet<>();
+                        for (TransactionResponse txnResponse : responseClusterPC.getResponsesList()) {
+                            cpc.callback.addProcessedResponse(txnResponse);
+                            if (txnResponse.getStatus().equals(TransactionStatus.PREPARED)) {
+                                preparedTIDs.add(TransactionID.getTransactionID(txnResponse.getTransactionID()));
+                            }
+                        }
+                        SmrLog.twoPCPrepared(epochNumber, cpc.batch, cpc.callback.getID());
+                        String id = responseClusterPC.getID();
+                        log.info("Adding prepared 2PC transactions to RemoteTxnCache: "+ id+", list of preparedTIDs: "+ preparedTIDs);
+                        RemoteTxnCache.addTIDsToPreparedBatch(id, preparedTIDs);
+                        cpc.callback.setPreparedEpoch(epochNumber);
+                        cpc.callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
+                        cpc.callback.sendResponseToClient();
+                    }
+                }
+            } else {
+                log.log(Level.WARNING, "Transaction batch response was null. Epoch: " + epochNumber);
+                // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
+            }
 
-        Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns, ID.getClusterID());
-        for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
-            DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
-            threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
+            Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns, ID.getClusterID());
+            for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
+                DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
+                threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
+            }
+            DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
         }
-        DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
 
         int epochLCE = -1;
         if (clusterCommitMap.size() > 0) {
+            log.info("Creating BFT 2PC commit request in SMR log.");
             for (Map.Entry<String, ClusterPC> cpcEntry : clusterCommitMap.entrySet()) {
                 ClusterPC cpc = cpcEntry.getValue();
                 String id = cpcEntry.getKey();
+                log.info("2PC Transactions to commit: " + cpc.batch + ", ID: " + id);
                 Set<Transaction> prepared2PCTxns = new LinkedHashSet<>();
                 for (Transaction t : cpc.batch) {
-                    if (RemoteTxnCache.isTIDInPreparedBatch(id, TransactionID.getTransactionID(t.getTransactionID()))) {
+                    TransactionID transactionID = TransactionID.getTransactionID(t.getTransactionID());
+                    if (RemoteTxnCache.isTIDInPreparedBatch(id, transactionID)) {
+                        log.info("Found transaction in prepared batch: "+ transactionID);
                         prepared2PCTxns.add(t);
                     } else {
                         cpc.callback.addToFailedList(t);
@@ -188,20 +199,22 @@ public class EpochProcessor implements Runnable {
 
 
         // Send transactionBatchResponse to clients
-        for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
-            String id = txnResponse.getTransactionID();
-            log.info("Sending a transactionBatchResponse for transaction with ID " + id + ": " + transactionBatchResponse);
-            StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(id));
-            if (responseObserver != null) {
-                TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
-                        .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
-                        .setStatus(commitStatus)
-                        .build();
-                responseObserver.onNext(newResponse);
-                responseObserver.onCompleted();
-            } else {
-                log.log(Level.WARNING,
-                        "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
+        if (transactionBatchResponse != null) {
+            for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
+                String id = txnResponse.getTransactionID();
+                log.info("Sending a transactionBatchResponse for transaction with ID " + id + ": " + transactionBatchResponse);
+                StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(id));
+                if (responseObserver != null) {
+                    TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
+                            .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
+                            .setStatus(commitStatus)
+                            .build();
+                    responseObserver.onNext(newResponse);
+                    responseObserver.onCompleted();
+                } else {
+                    log.log(Level.WARNING,
+                            "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
+                }
             }
         }
 

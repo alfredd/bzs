@@ -102,7 +102,7 @@ public class BFTServer extends DefaultSingleRecoverable {
     }
 
     private void commitDBCache(Integer epoch) {
-        Map<String, Bzs.DBData> cache = dbCache.get(epoch);
+        Map<String, Bzs.DBData> cache = dbCache.remove(epoch);
         if (cache != null)
             for (Map.Entry<String, Bzs.DBData> entry : cache.entrySet()) {
                 try {

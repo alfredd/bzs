@@ -74,7 +74,8 @@ public class TxnProcessor {
     }
 
     public void commitTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
-        Set<Bzs.Transaction> txnsToPrepare = commonRemoteTxnProcessCode(clusterDRWTProcessor, false);
+        Set<Bzs.Transaction> txnsToPrepare = new LinkedHashSet<>();
+        txnsToPrepare.addAll(clusterDRWTProcessor.getRequest().getTransactionsList());
         epochManager.clusterCommit(txnsToPrepare, clusterDRWTProcessor);
     }
 }

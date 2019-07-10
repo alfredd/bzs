@@ -50,6 +50,7 @@ public class DRWTProcessor implements Runnable {
                 logger.info("Transaction was not prepared: " + response);
                 TxnUtils.sendAbortToClient(response, tid);
                 Bzs.Transaction txn = txns.remove(tid);
+                TransactionCache.removeHistory(tid);
                 LockManager.releaseLocks(txn);
                 abortSet.add(tid);
             }
