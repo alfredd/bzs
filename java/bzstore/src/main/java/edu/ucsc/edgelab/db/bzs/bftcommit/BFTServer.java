@@ -161,15 +161,14 @@ public class BFTServer extends DefaultSingleRecoverable {
                 continue;
             }
             for (Bzs.Write wOp : txn.getWriteOperationsList()) {
+                Bzs.WriteResponse wresp = Bzs.WriteResponse.newBuilder()
+                        .setWriteOperation(wOp)
+                        .setVersion(epochNumber)
+                        .build();
+                builder = builder.addWriteResponses(wresp);
                 if (wOp.getClusterID() == this.clusterID) {
-                    Bzs.WriteResponse wresp = Bzs.WriteResponse.newBuilder()
-                            .setWriteOperation(wOp)
-                            .setVersion(txn.getEpochNumber())
-                            .build();
-                    builder = builder.addWriteResponses(wresp);
-
                     // Update DB data cache.
-                    updateDBCache(epochNumber, wOp.getKey(), wOp.getValue(), txn.getEpochNumber());
+                    updateDBCache(epochNumber, wOp.getKey(), wOp.getValue(), epochNumber);
                 }
             }
             responseList.add(builder);

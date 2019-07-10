@@ -85,10 +85,10 @@ public class EpochProcessor implements Runnable {
             }
         }
 
-        TransactionBatchResponse response = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
-        if (response != null) {
-            log.info(String.format("BFT Prepare response: %s", response.toString()));
-            for (TransactionResponse txnResponse : response.getResponsesList()) {
+        TransactionBatchResponse transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
+        if (transactionBatchResponse != null) {
+            log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
+            for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
                 TransactionStatus respStatus = txnResponse.getStatus();
                 TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
                 if (respStatus != TransactionStatus.PREPARED) {
@@ -102,8 +102,8 @@ public class EpochProcessor implements Runnable {
                     allRWT.remove(transactionID);
                 }
             }
-            if (response.getRemotePrepareTxnResponseCount() > 0) {
-                for (ClusterPCResponse responseClusterPC : response.getRemotePrepareTxnResponseList()) {
+            if (transactionBatchResponse.getRemotePrepareTxnResponseCount() > 0) {
+                for (ClusterPCResponse responseClusterPC : transactionBatchResponse.getRemotePrepareTxnResponseList()) {
                     ClusterPC cpc = clusterPrepareMap.get(responseClusterPC.getID());
                     Set<TransactionID> preparedTIDs = new LinkedHashSet<>();
                     for (TransactionResponse txnResponse : responseClusterPC.getResponsesList()) {
@@ -183,10 +183,10 @@ public class EpochProcessor implements Runnable {
 
 
 
-        // Send response to clients
-        for (TransactionResponse txnResponse : response.getResponsesList()) {
+        // Send transactionBatchResponse to clients
+        for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
             String id = txnResponse.getTransactionID();
-            log.info("Sending a response for transaction with ID " + id + ": " + response);
+            log.info("Sending a transactionBatchResponse for transaction with ID " + id + ": " + transactionBatchResponse);
             StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(id));
             if (responseObserver != null) {
                 TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
@@ -196,7 +196,7 @@ public class EpochProcessor implements Runnable {
                 responseObserver.onNext(newResponse);
                 responseObserver.onCompleted();
             } else {
-                log.log(Level.WARNING, "Could not find appropriate response observer for transaction request: " + response);
+                log.log(Level.WARNING, "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
             }
         }
 
