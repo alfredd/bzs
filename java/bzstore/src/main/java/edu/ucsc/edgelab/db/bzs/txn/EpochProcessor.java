@@ -46,7 +46,7 @@ public class EpochProcessor implements Runnable {
         Map<TransactionID, Transaction> allRWT = new LinkedHashMap<>();
         Map<TransactionID, Transaction> lRWTxns = new LinkedHashMap<>();
         Map<TransactionID, Transaction> dRWTxns = new LinkedHashMap<>();
-
+        int actualTxnPrepareCount = 0;
         for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
 
@@ -62,6 +62,7 @@ public class EpochProcessor implements Runnable {
                         lRWTxns.put(tid, rwt);
                     }
                     allRWT.put(tid, rwt);
+                    actualTxnPrepareCount += 1;
                 } else {
                     log.log(Level.WARNING, "Transaction with TID" + tid + ", not found in transaction inProgressTxnMap.");
                 }
@@ -81,8 +82,12 @@ public class EpochProcessor implements Runnable {
                         .setOperation(Operation.DRWT_PREPARE)
                         .setID(pc.getKey())
                         .build();
+                actualTxnPrepareCount += pc.getValue().batch.size();
                 allRWTxnLocalBatch = TransactionBatch.newBuilder(allRWTxnLocalBatch).addRemotePrepareTxn(clusterPC).build();
             }
+        }
+        if (actualTxnPrepareCount<=0) {
+            log.log(Level.WARNING, "No transactions found in this Epoch: "+ epochNumber);
         }
 
         TransactionBatchResponse transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
@@ -168,9 +173,9 @@ public class EpochProcessor implements Runnable {
         // Perform BFT Consensus on the SMR Log entry
         long smrCommitStartTime = System.currentTimeMillis();
         status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
-        long duration = System.currentTimeMillis()-smrCommitStartTime;
+        long duration = System.currentTimeMillis() - smrCommitStartTime;
 
-        log.info("Time to prepare SMR log: "+(duration)+"ms.");
+        log.info("Time to prepare SMR log: " + (duration) + "ms.");
         TransactionStatus commitStatus = TransactionStatus.COMMITTED;
         if (status < 0) {
             log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch " + epochNumber);
@@ -180,7 +185,6 @@ public class EpochProcessor implements Runnable {
             BFTClient.getInstance().commitSMR(epochNumber);
             log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
         }
-
 
 
         // Send transactionBatchResponse to clients
@@ -196,7 +200,8 @@ public class EpochProcessor implements Runnable {
                 responseObserver.onNext(newResponse);
                 responseObserver.onCompleted();
             } else {
-                log.log(Level.WARNING, "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
+                log.log(Level.WARNING,
+                        "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
             }
         }
 
@@ -224,6 +229,7 @@ public class EpochProcessor implements Runnable {
     }
 
     public void addClusterCommit(LinkedBlockingQueue<ClusterPC> clusterCommitBatch) {
+        log.info("Adding clusterCommitBatch to commit map: " + clusterCommitBatch);
         for (ClusterPC cpc : clusterCommitBatch) {
             clusterCommitMap.put(cpc.callback.getID(), cpc);
         }

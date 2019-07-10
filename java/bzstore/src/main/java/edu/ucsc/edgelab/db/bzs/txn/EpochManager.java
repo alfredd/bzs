@@ -89,16 +89,16 @@ public class EpochManager {
         }
     }
 
-    private ClusterPC createClusterPCObj(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
+    private ClusterPC createClusterPCObj(Set<Bzs.Transaction> txns, ClusterDRWTProcessor clusterDRWTProcessor) {
         ClusterPC clusterPC = new ClusterPC();
-        clusterPC.batch = txnsToPrepare;
+        clusterPC.batch = txns;
         clusterPC.callback = clusterDRWTProcessor;
         return clusterPC;
     }
 
-    public void clusterCommit(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
+    public void clusterCommit(Set<Bzs.Transaction> txnsToCommit, ClusterDRWTProcessor clusterDRWTProcessor) {
         synchronized (this) {
-            ClusterPC clusterPC = createClusterPCObj(txnsToPrepare, clusterDRWTProcessor);
+            ClusterPC clusterPC = createClusterPCObj(txnsToCommit, clusterDRWTProcessor);
             clusterCommitBatch.add(clusterPC);
         }
     }
