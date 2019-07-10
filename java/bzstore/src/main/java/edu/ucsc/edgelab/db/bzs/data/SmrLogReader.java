@@ -14,7 +14,7 @@ public class SmrLogReader {
         Integer epoch = db.getEpochNumber();
         for (int i = 0; i <= epoch; i++) {
             String epochNumber = Integer.toString(i);
-            Bzs.SmrLogEntry smrlogEntry = db.getSmrBlock(epochNumber);
+            Bzs.SmrLogEntry smrlogEntry = db.getSmrBlock("S."+epochNumber);
             if (smrlogEntry != null)
                 System.out.println(String.format("Epoch: %d, SMR LOG[%d]: %s", i, i, smrlogEntry.toString()));
             else
