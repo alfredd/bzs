@@ -165,7 +165,7 @@ public class EpochProcessor implements Runnable {
                 SmrLog.twoPCCommitted(epochNumber, prepared2PCTxns, id);
             }
         }
-        SmrLog.updateLastCommittedEpoch(epochLCE);
+        SmrLog.updateEpochLCE(epochNumber, epochLCE);
 
         // Create SMR log entry. Including committed dRWTs, dvec, lce and perform a consensus on the SMR Log Entry.
 
@@ -173,7 +173,7 @@ public class EpochProcessor implements Runnable {
         SmrLog.distributedPrepared(epochNumber, dRWTxns.values());
         SmrLog.setLockLCEForEpoch(epochNumber);
         SmrLog.updateLastCommittedEpoch(epochNumber);
-        SmrLog.committedDRWT(DTxnCache.getCommittedTransactions());
+        SmrLog.committedDRWT(epochNumber, DTxnCache.getCommittedTransactions());
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
         int status = -1;
 

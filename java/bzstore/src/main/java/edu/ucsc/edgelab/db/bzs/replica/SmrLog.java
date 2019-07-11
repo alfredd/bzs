@@ -82,21 +82,26 @@ public class SmrLog {
         }
     }
 
-    public static void committedDRWT(Collection<Bzs.Transaction> transactions) {
-        int commitToEpoch = Epoch.getEpochUnderExecution();
+    public static void committedDRWT(int commitToEpoch, Collection<Bzs.Transaction> transactions) {
         if (transactions.size() < 1)
             return;
-        int epochNumber = transactions.iterator().next().getEpochNumber();
-        int lce = epochNumber;
-        if (lockLCEForEpoch == commitToEpoch) {
-            commitToEpoch = Epoch.getEpochNumber();
-            if (lceMap.containsKey(commitToEpoch)) {
-                if (lceMap.get(commitToEpoch) > epochNumber) {
-                    lce = lceMap.get(commitToEpoch);
-                }
+
+        int lce = -1;
+        for (Bzs.Transaction t: transactions) {
+            if (lce<t.getEpochNumber()) {
+                lce = t.getEpochNumber();
             }
         }
-        lceMap.put(commitToEpoch, lce);
+        updateEpochLCE(commitToEpoch, lce);
+//        if (lockLCEForEpoch == commitToEpoch) {
+//            commitToEpoch = Epoch.getEpochNumber();
+//            if (lceMap.containsKey(commitToEpoch)) {
+//                if (lceMap.get(commitToEpoch) > epochNumber) {
+//                    lce = lceMap.get(commitToEpoch);
+//                }
+//            }
+//        }
+//        lceMap.put(commitToEpoch, lce);
         SmrLogEntryCreator smrData = getSMRData(commitToEpoch);
         if (smrData != null) {
             for (Bzs.Transaction transaction : transactions) {
@@ -115,7 +120,7 @@ public class SmrLog {
     public static void updateLastCommittedEpoch(final Integer epoch) {
         SmrLogEntryCreator smrData = getSMRData(epoch);
         if (smrData != null) {
-            Integer lce = lastLCE;
+         /*   Integer lce = lastLCE;
             if (lceMap.containsKey(epoch)) {
                 lce = lceMap.get(epoch);
             } else {
@@ -124,7 +129,10 @@ public class SmrLog {
             smrData.updateLastCommittedEpoch(lce);
             final Integer lce1 = lceMap.get(epoch);
             if (lce1 > lastLCE)
-                lastLCE = lce1;
+                lastLCE = lce1;*/
+            Integer lce = lceMap.get(epoch);
+            lastLCE = lce;
+            smrData.updateLastCommittedEpoch(lce);
         }
     }
 

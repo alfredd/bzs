@@ -20,14 +20,16 @@ public class DTxnCache {
     }
 
     public static Collection<Bzs.Transaction> getCommittedTransactions() {
+        logger.info("");
         Set<Bzs.Transaction> committedTxns = new LinkedHashSet<>();
-        if (epochQueue.size() > 0) {
+        while (completedDRWTxnsExist()) {
             Integer head = epochQueue.getFirst();
             if (head != null) {
                 CacheKeeper cache = txnCache.get(head);
                 if (cache.allCompleted()) {
                     epochQueue.removeFirst();
-                    return cache.getCompletedTxns();
+                    completedEpochs.remove(head);
+                    committedTxns.addAll(cache.getCompletedTxns());
                 }
             }
         }
