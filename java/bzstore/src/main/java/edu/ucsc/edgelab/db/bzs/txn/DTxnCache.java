@@ -36,7 +36,7 @@ public class DTxnCache {
 
     public static boolean completedDRWTxnsExist() {
         boolean status;
-        status = completedEpochs.size() > 0 && completedEpochs.contains(epochQueue.getFirst());
+        status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(epochQueue.getFirst());
         return status;
     }
 
