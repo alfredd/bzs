@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.txn;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
@@ -24,6 +25,7 @@ public class EpochManager {
 
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
     private Serializer serializer;
+    private PerformanceTrace perfTracer;
 
 
     public EpochManager() {
@@ -71,11 +73,11 @@ public class EpochManager {
 
     protected void processEpoch(final Integer epoch, final Integer txnCount) {
         EpochProcessor processor = new EpochProcessor(epoch, txnCount, dTxnThreadPoolExecutor);
+        processor.addPerformanceTracer(perfTracer);
         processor.addClusterPrepare(clusterPrepareBatch);
         clusterPrepareBatch.clear();
         processor.addClusterCommit(clusterCommitBatch);
         clusterCommitBatch.clear();
-
         epochThreadPoolExecutor.addToFixedQueue(processor);
     }
 
@@ -102,6 +104,10 @@ public class EpochManager {
             ClusterPC clusterPC = createClusterPCObj(txnsToCommit, clusterDRWTProcessor);
             clusterCommitBatch.add(clusterPC);
         }
+    }
+
+    public void setPerformanceTracer(PerformanceTrace performanceTracer) {
+        this.perfTracer = performanceTracer;
     }
 }
 

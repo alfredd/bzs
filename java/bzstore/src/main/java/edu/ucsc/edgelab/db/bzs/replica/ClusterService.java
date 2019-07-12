@@ -80,7 +80,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     @Override
     public void commitPrepare(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
         Bzs.TransactionResponse response;
-        MetaInfo metaInfo = new LocalDataVerifier(clusterID).getMetaInfo(request);
+        MetaInfo metaInfo = new LocalDataVerifier().getMetaInfo(request);
         String transactionID = request.getTransactionID();
         boolean serializable = serializer.serialize(request);
         if (!serializable) {
@@ -192,7 +192,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         Bzs.Operation operation = Bzs.Operation.BFT_COMMIT;
         Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.COMMITTED;
         Bzs.TransactionStatus failureStatus = Bzs.TransactionStatus.ABORTED;
-        MetaInfo metaInfo = new LocalDataVerifier(clusterID).getMetaInfo(request);
+        MetaInfo metaInfo = new LocalDataVerifier().getMetaInfo(request);
         log.info("Committing transaction request: " + request);
         try {
             if (metaInfo.localWrite) {

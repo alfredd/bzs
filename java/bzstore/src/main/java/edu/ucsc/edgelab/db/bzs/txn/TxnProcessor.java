@@ -3,7 +3,6 @@ package edu.ucsc.edgelab.db.bzs.txn;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
-import edu.ucsc.edgelab.db.bzs.replica.ID;
 import edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
@@ -24,10 +23,11 @@ public class TxnProcessor {
 
     public TxnProcessor() {
         serializer = new Serializer();
+        localDataVerifier = new LocalDataVerifier();
+        performanceTracer = new PerformanceTrace();
         epochManager = new EpochManager();
         epochManager.setSerializer(serializer);
-        localDataVerifier = new LocalDataVerifier(ID.getClusterID());
-        performanceTracer = new PerformanceTrace();
+        epochManager.setPerformanceTracer(performanceTracer);
     }
 
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {

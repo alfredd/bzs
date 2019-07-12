@@ -1,13 +1,14 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.replica.ID;
 
 public class LocalDataVerifier {
 
     private final Integer clusterID;
 
-    public LocalDataVerifier(Integer clusterID) {
-        this.clusterID = clusterID;
+    public LocalDataVerifier() {
+        this.clusterID = ID.getClusterID();
     }
 
     public MetaInfo getMetaInfo(Bzs.Transaction transaction) {

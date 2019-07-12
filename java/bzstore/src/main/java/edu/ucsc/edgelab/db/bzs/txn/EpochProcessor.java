@@ -23,11 +23,12 @@ public class EpochProcessor implements Runnable {
     private final Integer txnCount;
     private static final Logger log = Logger.getLogger(EpochProcessor.class.getName());
     private final WedgeDBThreadPoolExecutor threadPoolExecutor;
-    private LocalDataVerifier localDataVerifier = new LocalDataVerifier(ID.getClusterID());
+    private LocalDataVerifier localDataVerifier = new LocalDataVerifier();
 
     private final Integer epochNumber;
     private Map<String, ClusterPC> clusterPrepareMap;
     private Map<String, ClusterPC> clusterCommitMap;
+    private PerformanceTrace perfTracer;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
@@ -39,6 +40,10 @@ public class EpochProcessor implements Runnable {
 
     public void processEpoch() {
         long startTime = System.currentTimeMillis();
+
+        // Perf trace
+//        perfTracer.setBatchStartTime(epochNumber, startTime);
+
         SmrLog.createLogEntry(epochNumber);
         Epoch.setEpochUnderExecution(epochNumber);
         DependencyVectorManager.setValue(ID.getClusterID(), epochNumber);
@@ -247,6 +252,10 @@ public class EpochProcessor implements Runnable {
             clusterCommitMap.put(cpc.callback.getID(), cpc);
         }
 
+    }
+
+    public void addPerformanceTracer(PerformanceTrace perfTracer) {
+        this.perfTracer = perfTracer;
     }
 }
 
