@@ -24,10 +24,10 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     private TxnProcessor transactionProcessor;
     private ForwardingClient forwardingClient = null;
 
-    public BZStoreService(Integer id, Integer clusterID, TxnProcessor tp, boolean isLeader) {
-        log.info("BZStore service started. Replica ID: " + id);
-        this.replicaID = id;
-        this.clusterID = clusterID;
+    public BZStoreService(TxnProcessor tp, boolean isLeader) {
+        this.replicaID = ID.getReplicaID();
+        this.clusterID = ID.getClusterID();
+        log.info("BZStore service started. Replica ID: " + replicaID);
 
         transactionProcessor = tp;
         ServerInfo leaderInfo = ServerInfo.getLeaderInfo(this.clusterID);

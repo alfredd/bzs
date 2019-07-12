@@ -29,10 +29,15 @@ public class Serializer {
 
     public static final Logger log = Logger.getLogger(Serializer.class.getName());
 
-
+    @Deprecated
     public Serializer(Integer clusterID, Integer replicaID) {
         this.clusterID = clusterID;
         this.replicaID = replicaID;
+    }
+
+    public Serializer() {
+        clusterID = ID.getClusterID();
+        replicaID = ID.getReplicaID();
         try {
             ServerInfo leaderInfo = Configuration.getLeaderInfo(clusterID);
             checkLocks = leaderInfo.replicaID == replicaID;

@@ -74,7 +74,7 @@ public class BZStoreServer {
             throw new RuntimeException(e.getLocalizedMessage(),e);
         }
         DependencyVectorManager.init();
-        transactionProcessor = new TxnProcessor(this.replicaID, this.clusterID);
+        transactionProcessor = new TxnProcessor();
     }
 
     private void setServerPort(int serverPort) {
@@ -87,10 +87,10 @@ public class BZStoreServer {
 //        if (isLeader)
 //            transactionProcessor.initTransactionProcessor();
         server = ServerBuilder.forPort(this.serverPort)
-                .addService(new BZStoreService(replicaID, clusterID, this.transactionProcessor, isLeader))
-                .addService(new BZStoreReplica(clusterID, replicaID, this.transactionProcessor, isLeader))
-                .addService(new ClusterService(clusterID, replicaID, this.transactionProcessor, isLeader))
-                .addService(new PkiService(clusterID))
+                .addService(new BZStoreService(this.transactionProcessor, isLeader))
+                .addService(new BZStoreReplica(this.transactionProcessor, isLeader))
+                .addService(new ClusterService(this.transactionProcessor, isLeader))
+                .addService(new PkiService())
                 .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

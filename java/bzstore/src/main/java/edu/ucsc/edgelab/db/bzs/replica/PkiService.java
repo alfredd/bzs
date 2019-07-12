@@ -8,8 +8,8 @@ public class PkiService extends PKIServiceGrpc.PKIServiceImplBase {
 
     private Integer replicaID;
 
-    public PkiService(Integer replicaID) {
-        this.replicaID = replicaID;
+    public PkiService() {
+        this.replicaID = ID.getReplicaID();
     }
 
     @Override

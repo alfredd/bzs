@@ -25,12 +25,12 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
     private Map<String, ClusterDRWTProcessorImpl> remoteJobProcessorMap = new LinkedHashMap<>();
 
 
-    public ClusterService(Integer clusterID, Integer replicaID, TxnProcessor processor, boolean isLeader) {
-        this.clusterID = clusterID;
-        this.replicaID = replicaID;
+    public ClusterService(TxnProcessor processor, boolean isLeader) {
+        this.clusterID = ID.getClusterID();
+        this.replicaID = ID.getReplicaID();
         this.amILeader = isLeader;
         this.processor = processor;
-        serializer = new Serializer(clusterID, replicaID);
+        serializer = new Serializer();
     }
 
 

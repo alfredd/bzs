@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
+import edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import io.grpc.stub.StreamObserver;
@@ -19,12 +20,14 @@ public class TxnProcessor {
     private EpochManager epochManager;
     public static final Logger log = Logger.getLogger(TxnProcessor.class.getName());
     private LocalDataVerifier localDataVerifier;
+    private final PerformanceTrace performanceTracer;
 
-    public TxnProcessor(Integer clusterID, Integer replicaID) {
-        serializer = new Serializer(clusterID, replicaID);
+    public TxnProcessor() {
+        serializer = new Serializer();
         epochManager = new EpochManager();
         epochManager.setSerializer(serializer);
         localDataVerifier = new LocalDataVerifier(ID.getClusterID());
+        performanceTracer = new PerformanceTrace();
     }
 
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {
