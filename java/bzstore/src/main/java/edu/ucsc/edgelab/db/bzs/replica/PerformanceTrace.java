@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.IntStream;
 
 public class PerformanceTrace {
 
@@ -105,7 +104,7 @@ public class PerformanceTrace {
                             "%d, %d, %d, %d, %d, %d, %d, %d, %f, " +
                             "%f, %f, %f, %f, %f, %f, %f\n ",
                     // TODO add more parameters for the performance analysis.
-                    m.batchNumber,
+                    m.epochNumber,
                     m.transactionCount, m.localTransactionCount, m.remoteTransactionCount, m.localPrepared, m.distributedPrepared,
                     m.localCompleted, m.distributedCompleted, m.localTransactionsFailed, m.remoteTransactionsFailed,
                     (m.localCompleted + m.distributedCompleted),
@@ -210,7 +209,7 @@ public class PerformanceTrace {
                                          final Integer localTransactionCount,
                                          final Integer remoteTransactionCount) {
         Metrics m = getMetricsForBatch(batchNumber);
-        m.batchNumber = batchNumber;
+        m.epochNumber = batchNumber;
         m.localTransactionCount = localTransactionCount;
         m.remoteTransactionCount = remoteTransactionCount;
         m.transactionCount = totalTransactionCount;
@@ -333,71 +332,6 @@ public class PerformanceTrace {
 
 }
 
-
-class Metrics {
-    int transactionCount = 0;
-    int localTransactionCount = 0;
-    int remoteTransactionCount = 0;
-    int batchNumber = 0;
-
-    long batchStartTime = 0;
-    long batchEndTime = 0;
-
-    long localPrepareStartTime = 0;
-    long distributedPrepareStartTime = 0;
-
-    long localPrepareEndTime = 0;
-    long distributedPrepareEndTime = 0;
-
-    int bytesPreparedInEpoch = 0;
-    int bytesCommittedInEpoch = 0;
-
-    long localCommitEndTime = 0;
-    long localCommitStartTime = 0;
-
-    int localTransactionsFailed = 0;
-    int remoteTransactionsFailed = 0;
-
-    int localPrepared = 0;
-    int distributedPrepared = 0;
-
-
-    int localCompleted = 0;
-    int distributedCompleted = 0;
-
-    @Override
-    public String toString() {
-        return String.format("transactionCount = %d \n" +
-                        "localTransactionCount = %d\n" +
-                        "remoteTransactionCount = %d\n" +
-                        "batchNumber = %d \n" +
-                        "batchStartTime = %d\n" +
-                        "batchEndTime %d \n" +
-//                        "localTransactionsCompleted = %d \n" +
-                        "localTransactionsFailed = %d \n" +
-//                        "remoteTransactionsCompleted = %d \n" +
-                        "remoteTransactionsFailed = %d \n" +
-                        "localPrepared = %d \n" +
-                        "distributedPrepared = %d \n" +
-                        "localCompleted = %d \n" +
-                        "distributedCompleted = %d ",
-                transactionCount,
-                localTransactionCount,
-                remoteTransactionCount,
-                batchNumber,
-                batchStartTime,
-                batchEndTime,
-//                localTransactionsCompleted,
-                localTransactionsFailed,
-//                remoteTransactionsCompleted,
-                remoteTransactionsFailed,
-                localPrepared,
-                distributedPrepared,
-                localCompleted,
-                distributedCompleted
-        );
-    }
-}
 
 class TransactionMetrics {
     int prepareBatch = 0;

@@ -43,8 +43,8 @@ public class EpochProcessor implements Runnable {
 
         // Perf trace
 //        perfTracer.setBatchStartTime(epochNumber, startTime);
-
         SmrLog.createLogEntry(epochNumber);
+
         Epoch.setEpochUnderExecution(epochNumber);
         DependencyVectorManager.setValue(ID.getClusterID(), epochNumber);
 
