@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class BenchmarkExecutor implements Runnable {
+public class DatabaseLoader implements Runnable {
 
     private final Integer clusterID;
     private List<String> wordList = new LinkedList<>();
@@ -23,7 +23,7 @@ public class BenchmarkExecutor implements Runnable {
     private int currentCompleted = 0;
     private int totalClusters = 0;
 
-    private static final Logger log = Logger.getLogger(BenchmarkExecutor.class.getName());
+    private static final Logger log = Logger.getLogger(DatabaseLoader.class.getName());
 
     private final TransactionProcessorINTF transactionProcessor;
 //    private final ReportBuilder reportBuilder;
@@ -33,7 +33,7 @@ public class BenchmarkExecutor implements Runnable {
     private final List<String> allWords;
     private boolean sendLocalOnly;
 
-    public BenchmarkExecutor(TransactionProcessorINTF transactionProcessor) throws IOException {
+    public DatabaseLoader(TransactionProcessorINTF transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
         this.clusterID = ID.getClusterID();
 

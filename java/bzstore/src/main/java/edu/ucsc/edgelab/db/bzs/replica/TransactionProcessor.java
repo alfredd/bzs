@@ -35,7 +35,7 @@ public class TransactionProcessor implements TransactionProcessorINTF {
     private static final Logger log = Logger.getLogger(TransactionProcessor.class.getName());
 
     private Integer replicaID;
-    private BenchmarkExecutor benchmarkExecutor;
+    private DatabaseLoader benchmarkExecutor;
     private BFTClient bftClient = null;
     private RemoteTransactionProcessor remoteTransactionProcessor;
     private List<TransactionID> remotePreparedList;
@@ -91,7 +91,7 @@ public class TransactionProcessor implements TransactionProcessorINTF {
 
     private void initLocalDatabase() {
         try {
-            benchmarkExecutor = new BenchmarkExecutor(this);
+            benchmarkExecutor = new DatabaseLoader(this);
             new Thread(benchmarkExecutor).start();
         } catch (IOException e) {
             log.log(Level.WARNING, "Creation of benchmark execution client failed: " + e.getLocalizedMessage(), e);

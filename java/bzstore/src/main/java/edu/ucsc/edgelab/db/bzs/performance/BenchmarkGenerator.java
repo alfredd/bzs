@@ -12,7 +12,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import static edu.ucsc.edgelab.db.bzs.replica.BenchmarkExecutor.hashmod;
+import static edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader.hashmod;
 
 public class BenchmarkGenerator {
 
