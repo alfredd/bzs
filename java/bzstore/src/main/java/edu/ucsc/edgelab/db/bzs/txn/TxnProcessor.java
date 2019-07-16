@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TxnProcessor {
+public class TxnProcessor implements TransactionProcessorINTF {
 
     private Serializer serializer;
     private EpochManager epochManager;
@@ -30,6 +30,7 @@ public class TxnProcessor {
         epochManager.setPerformanceTracer(performanceTracer);
     }
 
+    @Override
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {
         synchronized (this) {
             log.info(String.format("Received transaction request: %s", request.toString()));

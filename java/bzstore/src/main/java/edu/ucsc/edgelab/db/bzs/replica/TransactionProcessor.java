@@ -7,6 +7,7 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.txn.LocalDataVerifier;
 import edu.ucsc.edgelab.db.bzs.txn.MetaInfo;
+import edu.ucsc.edgelab.db.bzs.txn.TransactionProcessorINTF;
 import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 import io.grpc.stub.StreamObserver;
 
@@ -19,7 +20,7 @@ import static edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace.BatchMetric.faile
 import static edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace.BatchMetric.prepareBatchNumber;
 import static edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace.TimingMetric.*;
 
-public class TransactionProcessor {
+public class TransactionProcessor implements TransactionProcessorINTF {
 
     private Integer clusterID;
     private Integer maxBatchSize;
@@ -90,7 +91,7 @@ public class TransactionProcessor {
 
     private void initLocalDatabase() {
         try {
-            benchmarkExecutor = new BenchmarkExecutor(clusterID, this);
+            benchmarkExecutor = new BenchmarkExecutor(this);
             new Thread(benchmarkExecutor).start();
         } catch (IOException e) {
             log.log(Level.WARNING, "Creation of benchmark execution client failed: " + e.getLocalizedMessage(), e);
@@ -107,6 +108,7 @@ public class TransactionProcessor {
         return epochNumber;
     }
 
+    @Override
     public void processTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
 
         /*

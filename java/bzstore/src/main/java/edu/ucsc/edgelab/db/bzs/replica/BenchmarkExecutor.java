@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.ConnectionLessTransaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.txn.TransactionProcessorINTF;
 import io.grpc.stub.StreamObserver;
 
 import java.io.File;
@@ -24,17 +25,17 @@ public class BenchmarkExecutor implements Runnable {
 
     private static final Logger log = Logger.getLogger(BenchmarkExecutor.class.getName());
 
-    private final TransactionProcessor transactionProcessor;
-    private final ReportBuilder reportBuilder;
+    private final TransactionProcessorINTF transactionProcessor;
+//    private final ReportBuilder reportBuilder;
     private int totalCount;
     private int processed;
     private int flushed = 0;
     private final List<String> allWords;
     private boolean sendLocalOnly;
 
-    public BenchmarkExecutor(Integer clusterID, TransactionProcessor transactionProcessor) throws IOException {
+    public BenchmarkExecutor(TransactionProcessorINTF transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
-        this.clusterID = clusterID;
+        this.clusterID = ID.getClusterID();
 
         BZStoreProperties properties = new BZStoreProperties();
         this.totalClusters = Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count));
@@ -59,7 +60,7 @@ public class BenchmarkExecutor implements Runnable {
         }
         scanner.close();
 
-        String[] fields = new String[]{"Epoch Number, ",
+/*        String[] fields = new String[]{"Epoch Number, ",
                 "Total Transactions in Epoch, ",
                 "Transactions Processed In Epoch(S), ",
                 "Transactions Failed In Epoch(F), ",
@@ -73,7 +74,7 @@ public class BenchmarkExecutor implements Runnable {
         };
 
         reportBuilder = new ReportBuilder("Report_w_hash", fields);
-        wordList.addAll(words);
+        wordList.addAll(words);*/
 
 
         log.info("Total words read from file: " + wordList.size());
@@ -177,7 +178,7 @@ public class BenchmarkExecutor implements Runnable {
     public void logTransactionDetails(int epochNumber, int epochTransactionCount, int transactionsProcessedInEpoch,
                                       int transactionsFailedInEpoch, long epochProcessingStartTime,
                                       long epochProcessingEndTime, int bytesProcessedInEpoch) {
-        currentCompleted = transactionsProcessedInEpoch == 0 ? transactionsFailedInEpoch : transactionsProcessedInEpoch;
+ /*       currentCompleted = transactionsProcessedInEpoch == 0 ? transactionsFailedInEpoch : transactionsProcessedInEpoch;
         processed += currentCompleted;
         if (started && currentCompleted != previousCompleted) {
             flushed = 0;
@@ -207,14 +208,7 @@ public class BenchmarkExecutor implements Runnable {
                 flushed = 1;
                 reportBuilder.flush();
             }
-        }
-    }
-
-    public static void main(String args[]) throws IOException {
-        BenchmarkExecutor benchmarkExecutor = new BenchmarkExecutor(0, null);
-        String format = ReportBuilder.getDateString();
-        System.out.println(format);
-
+        }*/
     }
 
     public static Integer hashmod(String key, int totalCluster) {
