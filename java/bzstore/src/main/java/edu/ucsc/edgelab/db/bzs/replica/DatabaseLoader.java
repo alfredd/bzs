@@ -125,12 +125,18 @@ public class DatabaseLoader implements Runnable {
         txnCount = 100;
 
 
-        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
-        log.info("Sending "+ txnCount+" distributed transactions for processing.");
-        try {
-            Thread.sleep(delayMs);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+//        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
+//        log.info("Sending "+ txnCount+" distributed transactions for processing.");
+
+        while(totalCount>= currentCompleted) {
+            try {
+                Thread.sleep(delayMs);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            log.info(String.format("Total transactions: %d, Completed count: %d", totalCount, currentCompleted));
+
         }
     }
 
@@ -157,6 +163,7 @@ public class DatabaseLoader implements Runnable {
                 } else {
                     transactionsCompleted += 1;
                 }
+                currentCompleted = transactionsCompleted + transactionsFailed;
             }
 
             @Override
