@@ -3,11 +3,13 @@ package edu.ucsc.edgelab.db.bzs.txn;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
+import edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader;
 import edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import io.grpc.stub.StreamObserver;
 
+import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -28,6 +30,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
         epochManager = new EpochManager();
         epochManager.setSerializer(serializer);
         epochManager.setPerformanceTracer(performanceTracer);
+        startDatabaseInit();
     }
 
     @Override
@@ -81,5 +84,15 @@ public class TxnProcessor implements TransactionProcessorINTF {
         Set<Bzs.Transaction> txnsToPrepare = new LinkedHashSet<>();
         txnsToPrepare.addAll(clusterDRWTProcessor.getRequest().getTransactionsList());
         epochManager.clusterCommit(txnsToPrepare, clusterDRWTProcessor);
+    }
+
+    private void startDatabaseInit() {
+        try {
+            log.info("Starting DB loader job.");
+            DatabaseLoader dbLoaderJob = new DatabaseLoader(this);
+            new Thread(dbLoaderJob).start();
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Creation of benchmark execution client failed: " + e.getLocalizedMessage(), e);
+        }
     }
 }

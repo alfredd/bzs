@@ -26,7 +26,7 @@ public class DatabaseLoader implements Runnable {
     private static final Logger log = Logger.getLogger(DatabaseLoader.class.getName());
 
     private final TransactionProcessorINTF transactionProcessor;
-//    private final ReportBuilder reportBuilder;
+    //    private final ReportBuilder reportBuilder;
     private int totalCount;
     private int processed;
     private int flushed = 0;
@@ -105,12 +105,12 @@ public class DatabaseLoader implements Runnable {
 
     @Override
     public void run() {
-        int delayMs = 15000;
+        int delayMs = 20000;
         try {
             BZStoreProperties properties = new BZStoreProperties();
             String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
             delayMs = Integer.decode(delay);
-            log.info("Benchmark tests will run after " + delay + "milliseconds");
+            log.info("DB Loader will run after " + delay + "milliseconds");
             Thread.sleep(delayMs);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
@@ -127,16 +127,17 @@ public class DatabaseLoader implements Runnable {
 
 //        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
 //        log.info("Sending "+ txnCount+" distributed transactions for processing.");
-
-        while(totalCount>= currentCompleted) {
+        int end = 0;
+        while (end <= 15) {
             try {
                 Thread.sleep(delayMs);
+                if (currentCompleted >= txnCount) {
+                    end += 1;
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
             log.info(String.format("Total transactions: %d, Completed count: %d", totalCount, currentCompleted));
-
         }
     }
 
