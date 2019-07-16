@@ -132,10 +132,6 @@ public class DatabaseLoader implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-
-        sendLocalOnly=false;
-        sendTransactions(txnCount,maxOperations);
     }
 
     public void sendTransactions(int n, int m) {
