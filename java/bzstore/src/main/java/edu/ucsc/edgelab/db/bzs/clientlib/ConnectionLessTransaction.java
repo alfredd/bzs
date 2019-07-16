@@ -2,11 +2,11 @@ package edu.ucsc.edgelab.db.bzs.clientlib;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 
-public class TransactionManager {
+public class ConnectionLessTransaction {
     protected Bzs.Transaction transaction;
     protected Bzs.Transaction.Builder builder = Bzs.Transaction.newBuilder();
 
-    public TransactionManager() {
+    public ConnectionLessTransaction() {
         this.transaction = builder.build();
         builder = Bzs.Transaction.newBuilder();
     }

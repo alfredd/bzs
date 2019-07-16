@@ -8,7 +8,7 @@ import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Transaction extends TransactionManager implements TransactionInterface {
+public class Transaction extends ConnectionLessTransaction implements TransactionInterface {
 
     private BZStoreClient client;
 

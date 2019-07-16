@@ -1,7 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.clientlib.TransactionManager;
+import edu.ucsc.edgelab.db.bzs.clientlib.ConnectionLessTransaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import io.grpc.stub.StreamObserver;
 
@@ -81,7 +81,7 @@ public class BenchmarkExecutor implements Runnable {
     }
 
     public Bzs.Transaction generateWriteSet(Integer operationCount) {
-        TransactionManager transactionManager = new TransactionManager();
+        ConnectionLessTransaction transactionManager = new ConnectionLessTransaction();
         Random random = new Random();
         List<String> wordListForGeneratingWriteSet = this.wordList;
         if (!sendLocalOnly) {
