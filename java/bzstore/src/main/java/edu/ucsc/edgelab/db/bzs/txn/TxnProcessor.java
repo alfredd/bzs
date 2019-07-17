@@ -32,7 +32,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
         Integer clusterLeader = 0;
         try {
             ServerInfo serverInfo = Configuration.getLeaderInfo(ID.getClusterID());
-            clusterLeader = serverInfo.clusterID;
+            clusterLeader = serverInfo.replicaID;
         } catch (IOException e) {
             log.log(Level.WARNING, "Exception occurred while setting up transaction processor. "+ e.getLocalizedMessage(), e);
             clusterLeader = 0;
