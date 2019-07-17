@@ -27,11 +27,13 @@ public class BFTClient {
     }
 
     public static final BFTClient getInstance() {
+        if (bftClient==null)
+            createConnection();
         return bftClient;
     }
 
     public BFTClient(int ClientId) {
-        LOGGER.info("Trying to connect to server: " + ClientId);
+        LOGGER.info("Trying to connect to BFT server: " + ClientId);
         serviceProxy = new ServiceProxy(ClientId);
     }
 
