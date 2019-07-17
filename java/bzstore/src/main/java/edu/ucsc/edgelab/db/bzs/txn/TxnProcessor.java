@@ -1,12 +1,11 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
+import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
-import edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader;
-import edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace;
-import edu.ucsc.edgelab.db.bzs.replica.Serializer;
-import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
+import edu.ucsc.edgelab.db.bzs.replica.*;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
@@ -30,7 +29,17 @@ public class TxnProcessor implements TransactionProcessorINTF {
         epochManager = new EpochManager();
         epochManager.setSerializer(serializer);
         epochManager.setPerformanceTracer(performanceTracer);
-        startDatabaseInit();
+        Integer clusterLeader = 0;
+        try {
+            ServerInfo serverInfo = Configuration.getLeaderInfo(ID.getClusterID());
+            clusterLeader = serverInfo.clusterID;
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Exception occurred while setting up transaction processor. "+ e.getLocalizedMessage(), e);
+            clusterLeader = 0;
+        }
+        if (ID.getReplicaID().equals(clusterLeader)) {
+            startDatabaseInit();
+        }
     }
 
     @Override
