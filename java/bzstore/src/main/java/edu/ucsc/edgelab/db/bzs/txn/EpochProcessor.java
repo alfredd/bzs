@@ -230,8 +230,14 @@ public class EpochProcessor implements Runnable {
                 callback.sendResponseToClient();
             }
         }
-
-        System.out.println("Epoch processed in " + (System.currentTimeMillis() - startTime) + "ms");
+        long processingTime = System.currentTimeMillis() - startTime;
+        String metrics = String.format("Epoch Metrics: Bytes = %d, Txn Count:#LRWT = %d, #DRWT = %d, Epoch pxng time = %dms"
+                , logEntry.toByteArray().length
+                , logEntry.getLRWTxnsCount()
+                , logEntry.getCommittedDRWTxnsCount()
+                , processingTime
+        );
+        log.info(metrics);
     }
 
     @Override
