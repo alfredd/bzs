@@ -231,7 +231,8 @@ public class EpochProcessor implements Runnable {
             }
         }
         long processingTime = System.currentTimeMillis() - startTime;
-        String metrics = String.format("Epoch Metrics: Bytes = %d, Txn Count:#LRWT = %d, #DRWT = %d, Epoch pxng time = %dms"
+        String metrics = String.format("Epoch Metrics: Epoch # = %d,  Bytes = %d, Txn Count:#LRWT = %d, #DRWT = %d, Epoch pxng time = %dms"
+                , epochNumber.intValue()
                 , logEntry.toByteArray().length
                 , logEntry.getLRWTxnsCount()
                 , logEntry.getCommittedDRWTxnsCount()
