@@ -47,18 +47,20 @@ public class DatabaseLoader implements Runnable {
         Scanner scanner = new Scanner(file);
         Set<String> words = new LinkedHashSet<>();
         allWords = new LinkedList<>();
+        log.info(String.format("Loading keys from: %s. Total number of clusters: %d", fileName, totalClusters));
         while (scanner.hasNext()) {
             String[] line = scanner.next().split(" ");
 
             for (String word : line) {
                 allWords.add(word);
-                Integer cid = hashmod(word, Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count)));
+                Integer cid = hashmod(word, totalClusters);
                 if (cid == clusterID) {
                     words.add(word);
                 }
             }
         }
         scanner.close();
+        wordList.addAll(words);
 
 /*        String[] fields = new String[]{"Epoch Number, ",
                 "Total Transactions in Epoch, ",
@@ -216,7 +218,7 @@ public class DatabaseLoader implements Runnable {
     }
 
     public static Integer hashmod(String key, int totalCluster) {
-        return Math.abs(key.hashCode()) % totalCluster;
+        return Math.abs(key.length()) % totalCluster;
     }
 
 }
