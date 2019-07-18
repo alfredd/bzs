@@ -53,6 +53,7 @@ public class BenchmarkGenerator {
         return transactions;
     }
 
+    // TODO: pass localOnly Keys and remoteOnly Keys to the function to generate transactions.
     public LinkedList<Bzs.Transaction> generate_DRWTransactions(List<String> localClusterKeys, List<String> remoteClusterKeys) {
         LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
         loadKeysFromFileForCluster(localClusterKeys);
