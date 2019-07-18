@@ -24,13 +24,13 @@ public class Configuration {
         return info;
     }
 
-    public static ServerInfo getServerInfo(Integer clusterID, Integer leaderID) throws IOException {
+    public static ServerInfo getServerInfo(Integer clusterID, Integer replicaID) throws IOException {
         BZStoreProperties properties = new BZStoreProperties();
         ServerInfo info = new ServerInfo();
         info.clusterID = clusterID;
-        info.replicaID = leaderID;
-        info.host = properties.getProperty(clusterID, leaderID, BZStoreProperties.Configuration.host);
-        info.port = Integer.decode(properties.getProperty(clusterID, leaderID, BZStoreProperties.Configuration.port));
+        info.replicaID = replicaID;
+        info.host = properties.getProperty(clusterID, replicaID, BZStoreProperties.Configuration.host);
+        info.port = Integer.decode(properties.getProperty(clusterID, replicaID, BZStoreProperties.Configuration.port));
         return info;
     }
 

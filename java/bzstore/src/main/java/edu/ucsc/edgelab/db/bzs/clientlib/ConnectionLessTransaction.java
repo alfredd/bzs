@@ -30,6 +30,7 @@ public class ConnectionLessTransaction {
         Transaction.LOGGER.info("Transaction object till now: "+transaction.toString());
     }
 
+    @Deprecated
     public void write(String key, String value) {
         Bzs.Write write = Bzs.Write.newBuilder().setKey(key).setValue(value).build();
         transaction = builder.addWriteOperations(write).build();

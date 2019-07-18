@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.ConnectionLessTransaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.performance.BenchmarkGenerator;
 import edu.ucsc.edgelab.db.bzs.txn.TransactionProcessorINTF;
 import io.grpc.stub.StreamObserver;
 
@@ -62,23 +63,6 @@ public class DatabaseLoader implements Runnable {
         scanner.close();
         wordList.addAll(words);
 
-/*        String[] fields = new String[]{"Epoch Number, ",
-                "Total Transactions in Epoch, ",
-                "Transactions Processed In Epoch(S), ",
-                "Transactions Failed In Epoch(F), ",
-                "Total Transaction Count, ",
-                "Total Transactions Completed, ",
-                "Total Transactions Failed, ",
-                "Processing Time(ms), ",
-                "Throughput(Tps), ",
-                "Bytes processed (Bytes), ",
-                "Throughput (Bps)\n"
-        };
-
-        reportBuilder = new ReportBuilder("Report_w_hash", fields);
-        wordList.addAll(words);*/
-
-
         log.info("Total words read from file: " + wordList.size());
 
     }
@@ -129,8 +113,32 @@ public class DatabaseLoader implements Runnable {
 
 //        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
 //        log.info("Sending "+ txnCount+" distributed transactions for processing.");
+        waitForTransactionCompletion(delayMs, txnCount);
+
+        try {
+            log.info("Waiting for "+ delayMs+"ms before generating LRW Txns.");
+            Thread.sleep(delayMs);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        log.info("GENERATING L-RWT.");
+        BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator();
+        benchmarkGenerator.setTotalClusterCount(totalClusters);
+        LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
+        for (Bzs.Transaction txn: txns) {
+            transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
+        }
+        totalCount=0;
+        currentCompleted=0;
+        waitForTransactionCompletion(delayMs, txns.size());
+
+
+    }
+
+    private void waitForTransactionCompletion(int delayMs, int txnCount) {
         int end = 0;
-        while (end <= 15) {
+        while (end < 1) {
             try {
                 Thread.sleep(delayMs);
                 if (currentCompleted >= txnCount) {
@@ -139,7 +147,7 @@ public class DatabaseLoader implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            log.info(String.format("Total transactions: %d, Completed count: %d", totalCount, currentCompleted));
+            log.info(String.format("Total write-only transactions: %d, Completed count: %d", totalCount, currentCompleted));
         }
     }
 

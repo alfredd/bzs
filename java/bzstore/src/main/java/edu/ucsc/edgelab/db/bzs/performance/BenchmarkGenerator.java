@@ -1,61 +1,103 @@
 package edu.ucsc.edgelab.db.bzs.performance;
 
+import edu.ucsc.edgelab.db.bzs.BZStoreClient;
+import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.ConnectionLessTransaction;
-import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
-import edu.ucsc.edgelab.db.bzs.txn.TxnProcessor;
+import edu.ucsc.edgelab.db.bzs.clientlib.Transaction;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
+import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
+import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
+import edu.ucsc.edgelab.db.bzs.replica.ID;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader.hashmod;
 
 public class BenchmarkGenerator {
 
-    private int totalClusters;
+    private final Integer clusterID;
+    private int totalClusterCount;
     private static final Logger log = Logger.getLogger(BenchmarkGenerator.class.getName());
-    private Set<String> words;
+    private Map<String, BZStoreData> storedData = new HashMap<>();
 
     public BenchmarkGenerator() {
-        words = new LinkedHashSet<>();
+        this.clusterID = ID.getClusterID();
     }
 
-    private void loadKeysFromFileForCluster(int clusterID) throws IOException {
-        BZStoreProperties properties = new BZStoreProperties();
-        this.totalClusters = Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count));
-        File file = getDataKeysFile();
-        Scanner scanner = new Scanner(file);
-        LinkedList<Object> allWords = new LinkedList<>();
-        while (scanner.hasNext()) {
-            String[] line = scanner.next().split(" ");
+    private void loadKeysFromFileForCluster(List<String> words) {
+        for (String word : words) {
+            Integer wordHash = hashmod(word, totalClusterCount);
+            if (wordHash == clusterID) {
+                BZStoreData storedValue = BZDatabaseController.getlatest(word);
+                storedData.put(word, storedValue);
+            }
+        }
+    }
 
-            for (String word : line) {
-                allWords.add(word);
-                Integer cid = hashmod(word, totalClusters);
-                if (cid == clusterID) {
-                    words.add(word);
+    public LinkedList<Bzs.Transaction> generateAndPush_LRWTransactions(List<String> words) {
+        LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
+        loadKeysFromFileForCluster(words);
+        for (Map.Entry<String, BZStoreData> entry : storedData.entrySet()) {
+            BZStoreData storeData = entry.getValue();
+            if (storeData.version > 0) {
+                ConnectionLessTransaction t = new ConnectionLessTransaction();
+                t.setReadHistory(entry.getKey(), storeData.value, storeData.version, clusterID);
+                t.write(entry.getKey(), storeData.value + storeData.value, clusterID);
+                Bzs.Transaction txn = t.getTransaction();
+                transactions.add(txn);
+            }
+        }
+        return transactions;
+    }
+
+    public LinkedList<Bzs.Transaction> generate_DRWTransactions(List<String> localClusterKeys, List<String> remoteClusterKeys) {
+        LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
+        loadKeysFromFileForCluster(localClusterKeys);
+
+        Map<Integer, BZStoreClient> clientList = new LinkedHashMap<>();
+        for (int i = 0; i < totalClusterCount; i++) {
+            if (!clusterID.equals(i) && ID.canRunBenchMarkTests()) {
+                try {
+                    ServerInfo serverInfo = Configuration.getServerInfo(i, 0);
+                    BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
+                    clientList.put(i, client);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
-        scanner.close();
+
+        int remoteMaxKeyCount = remoteClusterKeys.size();
+        int remoteIndex = 0;
+        for (String localKey : localClusterKeys) {
+            Transaction t = new Transaction();
+            if (remoteIndex >= remoteMaxKeyCount) {
+                break;
+            } else {
+                String remoteClusterKey = remoteClusterKeys.get(remoteIndex);
+                int remoteClusterID = hashmod(remoteClusterKey, totalClusterCount);
+                BZStoreClient client = clientList.get(remoteClusterID);
+                if (client!=null) {
+                    t.setClient(client);
+                    t.read(remoteClusterKey);
+                }
+                remoteIndex += 1;
+            }
+            BZStoreData localData = storedData.get(localKey);
+            if (localData != null) {
+                t.setReadHistory(localKey, localData.value, localData.version, clusterID);
+            }
+            transactions.add(t.getTransaction());
+        }
+
+
+        return transactions;
     }
 
-    private File getDataKeysFile() {
-        String dataFile = "data.txt";
-        String fileName = System.getProperty("user.dir") + "/" + dataFile;
-        log.info("Data File path: " + fileName);
-        return new File(fileName);
-    }
-
-
-    public void generateAndPushRWTransactions(TxnProcessor txnProcessor) {
-        LinkedList<ConnectionLessTransaction> transactions = new LinkedList<>();
-
-
-
+    public void setTotalClusterCount(int totalClusters) {
+        this.totalClusterCount = totalClusters;
     }
 }

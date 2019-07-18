@@ -4,6 +4,16 @@ public class ID {
     private static Integer clusterID;
     private static Integer replicaID;
 
+    private static boolean runBenchMarkTests = false;
+
+    public static boolean canRunBenchMarkTests() {
+        return runBenchMarkTests;
+    }
+
+    public static void setRunBenchMarkTests(boolean runBenchMarkTests) {
+        ID.runBenchMarkTests = runBenchMarkTests;
+    }
+
     public static Integer getClusterID() {
         return clusterID;
     }
