@@ -32,6 +32,7 @@ public class DatabaseLoader implements Runnable {
     private int processed;
     private int flushed = 0;
     private final List<String> allWords;
+    private final List<String> remoteClusterKeys = new LinkedList<>();
     private boolean sendLocalOnly;
 
     public DatabaseLoader(TransactionProcessorINTF transactionProcessor) throws IOException {
@@ -57,6 +58,8 @@ public class DatabaseLoader implements Runnable {
                 Integer cid = hashmod(word, totalClusters);
                 if (cid == clusterID) {
                     words.add(word);
+                } else {
+                    remoteClusterKeys.add(word);
                 }
             }
         }
@@ -126,12 +129,20 @@ public class DatabaseLoader implements Runnable {
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator();
         benchmarkGenerator.setTotalClusterCount(totalClusters);
         LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
+        totalCount=txns.size();
+        currentCompleted=0;
         for (Bzs.Transaction txn: txns) {
             transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
         }
-        totalCount=0;
-        currentCompleted=0;
         waitForTransactionCompletion(delayMs, txns.size());
+        log.info("GENERATING D-RWT.");
+
+        LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
+        totalCount=drwtxns.size();
+        currentCompleted=0;
+        for(Bzs.Transaction t: drwtxns) {
+            transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
+        }
 
 
     }
