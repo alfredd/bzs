@@ -116,7 +116,7 @@ public class DatabaseLoader implements Runnable {
 
 //        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
 //        log.info("Sending "+ txnCount+" distributed transactions for processing.");
-        waitForTransactionCompletion(delayMs, txnCount);
+        waitForTransactionCompletion(delayMs, txnCount, "write-only");
 
         try {
             log.info("Waiting for "+ delayMs+"ms before generating LRW Txns.");
@@ -134,7 +134,7 @@ public class DatabaseLoader implements Runnable {
         for (Bzs.Transaction txn: txns) {
             transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
         }
-        waitForTransactionCompletion(delayMs, txns.size());
+        waitForTransactionCompletion(delayMs, txns.size(), "L-RW");
         log.info("GENERATING D-RWT.");
 
         LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
@@ -143,11 +143,11 @@ public class DatabaseLoader implements Runnable {
         for(Bzs.Transaction t: drwtxns) {
             transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
         }
-
+        waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
 
     }
 
-    private void waitForTransactionCompletion(int delayMs, int txnCount) {
+    private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
         int end = 0;
         while (end < 1) {
             try {
@@ -158,7 +158,7 @@ public class DatabaseLoader implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            log.info(String.format("Total write-only transactions: %d, Completed count: %d", totalCount, currentCompleted));
+            log.info(String.format("Total "+transactionType+" transactions: %d, Completed count: %d", totalCount, currentCompleted));
         }
     }
 
