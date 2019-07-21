@@ -34,16 +34,22 @@ public class BZStoreServer {
     public static void main(String[] args) throws IOException {
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
         root.setLevel(ch.qos.logback.classic.Level.TRACE);
-        if (args.length != 2) {
+        if (args.length > 3) {
             System.err.println("Number of input arguments is not 2 but "+args.length);
             System.err.println("Usage: ");
-            System.err.println("      bzserver CLUSTER_ID REPLICA_ID ; where ID={0..8}");
+            System.err.println("      bzserver CLUSTER_ID REPLICA_ID [RUN_BENCHMARK];");
+            System.err.println("            where ID={0..8}; optional and experimental RUN_BENCHMARK=y");
             System.exit(1);
         }
-
+        boolean runBenchmarks=false;
         Integer clusterID = Integer.decode(args[0]);
         Integer replicaID = Integer.decode(args[1]);
-
+        if (args.length==3) {
+            if ("y".equalsIgnoreCase(args[2])) {
+                runBenchmarks=true;
+            }
+        }
+        ID.setRunBenchMarkTests(runBenchmarks);
         BZStoreProperties properties = new BZStoreProperties();
         try {
             Integer port = Integer.decode(
