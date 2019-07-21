@@ -12,6 +12,7 @@ import edu.ucsc.edgelab.db.bzs.replica.ID;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader.hashmod;
@@ -66,7 +67,7 @@ public class BenchmarkGenerator {
                     BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
                     clientList.put(i, client);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.log(Level.WARNING, "Exception occurred while retrieving data from client. "+e.getLocalizedMessage(), e);
                 }
             }
         }
@@ -94,7 +95,7 @@ public class BenchmarkGenerator {
             transactions.add(t.getTransaction());
         }
 
-
+        log.info("Number of transactions for testing D-RW Txns: "+ transactions.size());
         return transactions;
     }
 
