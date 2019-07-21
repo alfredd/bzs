@@ -35,11 +35,7 @@ public class BZStoreServer {
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
         root.setLevel(ch.qos.logback.classic.Level.TRACE);
         if (args.length > 3) {
-            System.err.println("Number of input arguments is not 2 but "+args.length);
-            System.err.println("Usage: ");
-            System.err.println("      bzserver CLUSTER_ID REPLICA_ID [RUN_BENCHMARK];");
-            System.err.println("            where ID={0..8}; optional and experimental RUN_BENCHMARK=y");
-            System.exit(1);
+            printOptionsAndExit(args);
         }
         boolean runBenchmarks=false;
         Integer clusterID = Integer.decode(args[0]);
@@ -47,6 +43,8 @@ public class BZStoreServer {
         if (args.length==3) {
             if ("y".equalsIgnoreCase(args[2])) {
                 runBenchmarks=true;
+            } else {
+                printOptionsAndExit(args);
             }
         }
         ID.setRunBenchMarkTests(runBenchmarks);
@@ -67,6 +65,14 @@ public class BZStoreServer {
         } catch (UnknownConfiguration unknownConfiguration) {
             unknownConfiguration.printStackTrace();
         }
+    }
+
+    private static void printOptionsAndExit(String[] args) {
+        System.err.println("Invalid Usage. Please read the following:");
+        System.err.println("  USAGE: ");
+        System.err.println("      bzserver CLUSTER_ID REPLICA_ID [RUN_BENCHMARK];");
+        System.err.println("            where ID={0..8}; optional and experimental RUN_BENCHMARK=y");
+        System.exit(1);
     }
 
     public BZStoreServer(Integer id, Integer clusterId) {
