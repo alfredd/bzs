@@ -135,15 +135,20 @@ public class DatabaseLoader implements Runnable {
             transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
         }
         waitForTransactionCompletion(delayMs, txns.size(), "L-RW");
-        log.info("GENERATING D-RWT.");
 
-        LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
-        totalCount=drwtxns.size();
-        currentCompleted=0;
-        for(Bzs.Transaction t: drwtxns) {
-            transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
+        if (ID.canRunBenchMarkTests()) {
+
+            log.info("GENERATING D-RWT.");
+
+            LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
+            totalCount=drwtxns.size();
+            currentCompleted=0;
+            for(Bzs.Transaction t: drwtxns) {
+                transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
+            }
+            waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
         }
-        waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
+        log.info("END OF BENCHMARK RUN.");
 
     }
 
