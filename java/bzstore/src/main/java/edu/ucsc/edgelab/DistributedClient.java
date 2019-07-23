@@ -25,7 +25,6 @@ public class DistributedClient {
             properties = new BZStoreProperties();
         } catch (IOException e) {
             LOGGER.log(Level.INFO, e.getMessage());
-
         }
 
         total_clusters = Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count));
@@ -67,7 +66,7 @@ public class DistributedClient {
         }
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws InterruptedException {
         DistributedClient dclient = new DistributedClient();
         String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/" + dataFile;
@@ -85,20 +84,46 @@ public class DistributedClient {
         } catch (Exception e) {
             LOGGER.log(Level.INFO, e.getMessage());
         }
-        String key = "Niger";
-        String key2 = "Tajikistan";
+        String key2 = "Niger";
+        String key = "Tajikistan";
+        long startTime;
+        long duration;
+
+//        dclient.createNewTransactions();
+//        System.out.println(dclient.read(key2));
+//        System.out.println(dclient.read(key));
+
+
+
+
 
         dclient.createNewTransactions();
-        dclient.read(key);
-        dclient.write(key, "42");
+        dclient.write(key2, "aa");
 
-        long startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
         dclient.commit();
-        System.out.println("Commit processed in "+(System.currentTimeMillis()-startTime)+"ms");
+        duration = System.currentTimeMillis() - startTime;
+        System.out.println("Commit processed in "+ duration +"ms");
 
-        /*dclient.createNewTransactions();
-        dclient.write(key2, "44");
+
+
+
+
+
+        dclient.createNewTransactions();
+        dclient.write(key, "bb");
+        startTime = System.currentTimeMillis();
         dclient.commit();
+        duration = System.currentTimeMillis() - startTime;
+        System.out.println("Commit processed in "+ duration +"ms");
+
+
+
+
+        Thread.sleep(1000);
+
+
+
 
         dclient.createNewTransactions();
 
@@ -109,12 +134,18 @@ public class DistributedClient {
         data = dclient.read(key2);
         LOGGER.info("Data from db: " + data);
 
-        dclient.write(key, "2");
-        dclient.write(key2, "3");
+        dclient.write(key,  "xyz");
+        dclient.write(key2, "abc");
 
         Bzs.Transaction t = dclient.transaction.getTransaction();
 
-        dclient.commit();*/
+        startTime = System.currentTimeMillis();
+        dclient.commit();
+        duration = System.currentTimeMillis() - startTime;
+        System.err.println("Commit processed in "+ duration +"ms");
+
+
+
 
 //        dclient.createNewTransactions();
 //        key="Zambia";
