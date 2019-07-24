@@ -32,9 +32,10 @@ public class DRWTProcessor implements Runnable {
      */
     @Override
     public void run() {
+        TxnUtils txnUtils = new TxnUtils();
         ClusterClient clusterClient = ClusterConnector.getClusterClientInstance();
         String batchID = String.format("%d:%d", cid.intValue(), epochNumber.intValue());
-        Bzs.TransactionBatch prepareBatch = TxnUtils.getTransactionBatch(batchID, txns.values(), Bzs.Operation.DRWT_PREPARE);
+        Bzs.TransactionBatch prepareBatch = txnUtils.getTransactionBatch(batchID, txns.values(), Bzs.Operation.DRWT_PREPARE);
 
         logger.info(String.format("DRWT Prepare batch: %s", prepareBatch));
         Bzs.TransactionBatchResponse batchResponse = clusterClient.execute(ClusterClient.DRWT_Operations.PREPARE_BATCH, prepareBatch, cid);
@@ -48,26 +49,22 @@ public class DRWTProcessor implements Runnable {
             TransactionID tid = TransactionID.getTransactionID(response.getTransactionID());
             if (!response.getStatus().equals(Bzs.TransactionStatus.PREPARED)) {
                 logger.info("Transaction was not prepared: " + response);
-                TxnUtils.sendAbortToClient(response, tid);
+                txnUtils.sendAbortToClient(response, tid);
                 Bzs.Transaction txn = txns.remove(tid);
                 TransactionCache.removeHistory(tid);
                 LockManager.releaseLocks(txn);
                 abortSet.add(tid);
+            } else {
+                txnUtils.updateDRWTxnResponse(response, tid, cid);
             }
         }
         DTxnCache.addToAbortQueue(epochNumber, abortSet);
 
-        Bzs.TransactionBatch commitBatch = TxnUtils.getTransactionBatch(batchID, txns.values(), Bzs.Operation.DRWT_COMMIT);
+        Bzs.TransactionBatch commitBatch = txnUtils.getTransactionBatch(batchID, txns.values(), Bzs.Operation.DRWT_COMMIT);
         logger.info("Committing the following  batch: " + commitBatch);
         Bzs.TransactionBatchResponse commitResponse = clusterClient.execute(ClusterClient.DRWT_Operations.COMMIT_BATCH, commitBatch, cid);
         DTxnCache.addToCompletedQueue(epochNumber, txns.keySet());
-        releaseLocks(commitResponse);
+//        TxnUtils.releaseLocks(commitResponse);
     }
 
-    private void releaseLocks(Bzs.TransactionBatchResponse batchResponse) {
-        for (Bzs.TransactionResponse response : batchResponse.getResponsesList()) {
-            TransactionID tid = TransactionID.getTransactionID(response.getTransactionID());
-            LockManager.releaseLocks(TransactionCache.getTransaction(tid));
-        }
-    }
 }

@@ -7,16 +7,12 @@ import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.*;
 import io.grpc.stub.StreamObserver;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static edu.ucsc.edgelab.db.bzs.Bzs.*;
-import static edu.ucsc.edgelab.db.bzs.txn.TxnUtils.mapTransactionsToCluster;
 
 public class EpochProcessor implements Runnable {
 
@@ -40,7 +36,7 @@ public class EpochProcessor implements Runnable {
 
     public void processEpoch() {
         long startTime = System.currentTimeMillis();
-
+        TxnUtils txnUtils = new TxnUtils();
         // Perf trace
 //        perfTracer.setBatchStartTime(epochNumber, startTime);
         SmrLog.createLogEntry(epochNumber);
@@ -75,7 +71,7 @@ public class EpochProcessor implements Runnable {
 
         // BFT Local Prepare everything
         final String batchID = epochNumber.toString();
-        TransactionBatch allRWTxnLocalBatch = TxnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
+        TransactionBatch allRWTxnLocalBatch = txnUtils.getTransactionBatch(batchID, allRWT.values(), Bzs.Operation.BFT_PREPARE);
 
         // Add 2PC remote transactions part of prepare batch.
         if (clusterPrepareMap.size() > 0) {
@@ -103,7 +99,7 @@ public class EpochProcessor implements Runnable {
                     TransactionStatus respStatus = txnResponse.getStatus();
                     TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
                     if (respStatus != TransactionStatus.PREPARED) {
-                        TxnUtils.sendAbortToClient(txnResponse, transactionID);
+                        txnUtils.sendAbortToClient(txnResponse, transactionID);
                         Transaction txn = TransactionCache.getTransaction(transactionID);
                         LockManager.releaseLocks(txn);
                         if (lRWTxns.containsKey(transactionID)) {
@@ -111,6 +107,7 @@ public class EpochProcessor implements Runnable {
                         }
                         if (dRWTxns.containsKey(transactionID)) {
                             dRWTxns.remove(transactionID);
+                            txnUtils.updateDRWTxnResponse(txnResponse, transactionID, ID.getClusterID());
                         }
                         allRWT.remove(transactionID);
                     }
@@ -139,7 +136,7 @@ public class EpochProcessor implements Runnable {
                 // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
             }
 
-            Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = mapTransactionsToCluster(dRWTxns, ID.getClusterID());
+            Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = txnUtils.mapTransactionsToCluster(dRWTxns, ID.getClusterID());
             for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
                 DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
                 threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
@@ -178,9 +175,9 @@ public class EpochProcessor implements Runnable {
         SmrLog.distributedPrepared(epochNumber, dRWTxns.values());
         SmrLog.setLockLCEForEpoch(epochNumber);
         SmrLog.updateLastCommittedEpoch(epochNumber);
-        SmrLog.committedDRWT(epochNumber, DTxnCache.getCommittedTransactions());
+        final Collection<Transaction> committedTransactions = DTxnCache.getCommittedTransactions();
+        SmrLog.committedDRWT(epochNumber, committedTransactions);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
-        int status = -1;
 
         // Generate SMR log entry.
         SmrLogEntry logEntry = SmrLog.generateLogEntry(epochNumber);
@@ -188,7 +185,7 @@ public class EpochProcessor implements Runnable {
 
         // Perform BFT Consensus on the SMR Log entry
         long smrCommitStartTime = System.currentTimeMillis();
-        status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
+        int status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
         long duration = System.currentTimeMillis() - smrCommitStartTime;
 
         log.info("Time to prepare SMR log: " + (duration) + "ms.");
@@ -207,20 +204,35 @@ public class EpochProcessor implements Runnable {
         if (transactionBatchResponse != null) {
             for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
                 String id = txnResponse.getTransactionID();
-                log.info("Sending a transactionBatchResponse for transaction with ID " + id + ": " + transactionBatchResponse);
-                StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(TransactionID.getTransactionID(id));
-                if (responseObserver != null) {
-                    TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
-                            .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
-                            .setStatus(commitStatus)
-                            .build();
-                    responseObserver.onNext(newResponse);
-                    responseObserver.onCompleted();
+                TransactionID transactionID = TransactionID.getTransactionID(id);
+                StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
+                if (lRWTxns.containsKey(transactionID)) {
+                    log.info("Sending a Transaction Response for transaction with ID " + id + ": " + transactionBatchResponse);
+                    if (responseObserver != null) {
+                        TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
+                                .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
+                                .setStatus(commitStatus)
+                                .build();
+                        responseObserver.onNext(newResponse);
+                        responseObserver.onCompleted();
+                    } else {
+                        log.log(Level.WARNING,
+                                "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
+                    }
                 } else {
-                    log.log(Level.WARNING,
-                            "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
+                    log.info("Response to clients for transaction with ID " + id + " WILL NOT BE SENT as it is a DRWTxn. : " + transactionBatchResponse);
                 }
             }
+        }
+
+        for (Transaction ct: committedTransactions) {
+            TransactionID ctid = TransactionID.getTransactionID(ct.getTransactionID());
+            StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(ctid);
+            TransactionResponse response = TransactionCache.getResponse(ctid);
+            log.info("Sending a Transaction Response for transaction with ID " + ctid + ": " + response);
+            observer.onNext(response);
+            observer.onCompleted();
+            LockManager.releaseLocks(ct);
         }
 
         if (clusterCommitMap.size() > 0) {

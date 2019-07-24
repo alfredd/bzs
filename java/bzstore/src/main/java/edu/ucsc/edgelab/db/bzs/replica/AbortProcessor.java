@@ -15,7 +15,7 @@ public class AbortProcessor extends RemoteOpProcessor {
 
     @Override
     public void run() {
-        Set<Integer> remoteCIDs = TxnUtils.getListOfClusterIDs(remoteTransaction,cid);
+        Set<Integer> remoteCIDs = new TxnUtils().getListOfClusterIDs(remoteTransaction,cid);
         List<Thread> abortThreads = super.sendMessageToClusterLeaders(remoteCIDs, MessageType.Abort);
         joinAllThreads(abortThreads);
         Bzs.TransactionStatus transactionStatus = Bzs.TransactionStatus.ABORTED;

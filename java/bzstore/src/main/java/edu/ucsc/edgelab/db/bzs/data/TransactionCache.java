@@ -68,9 +68,9 @@ public class TransactionCache {
                         .setWriteOperation(Bzs.Write.newBuilder().setKey(key).setValue(value).setClusterID(clusterID).build())
                         .setVersion(version).build();
                 tuple.rb = tuple.rb.addWriteResponses(writeResponse);
+//                tuple.writeOps.remove(key);
+                logger.info(String.format("Updated transaction response entry for TID: %s, (%s, %s, %d)", tid.toString(), key, value, version));
             }
-            tuple.writeOps.remove(key);
-            logger.info(String.format("Updated transaction response entry for TID: %s, (%s, %s, %d)", tid.toString(), key, value, version));
         }
     }
 
@@ -81,7 +81,7 @@ public class TransactionCache {
         }
     }
 
-    public static Bzs.TransactionResponse getResponse(TransactionID tid, Map<Integer, Integer> depVec) {
+    public static Bzs.TransactionResponse getResponse(TransactionID tid) {
         synchronized (CACHE) {
             return CACHE.storage.get(tid).rb.build();
         }

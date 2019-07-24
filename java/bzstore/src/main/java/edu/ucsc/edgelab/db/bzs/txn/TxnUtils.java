@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
 import edu.ucsc.edgelab.db.bzs.replica.DependencyVectorManager;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
@@ -13,7 +14,7 @@ public class TxnUtils {
 
     private static final Logger logger = Logger.getLogger(TxnUtils.class.getName());
 
-    public static Set<Integer> getListOfClusterIDs(final Bzs.Transaction remoteTransaction, final Integer cid) {
+    public Set<Integer> getListOfClusterIDs(final Bzs.Transaction remoteTransaction, final Integer cid) {
 
         Set<Integer> cidSet = new HashSet<>();
 
@@ -29,12 +30,13 @@ public class TxnUtils {
         return cidSet;
     }
 
-    private static void addToCidSet(Set<Integer> cidSet, int clusterID, int myCid) {
+    private void addToCidSet(Set<Integer> cidSet, final int clusterID, final int myCid) {
         if (clusterID != myCid)
             cidSet.add(clusterID);
     }
 
-    public static Bzs.TransactionBatch getTransactionBatch(final String batchID, final Collection<Bzs.Transaction> transactions, final Bzs.Operation operation) {
+    public Bzs.TransactionBatch getTransactionBatch(final String batchID, final Collection<Bzs.Transaction> transactions,
+                                                    final Bzs.Operation operation) {
         Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
 
         for (Bzs.Transaction transaction : transactions) {
@@ -44,7 +46,8 @@ public class TxnUtils {
         return batchBuilder.setID(batchID).setOperation(operation).putAllDepVector(dvecMap).build();
     }
 
-    public static Map<Integer, Map<TransactionID, Bzs.Transaction>> mapTransactionsToCluster(final Map<TransactionID, Bzs.Transaction> dRWTs, final int myClusterID) {
+    public Map<Integer, Map<TransactionID, Bzs.Transaction>> mapTransactionsToCluster(final Map<TransactionID, Bzs.Transaction> dRWTs,
+                                                                                      final int myClusterID) {
         Map<Integer, Map<TransactionID, Bzs.Transaction>> tMap = new TreeMap<>();
         for (Map.Entry<TransactionID, Bzs.Transaction> drwt : dRWTs.entrySet()) {
             if (drwt != null) {
@@ -60,9 +63,26 @@ public class TxnUtils {
         return tMap;
     }
 
-    public static void sendAbortToClient(Bzs.TransactionResponse txnResponse, TransactionID transactionID) {
+    public void sendAbortToClient(Bzs.TransactionResponse txnResponse, TransactionID transactionID) {
         StreamObserver<Bzs.TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
         responseObserver.onNext(txnResponse);
         responseObserver.onCompleted();
+    }
+
+    public void releaseLocks(Bzs.TransactionBatchResponse batchResponse) {
+        for (Bzs.TransactionResponse response : batchResponse.getResponsesList()) {
+            TransactionID tid = TransactionID.getTransactionID(response.getTransactionID());
+            LockManager.releaseLocks(TransactionCache.getTransaction(tid));
+        }
+    }
+
+    public void updateDRWTxnResponse(Bzs.TransactionResponse response, TransactionID tid, int clusterIDToCheck) {
+        for (Bzs.WriteResponse wr : response.getWriteResponsesList()) {
+            Bzs.Write writeOperation = wr.getWriteOperation();
+            if (writeOperation.getClusterID() == clusterIDToCheck) {
+                TransactionCache.updateResponse(tid, writeOperation.getKey(), writeOperation.getValue(), wr.getVersion(), clusterIDToCheck);
+            }
+        }
+        TransactionCache.updateDepVecInfo(tid, DependencyVectorManager.getCurrentTimeVectorAsMap());
     }
 }

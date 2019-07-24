@@ -22,7 +22,7 @@ class PrepareProcessor extends RemoteOpProcessor {
 
     @Override
     public void run() {
-        Set<Integer> remoteCIDs = TxnUtils.getListOfClusterIDs(remoteTransaction,cid);
+        Set<Integer> remoteCIDs = new TxnUtils().getListOfClusterIDs(remoteTransaction,cid);
         log.info("Sending prepare message for TID: "+tid+" to cluster: "+ remoteCIDs);
         List<Thread> remoteThreads = sendMessageToClusterLeaders(remoteCIDs, MessageType.Prepare);
 

@@ -400,7 +400,8 @@ public class TransactionProcessor implements TransactionProcessorINTF {
                 if (transactions != null) {
 
                     performanceTrace.setLocalPrepareStartTime(epoch, System.currentTimeMillis());
-                    Bzs.TransactionBatch transactionBatch = TxnUtils.getTransactionBatch(epoch.toString(), transactions.values(), Bzs.Operation.BFT_PREPARE);
+                    TxnUtils txnUtils = new TxnUtils();
+                    Bzs.TransactionBatch transactionBatch = txnUtils.getTransactionBatch(epoch.toString(), transactions.values(), Bzs.Operation.BFT_PREPARE);
                     log.info("Processing transaction batch: " + transactionBatch.toString());
 
                     Bzs.TransactionBatchResponse batchResponse = performPrepare(transactionBatch);
