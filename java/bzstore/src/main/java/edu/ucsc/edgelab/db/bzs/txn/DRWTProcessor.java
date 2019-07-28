@@ -63,6 +63,7 @@ public class DRWTProcessor implements Runnable {
         Bzs.TransactionBatch commitBatch = txnUtils.getTransactionBatch(batchID, txns.values(), Bzs.Operation.DRWT_COMMIT);
         logger.info("Committing the following  batch: " + commitBatch);
         Bzs.TransactionBatchResponse commitResponse = clusterClient.execute(ClusterClient.DRWT_Operations.COMMIT_BATCH, commitBatch, cid);
+        logger.info("Response for commitAll: "+ commitResponse);
         DTxnCache.addToCompletedQueue(epochNumber, txns.keySet());
 //        TxnUtils.releaseLocks(commitResponse);
     }
