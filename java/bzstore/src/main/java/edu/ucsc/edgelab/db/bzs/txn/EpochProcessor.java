@@ -127,7 +127,7 @@ public class EpochProcessor implements Runnable {
                         }
                         SmrLog.twoPCPrepared(epochNumber, cpc.batch, cpc.callback.getID());
                         String id = responseClusterPC.getID();
-                        log.info("Adding prepared 2PC transactions to RemoteTxnCache: "+ id+", list of preparedTIDs: "+ preparedTIDs);
+                        log.info("Adding prepared 2PC transactions to RemoteTxnCache: " + id + ", list of preparedTIDs: " + preparedTIDs);
                         RemoteTxnCache.addTIDsToPreparedBatch(id, preparedTIDs);
                         cpc.callback.setPreparedEpoch(epochNumber);
                         cpc.callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
@@ -144,7 +144,8 @@ public class EpochProcessor implements Runnable {
                 DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
                 threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
             }
-            DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
+            if (dRWTxns.size() > 0)
+                DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
         }
 
         int epochLCE = -1;
@@ -158,7 +159,7 @@ public class EpochProcessor implements Runnable {
                 for (Transaction t : cpc.batch) {
                     TransactionID transactionID = TransactionID.getTransactionID(t.getTransactionID());
                     if (RemoteTxnCache.isTIDInPreparedBatch(id, transactionID)) {
-                        log.info("Found transaction in prepared batch: "+ transactionID);
+                        log.info("Found transaction in prepared batch: " + transactionID);
                         prepared2PCTxns.add(t);
                     } else {
                         cpc.callback.addToFailedList(t);
@@ -228,7 +229,7 @@ public class EpochProcessor implements Runnable {
             }
         }
 
-        for (Transaction ct: committedTransactions) {
+        for (Transaction ct : committedTransactions) {
             TransactionID ctid = TransactionID.getTransactionID(ct.getTransactionID());
             StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(ctid);
             TransactionResponse response = TransactionCache.getResponse(ctid);
