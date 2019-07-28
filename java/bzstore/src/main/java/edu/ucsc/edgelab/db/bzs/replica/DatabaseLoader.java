@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.clientlib.ConnectionLessTransaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.performance.BenchmarkGenerator;
 import edu.ucsc.edgelab.db.bzs.txn.TransactionProcessorINTF;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 import io.grpc.stub.StreamObserver;
 
 import java.io.File;
@@ -55,7 +56,7 @@ public class DatabaseLoader implements Runnable {
 
             for (String word : line) {
                 allWords.add(word);
-                Integer cid = hashmod(word, totalClusters);
+                Integer cid = TxnUtils.hashmod(word, totalClusters);
                 if (cid == clusterID) {
                     words.add(word);
                 } else {
@@ -86,7 +87,7 @@ public class DatabaseLoader implements Runnable {
             int valueIndex = random.nextInt(wordListForGeneratingWriteSet.size());
             int cid = clusterID;
             if (!sendLocalOnly)
-                cid = hashmod(wordListForGeneratingWriteSet.get(keyIndex), totalClusters);
+                cid = TxnUtils.hashmod(wordListForGeneratingWriteSet.get(keyIndex), totalClusters);
             transactionManager.write(wordListForGeneratingWriteSet.get(keyIndex), wordListForGeneratingWriteSet.get(valueIndex), cid);
         }
         return transactionManager.getTransaction();
@@ -239,10 +240,6 @@ public class DatabaseLoader implements Runnable {
                 reportBuilder.flush();
             }
         }*/
-    }
-
-    public static Integer hashmod(String key, int totalCluster) {
-        return Math.abs(key.length()) % totalCluster;
     }
 
 }

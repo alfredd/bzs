@@ -10,12 +10,11 @@ import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader.hashmod;
+import static edu.ucsc.edgelab.db.bzs.txn.TxnUtils.hashmod;
 
 public class BenchmarkGenerator {
 

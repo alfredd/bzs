@@ -14,6 +14,10 @@ public class TxnUtils {
 
     private static final Logger logger = Logger.getLogger(TxnUtils.class.getName());
 
+    public static Integer hashmod(final String key,final  int totalCluster) {
+        return Math.abs(key.length()) % totalCluster;
+    }
+
     public Set<Integer> getListOfClusterIDs(final Bzs.Transaction remoteTransaction, final Integer cid) {
 
         Set<Integer> cidSet = new HashSet<>();
