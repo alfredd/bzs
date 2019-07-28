@@ -12,6 +12,7 @@ public class DTxnCache {
     private static LinkedList<Integer> epochQueue = new LinkedList<>();
     private static TreeSet<Integer> completedEpochs = new TreeSet<>();
     private static Map<Integer, CacheKeeper> txnCache = new ConcurrentHashMap<>();
+    public static boolean log_debug_flag = false;
 
     public static final Logger logger = Logger.getLogger(DTxnCache.class.getName());
 
@@ -39,7 +40,10 @@ public class DTxnCache {
     public static boolean completedDRWTxnsExist() {
         boolean status;
         status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(epochQueue.getFirst());
-        logger.info("Complexted DRWTxns exists? " + status);
+        if (log_debug_flag) {
+            logger.info("Complexted DRWTxns exists? " + status);
+            logger.info("Epoch Queue: "+epochQueue);
+        }
         return status;
     }
 
@@ -59,6 +63,7 @@ public class DTxnCache {
             logger.log(Level.WARNING, String.format("No transactions available for epoch: %d.", epochNumber.intValue()));
             return;
         }
+        log_debug_flag = true;
         logger.info(String.format("Adding transactions to txnCache for epoch: %d, %s", epochNumber.intValue(), completed.toString()));
         CacheKeeper cache = txnCache.get(epochNumber);
         cache.addToCompleted(completed);
