@@ -13,21 +13,24 @@ import java.util.logging.Logger;
 public class TransactionCache {
     private static final TransactionCache CACHE = new TransactionCache();
     private static Logger logger = Logger.getLogger(TransactionCache.class.getName());
+
     private static class TxnTuple {
         private Bzs.Transaction t;
         private StreamObserver<Bzs.TransactionResponse> o;
         private Set<String> writeOps = new HashSet<>();
         private Bzs.TransactionResponse.Builder rb = Bzs.TransactionResponse.newBuilder();
     }
+
     private TreeMap<TransactionID, TxnTuple> storage = new TreeMap<>();
 
 
-    private TransactionCache() {}
+    private TransactionCache() {
+    }
 
-    public static void add (TransactionID tid, Bzs.Transaction t, StreamObserver<Bzs.TransactionResponse> o) {
+    public static void add(TransactionID tid, Bzs.Transaction t, StreamObserver<Bzs.TransactionResponse> o) {
         synchronized (CACHE) {
             final TxnTuple tuple = new TxnTuple();
-            tuple.t=t;
+            tuple.t = t;
             tuple.o = o;
             for (int i = 0; i < t.getWriteOperationsCount(); i++) {
                 tuple.writeOps.add(t.getWriteOperations(i).getKey());
@@ -36,7 +39,7 @@ public class TransactionCache {
         }
     }
 
-    public static void update (TransactionID tid, Bzs.Transaction t) {
+    public static void update(TransactionID tid, Bzs.Transaction t) {
         synchronized (CACHE) {
             TxnTuple txnTuple = CACHE.storage.get(tid);
             txnTuple.t = t;
@@ -45,12 +48,12 @@ public class TransactionCache {
 
     public static Bzs.Transaction getTransaction(TransactionID tid) {
         final TxnTuple txnTuple = CACHE.storage.get(tid);
-        return txnTuple==null? null: txnTuple.t;
+        return txnTuple == null ? null : txnTuple.t;
     }
 
     public static StreamObserver<Bzs.TransactionResponse> getObserver(TransactionID tid) {
         final TxnTuple txnTuple = CACHE.storage.get(tid);
-        return txnTuple==null? null: txnTuple.o;
+        return txnTuple == null ? null : txnTuple.o;
     }
 
     public static void removeHistory(TransactionID tid) {
@@ -69,7 +72,8 @@ public class TransactionCache {
                         .setVersion(version).build();
                 tuple.rb = tuple.rb.addWriteResponses(writeResponse);
 //                tuple.writeOps.remove(key);
-                logger.info(String.format("Updated transaction response entry for TID: %s, (%s, %s, %d)", tid.toString(), key, value, version));
+                logger.info(String.format("Updated transaction response entry for TID: %s, (%s, %s, %d). Updated response is: %s", tid.toString(),
+                        key, value, version, tuple.rb.build().toString()));
             }
         }
     }

@@ -20,7 +20,7 @@ public class DTxnCache {
     }
 
     public static Collection<Bzs.Transaction> getCommittedTransactions() {
-        logger.info("");
+        logger.info("Returning committed transactions.");
         Set<Bzs.Transaction> committedTxns = new LinkedHashSet<>();
         while (completedDRWTxnsExist()) {
             Integer head = epochQueue.getFirst();
