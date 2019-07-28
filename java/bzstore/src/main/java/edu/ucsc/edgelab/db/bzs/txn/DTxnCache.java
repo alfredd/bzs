@@ -16,7 +16,7 @@ public class DTxnCache {
     public static final Logger logger = Logger.getLogger(DTxnCache.class.getName());
 
     private static void addEpochToQueue(Integer epochNumber) {
-        epochQueue.add(epochNumber);
+        epochQueue.addLast(epochNumber);
     }
 
     public static Collection<Bzs.Transaction> getCommittedTransactions() {
@@ -39,6 +39,7 @@ public class DTxnCache {
     public static boolean completedDRWTxnsExist() {
         boolean status;
         status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(epochQueue.getFirst());
+        logger.info("Complexted DRWTxns exists? " + status);
         return status;
     }
 
@@ -58,7 +59,7 @@ public class DTxnCache {
             logger.log(Level.WARNING, String.format("No transactions available for epoch: %d.", epochNumber.intValue()));
             return;
         }
-
+        logger.info(String.format("Adding transactions to txnCache for epoch: %d, %s", epochNumber.intValue(), completed.toString()));
         CacheKeeper cache = txnCache.get(epochNumber);
         cache.addToCompleted(completed);
         if (cache.allCompleted()) {
