@@ -118,6 +118,9 @@ public class EpochProcessor implements Runnable {
                         Set<TransactionID> preparedTIDs = new LinkedHashSet<>();
                         for (TransactionResponse txnResponse : responseClusterPC.getResponsesList()) {
                             cpc.callback.addProcessedResponse(txnResponse);
+
+                            DependencyVectorManager.updateLocalClock(cpc.callback.getRequest().getDepVectorMap());
+
                             if (txnResponse.getStatus().equals(TransactionStatus.PREPARED)) {
                                 preparedTIDs.add(TransactionID.getTransactionID(txnResponse.getTransactionID()));
                             }
