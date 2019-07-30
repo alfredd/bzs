@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
 
-
-args=$*
-echo $args
-
 if [ "$1" == "start" ]
 then
     echo "Starting WedgeDB cluster."
@@ -13,7 +9,7 @@ then
     for i in {0..3}
     do
         echo "./bzs.sh $1 $i &"
-        ./bzs.sh $1 $i > "c_$1_$i.log" &
+        ./bzs.sh $1 $i &> "c_$1_$i.log" &
     done
 elif [ "$1" == "stop" ]
 then
