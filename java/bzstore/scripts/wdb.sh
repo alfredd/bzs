@@ -14,7 +14,12 @@ then
 elif [ "$1" == "stop" ]
 then
     echo "Stopping all WedgeDB clusters."
+    for i in `ps -eaf | grep BZStoreServer | awk '{ print $2 }'` ; do kill $i ; done
     for i in `ps -eaf | grep bzs | awk '{ print $2 }'` ; do kill $i ; done
+elif [ "$1" == "clean" ]
+then
+    echo "Removing db files."
+    rm BZS_data_* -rf
 else
     echo "Invalid option"
 fi
