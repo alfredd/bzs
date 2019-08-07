@@ -22,4 +22,6 @@ then
     rm BZS_data_* -rf
 else
     echo "Invalid option"
+    echo "Usage: "
+    echo "      $0 start [NUM] | stop | clean"
 fi
