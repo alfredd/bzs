@@ -186,6 +186,16 @@ message TransactionResponse {
     string transactionID = 3;
     int32 epochNumber = 4;
     map<int32, int32> depVector = 5;
+    repeated TxnProof proofs = 6;
+}
+
+message TxnProof {
+    bytes hash = 1;
+    string algorithm = 2;
+    int32 clusterID = 3;
+    int32 nodeID = 4;
+    repeated bytes merkleTreeNodes = 5;
+    bytes merkleRoot = 6;
 }
 
 message DBData {

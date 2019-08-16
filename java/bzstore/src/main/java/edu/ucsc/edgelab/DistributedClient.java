@@ -6,6 +6,7 @@ import edu.ucsc.edgelab.db.bzs.clientlib.Transaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class DistributedClient {
     }
 
     public BZStoreData read(String key) {
-        int clusterId = hashmod(key, total_clusters);
+        int clusterId = TxnUtils.hashmod(key, total_clusters);
         BZStoreClient CurrClient = clientHashMap.get(clusterId);
         transaction.setClient(CurrClient);
         LOGGER.info("Executing read on cluster: " + clusterId);
@@ -52,7 +53,7 @@ public class DistributedClient {
     }
 
     public void write(String key, String value) {
-        int clusterId = hashmod(key, total_clusters);
+        int clusterId = TxnUtils.hashmod(key, total_clusters);
         transaction.setClient(clientHashMap.get(clusterId));
         LOGGER.info("Executing write on cluster: " + clusterId);
         transaction.write(key, value, clusterId);
@@ -84,8 +85,8 @@ public class DistributedClient {
         } catch (Exception e) {
             LOGGER.log(Level.INFO, e.getMessage());
         }
-        String key2 = "Niger";
-        String key = "Tajikistan";
+        String key2 = "Ohio";
+        String key = "Indonesia";
         long startTime;
         long duration;
 
@@ -94,7 +95,7 @@ public class DistributedClient {
 //        System.out.println(dclient.read(key));
 
 
-
+/*
 
 
         dclient.createNewTransactions();
@@ -120,9 +121,11 @@ public class DistributedClient {
 
 
 
+
+
         Thread.sleep(1000);
 
-
+*/
 
 
         dclient.createNewTransactions();
@@ -138,6 +141,10 @@ public class DistributedClient {
         dclient.write(key2, "abc");
 
         Bzs.Transaction t = dclient.transaction.getTransaction();
+
+        Thread.sleep(5000);
+
+        LOGGER.info("Committing transaction.");
 
         startTime = System.currentTimeMillis();
         dclient.commit();
@@ -160,10 +167,6 @@ public class DistributedClient {
 //        System.out.println("Commit processed in "+(System.currentTimeMillis()-startTime)+"ms");
 
 
-    }
-
-    public static Integer hashmod(String key, int totalCluster) {
-        return Math.abs(key.hashCode()) % totalCluster;
     }
 
 }
