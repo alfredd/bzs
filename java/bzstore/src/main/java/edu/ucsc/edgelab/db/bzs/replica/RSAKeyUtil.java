@@ -6,7 +6,6 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -39,10 +38,10 @@ public class RSAKeyUtil {
         return key;
     }
 
-    public static byte[] generateSignature(int replicaId, byte[] message) {
+    public static byte[] generateSignature(byte[] message, String privateKey) {
 
         byte[] result = null;
-        byte[] private_key = Base64.getDecoder().decode(getPrivateKey(replicaId));
+        byte[] private_key = Base64.getDecoder().decode(privateKey);
         try {
             PrivateKey puk =
                     KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(private_key));
@@ -55,9 +54,9 @@ public class RSAKeyUtil {
         return result;
     }
 
-    public static byte[] decryptSignature(int replicaId, byte[] message) {
+    public static byte[] decryptSignature(byte[] message, String publicKey) {
         byte[] result = null;
-        byte[] public_key = Base64.getDecoder().decode(getPublicKey(replicaId));
+        byte[] public_key = Base64.getDecoder().decode(publicKey);
 
         try {
             PublicKey puk =
@@ -77,13 +76,13 @@ public class RSAKeyUtil {
         out.println(System.getProperty("user.dir"));
         String plain_text = "Hello Worlds";
         out.println(plain_text);
-        String pub = getPrivateKey(0);
-        String puk = getPublicKey(0);
+        String privateKey = getPrivateKey(0);
+        String publicKey = getPublicKey(0);
         byte[] plain_bytes = plain_text.getBytes("UTF-8");
         out.println("Plain text: "+Arrays.toString(plain_bytes));
-        byte[] sig = generateSignature(0, plain_bytes);
+        byte[] sig = generateSignature(plain_bytes, privateKey);
         System.out.println("Generated signature: " + Arrays.toString(sig));
-        byte[] decrypted = decryptSignature(0, sig);
+        byte[] decrypted = decryptSignature(sig, publicKey);
         System.out.println("Decrypted data: "+Arrays.toString(decrypted));
         String decrypted_text = new String(decrypted, "UTF-8");
         System.out.println("Decrypted text: "+decrypted_text);
