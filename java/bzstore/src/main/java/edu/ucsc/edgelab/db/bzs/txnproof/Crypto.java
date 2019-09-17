@@ -1,5 +1,6 @@
 package edu.ucsc.edgelab.db.bzs.txnproof;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.replica.RSAKeyUtil;
 
@@ -54,7 +55,17 @@ public class Crypto {
         }
     }
 
-
+    public Bzs.DVec verifyDV(int replicaID, byte[] encryptedDV) {
+        byte[] dvbytes = decryptMessage(replicaID, encryptedDV);
+        if (dvbytes == null ) {
+            return null;
+        }
+        try {
+            return Bzs.DVec.parseFrom(dvbytes);
+        } catch (InvalidProtocolBufferException e) {
+            return null;
+        }
+    }
 
     public byte[] signDV(int replicaID, Map<Integer, Integer> dv) {
         Bzs.DVec depVec = Bzs.DVec.newBuilder().putAllDepVector(dv).build();
