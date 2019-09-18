@@ -149,8 +149,18 @@ message ReadResponse {
     int64 version = 3;
     string responseDigest = 4;
     OperationStatus status = 5;
+    int32 lce = 6;
+    map<int32, int32> depVector = 7;
+    repeated ResponsePOW proof = 8;
     //    int32 clusterID = 6;
     //    int32 replicaID = 7;
+}
+
+message ResponsePOW {
+    bytes depVectorDigest = 1;
+    bytes lceDigest = 2;
+    int32 clusterID = 3;
+    int32 replicaID = 4;
 }
 
 message ReadHistory {
