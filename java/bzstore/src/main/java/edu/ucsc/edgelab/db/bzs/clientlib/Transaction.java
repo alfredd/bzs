@@ -2,9 +2,16 @@ package edu.ucsc.edgelab.db.bzs.clientlib;
 
 import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
+import edu.ucsc.edgelab.db.bzs.txnproof.DependencyValidator;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,6 +20,7 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
     private BZStoreClient client;
 
     public static final Logger LOGGER = Logger.getLogger(Transaction.class.getName());
+
 
     public Transaction() {
         super();
@@ -95,5 +103,9 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
 
         LOGGER.info("Read operation processed in " + duration + " msecs");
         return data;
+    }
+
+    public Bzs.ROTransactionResponse readOnly(Bzs.ROTransaction roTransaction) {
+        return client.readOnly(roTransaction);
     }
 }

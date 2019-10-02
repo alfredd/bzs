@@ -4,9 +4,11 @@ import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.Transaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
+import edu.ucsc.edgelab.db.bzs.txnproof.DependencyValidator;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,11 +17,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DistributedClient {
-    HashMap<Integer, BZStoreClient> clientHashMap = new HashMap<>();
-    BZStoreProperties properties;
+    private HashMap<Integer, BZStoreClient> clientHashMap = new HashMap<>();
+    private BZStoreProperties properties;
     private static final Logger LOGGER = Logger.getLogger(DistributedClient.class.getName());
-    int total_clusters;
-    Transaction transaction;
+    private int total_clusters;
+    private Transaction transaction;
+    private DependencyValidator validator;
 
     DistributedClient() {
         try {
@@ -36,7 +39,7 @@ public class DistributedClient {
                     BZStoreProperties.Configuration.port));
             clientHashMap.put(i, new BZStoreClient(leader_host, leader_port));
         }
-
+        validator = new DependencyValidator();
     }
 
     public void createNewTransactions() {
@@ -65,6 +68,32 @@ public class DistributedClient {
         } catch (CommitAbortedException e) {
             LOGGER.log(Level.INFO, e.getMessage());
         }
+    }
+
+    public Bzs.ROTransactionResponse roTransaction(String[] keys) {
+        Bzs.ROTransaction.Builder roTBuilder = Bzs.ROTransaction.newBuilder();
+        Map<Integer, List<Bzs.Read>> clusterKeyMap = new HashMap<>();
+        for (String key: keys) {
+            Integer clusterID = TxnUtils.hashmod(key, Configuration.clusterCount());
+            if (!clusterKeyMap.containsKey(clusterID)) {
+                clusterKeyMap.put(clusterID, new LinkedList<>());
+            }
+            clusterKeyMap.get(clusterID).add(Bzs.Read.newBuilder().setKey(key).build());
+
+//            Bzs.Read readOp = Bzs.Read.newBuilder().setKey(key).build();
+//            roTBuilder = roTBuilder.addReadOperations(readOp);
+        }
+        Map<Bzs.ROTransaction, Bzs.ROTransactionResponse> roTransactionResponseMap = new LinkedHashMap<>();
+        for (Map.Entry<Integer, List<Bzs.Read>> entry: clusterKeyMap.entrySet()) {
+            Bzs.ROTransaction roTransaction = Bzs.ROTransaction.newBuilder().addAllReadOperations(entry.getValue()).setClusterID(entry.getKey()).build();
+            transaction.setClient(clientHashMap.get(entry.getKey()));
+            Bzs.ROTransactionResponse response = transaction.readOnly(roTransaction);
+            roTransactionResponseMap.put(roTransaction, response);
+        }
+
+        // TODO: Validate Response object.
+        int valid = validator.validate(roTransactionResponseMap);
+        return null;
     }
 
     public static void main(String args[]) throws InterruptedException {

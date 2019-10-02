@@ -175,6 +175,7 @@ message ReadHistory {
 
 message ROTransaction {
     repeated Read readOperations = 1;
+    int32 clusterID = 2;
 }
 
 message ROTransactionResponse {
