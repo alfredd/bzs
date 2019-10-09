@@ -4,7 +4,7 @@
 function setup_workspace() {
     echo "Setting up workspace."
     sleep 1
-    cp -rf ../../../library/config .
+
     cp -rf ../../../library/lib/*.jar .
     cp -f ../../../library/bin/BFT-SMaRt.jar .
     cp -f ../../merkle-btree/target/merkle-b-tree-1.0-SNAPSHOT.jar .
@@ -15,11 +15,13 @@ function setup_workspace() {
 if [[ "$1" == "setup" ]]
 then
     setup_workspace
+elif [[ "$1" == "bftsmart" ]]
+then
+    cp -rf ../../../library/config .
 elif [[ "$1" == "clean" ]]
 then
     echo "Cleaning up workspace."
     rm -rf *.jar
-    rm config -rf
 elif [[ "$1" == "install" ]]
 then
     java -version
