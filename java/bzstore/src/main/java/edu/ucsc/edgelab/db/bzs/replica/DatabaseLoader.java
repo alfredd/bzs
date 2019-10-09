@@ -107,13 +107,13 @@ public class DatabaseLoader implements Runnable {
         }
         this.sendLocalOnly = true;
         started = true;
-        int txnCount = 400;
+        int txnCount = 600;
         int maxOperations = 8;
         this.totalCount = txnCount;
         this.processed = 0;
         sendTransactions(txnCount, maxOperations);
         txnCount = 100;
-
+        log.info(String.format("Total transactions for W-ONLY LRWT = %d", totalCount));
 
 //        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
 //        log.info("Sending "+ txnCount+" distributed transactions for processing.");
@@ -132,11 +132,13 @@ public class DatabaseLoader implements Runnable {
         LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
         totalCount=txns.size();
         currentCompleted=0;
+
+        log.info(String.format("Total transactions for LRWT = %d", totalCount));
         for (Bzs.Transaction txn: txns) {
             transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
         }
         waitForTransactionCompletion(delayMs, txns.size(), "L-RW");
-
+        log.info("DRWT-Can be run? "+ ID.canRunBenchMarkTests());
         if (ID.canRunBenchMarkTests()) {
 
             log.info("GENERATING D-RWT.");
