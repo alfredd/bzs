@@ -14,7 +14,7 @@ public class BZStoreProperties {
     private static final Logger LOGGER = Logger.getLogger(BZStoreProperties.class.getName());
 
     public enum Configuration {
-        port, host, leader, epoch_time_ms, epoch_batch_size, delay_start, data, cluster_count
+        port, host, leader, epoch_time_ms, epoch_batch_size, delay_start, data, cluster_count, max_faults
     }
 
     private Properties bzsProperties;

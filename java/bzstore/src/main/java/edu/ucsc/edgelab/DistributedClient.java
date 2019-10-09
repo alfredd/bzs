@@ -7,6 +7,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
+import edu.ucsc.edgelab.db.bzs.exceptions.ValidityException;
 import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 import edu.ucsc.edgelab.db.bzs.txnproof.DependencyValidator;
 
@@ -84,15 +85,21 @@ public class DistributedClient {
 //            roTBuilder = roTBuilder.addReadOperations(readOp);
         }
         Map<Bzs.ROTransaction, Bzs.ROTransactionResponse> roTransactionResponseMap = new LinkedHashMap<>();
+        List<Bzs.ReadResponse> readResponses = new LinkedList<>();
         for (Map.Entry<Integer, List<Bzs.Read>> entry: clusterKeyMap.entrySet()) {
             Bzs.ROTransaction roTransaction = Bzs.ROTransaction.newBuilder().addAllReadOperations(entry.getValue()).setClusterID(entry.getKey()).build();
             transaction.setClient(clientHashMap.get(entry.getKey()));
             Bzs.ROTransactionResponse response = transaction.readOnly(roTransaction);
+            readResponses.addAll(response.getReadResponsesList());
             roTransactionResponseMap.put(roTransaction, response);
         }
 
         // TODO: Validate Response object.
-        int valid = validator.validate(roTransactionResponseMap);
+        try {
+            int valid = validator.validate(readResponses);
+        } catch (ValidityException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

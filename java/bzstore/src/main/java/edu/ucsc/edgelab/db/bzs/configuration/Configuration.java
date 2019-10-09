@@ -24,6 +24,19 @@ public class Configuration {
         return info;
     }
 
+    public static int getMaxAllowablefaults() {
+        BZStoreProperties properties = null;
+        Integer maxFaults =1;
+        try {
+            properties = new BZStoreProperties();
+            maxFaults = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.max_faults));
+
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception occurred while reading max faults: "+ e.getLocalizedMessage()+". Setting max faults to 1.",e);
+        }
+        return maxFaults;
+    }
+
     public static ServerInfo getServerInfo(Integer clusterID, Integer replicaID) throws IOException {
         BZStoreProperties properties = new BZStoreProperties();
         ServerInfo info = new ServerInfo();
