@@ -11,6 +11,7 @@ import io.grpc.stub.StreamObserver;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DatabaseLoader implements Runnable {
@@ -53,6 +54,10 @@ public class DatabaseLoader implements Runnable {
         log.info(String.format("Loading keys from: %s. Total number of clusters: %d", fileName, totalClusters));
         while (scanner.hasNext()) {
             String[] line = scanner.next().split(" ");
+            if (line != null)
+                log.info(String.format("Line read from file. Number of words: %d", line.length));
+            else
+                log.log(Level.WARNING, "Could not read data from file.");
 
             for (String word : line) {
                 allWords.add(word);
@@ -120,7 +125,7 @@ public class DatabaseLoader implements Runnable {
         waitForTransactionCompletion(delayMs, txnCount, "write-only");
 
         try {
-            log.info("Waiting for "+ delayMs+"ms before generating LRW Txns.");
+            log.info("Waiting for " + delayMs + "ms before generating LRW Txns.");
             Thread.sleep(delayMs);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -130,23 +135,23 @@ public class DatabaseLoader implements Runnable {
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator();
         benchmarkGenerator.setTotalClusterCount(totalClusters);
         LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
-        totalCount=txns.size();
-        currentCompleted=0;
+        totalCount = txns.size();
+        currentCompleted = 0;
 
         log.info(String.format("Total transactions for LRWT = %d", totalCount));
-        for (Bzs.Transaction txn: txns) {
+        for (Bzs.Transaction txn : txns) {
             transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
         }
         waitForTransactionCompletion(delayMs, txns.size(), "L-RW");
-        log.info("DRWT-Can be run? "+ ID.canRunBenchMarkTests());
+        log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
         if (ID.canRunBenchMarkTests()) {
 
             log.info("GENERATING D-RWT.");
 
             LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
-            totalCount=drwtxns.size();
-            currentCompleted=0;
-            for(Bzs.Transaction t: drwtxns) {
+            totalCount = drwtxns.size();
+            currentCompleted = 0;
+            for (Bzs.Transaction t : drwtxns) {
                 transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
             }
             waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
@@ -166,7 +171,7 @@ public class DatabaseLoader implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            log.info(String.format("Total "+transactionType+" transactions: %d, Completed count: %d", totalCount, currentCompleted));
+            log.info(String.format("Total " + transactionType + " transactions: %d, Completed count: %d", totalCount, currentCompleted));
         }
     }
 
