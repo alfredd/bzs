@@ -49,7 +49,7 @@ public class DatabaseLoader implements Runnable {
         log.info("Data File path: " + fileName);
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
-        Set<String> words = new LinkedHashSet<>();
+//        Set<String> words = new LinkedHashSet<>();
         allWords = new LinkedList<>();
         log.info(String.format("Loading keys from: %s. Total number of clusters: %d", fileName, totalClusters));
         while (scanner.hasNext()) {
@@ -60,17 +60,22 @@ public class DatabaseLoader implements Runnable {
                 log.log(Level.WARNING, "Could not read data from file.");
 
             for (String word : line) {
+
                 allWords.add(word);
-                Integer cid = TxnUtils.hashmod(word, totalClusters);
-                if (cid == clusterID) {
-                    words.add(word);
+                if (totalClusters==1) {
+                    wordList.add(word);
                 } else {
-                    remoteClusterKeys.add(word);
+                    Integer cid = TxnUtils.hashmod(word, totalClusters);
+                    if (cid == clusterID) {
+                        wordList.add(word);
+                    } else {
+                        remoteClusterKeys.add(word);
+                    }
                 }
             }
         }
         scanner.close();
-        wordList.addAll(words);
+
 
         log.info("Total words read from file: " + wordList.size());
 
@@ -247,6 +252,12 @@ public class DatabaseLoader implements Runnable {
                 reportBuilder.flush();
             }
         }*/
+    }
+
+    public static void main(String[] args) {
+        String[] words={"abcd"};
+        for (String word: words)
+            System.out.println(word);
     }
 
 }
