@@ -73,4 +73,16 @@ public class Configuration {
         }
         return epochTime;
     }
+
+    public static Integer getEpochBatchCount() {
+        int epochBatchSize;
+        try {
+            BZStoreProperties properties = new BZStoreProperties();
+            epochBatchSize = Integer.decode(properties.getProperty(BZStoreProperties.Configuration.epoch_batch_size));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception occurred while getting epoch batch size. " + e.getLocalizedMessage());
+            epochBatchSize = MAX_EPOCH_TXN;
+        }
+        return epochBatchSize;
+    }
 }

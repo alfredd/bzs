@@ -14,6 +14,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 public class EpochManager {
+    private final Integer maxEpochBatchSize;
     private volatile Integer epochNumber = 0;
     private volatile Integer sequenceNumber = 0;
     private WedgeDBThreadPoolExecutor epochThreadPoolExecutor;
@@ -39,9 +40,10 @@ public class EpochManager {
 //                logger.info("Epoch updated.");
             }
         };
+        maxEpochBatchSize = Configuration.getEpochBatchCount();
         epochNumber = BZDatabaseController.getEpochCount() + 1;
         Timer t = new Timer();
-        t.scheduleAtFixedRate(epochUpdater, Configuration.MAX_EPOCH_DURATION_MS, Configuration.MAX_EPOCH_DURATION_MS);
+        t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());
         dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
     }
 
@@ -50,6 +52,10 @@ public class EpochManager {
             final Integer epochNumber = this.epochNumber;
             final Integer sequenceNumber = this.sequenceNumber;
             this.sequenceNumber += 1;
+            if (sequenceNumber >= maxEpochBatchSize) {
+                // Probable race condition.
+                updateEpoch();
+            }
             return new TransactionID(epochNumber, sequenceNumber);
         }
     }
