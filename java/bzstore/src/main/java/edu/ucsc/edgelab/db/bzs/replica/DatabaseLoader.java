@@ -36,6 +36,7 @@ public class DatabaseLoader implements Runnable {
     private final List<String> allWords;
     private final List<String> remoteClusterKeys = new LinkedList<>();
     private boolean sendLocalOnly;
+    private List<String> writeOnlyWordList = new LinkedList<>();
 
     public DatabaseLoader(TransactionProcessorINTF transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
@@ -96,9 +97,12 @@ public class DatabaseLoader implements Runnable {
             int keyIndex = random.nextInt(wordListForGeneratingWriteSet.size());
             int valueIndex = random.nextInt(wordListForGeneratingWriteSet.size());
             int cid = clusterID;
-            if (!sendLocalOnly)
-                cid = TxnUtils.hashmod(wordListForGeneratingWriteSet.get(keyIndex), totalClusters);
-            transactionManager.write(wordListForGeneratingWriteSet.get(keyIndex), wordListForGeneratingWriteSet.get(valueIndex), cid);
+            String key = wordListForGeneratingWriteSet.get(keyIndex);
+            this.writeOnlyWordList.add(key);
+            if (!sendLocalOnly) {
+                cid = TxnUtils.hashmod(key, totalClusters);
+            }
+            transactionManager.write(key, wordListForGeneratingWriteSet.get(valueIndex), cid);
         }
         return transactionManager.getTransaction();
     }
@@ -117,7 +121,7 @@ public class DatabaseLoader implements Runnable {
         }
         this.sendLocalOnly = true;
         started = true;
-        int txnCount = 600;
+        int txnCount = 2000;
         int maxOperations = 8;
         this.totalCount = txnCount;
         this.processed = 0;
@@ -139,7 +143,7 @@ public class DatabaseLoader implements Runnable {
         log.info("GENERATING L-RWT.");
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator();
         benchmarkGenerator.setTotalClusterCount(totalClusters);
-        LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
+        LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(writeOnlyWordList);
         totalCount = txns.size();
         currentCompleted = 0;
 
