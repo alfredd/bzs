@@ -168,6 +168,7 @@ public class BFTServer extends DefaultSingleRecoverable {
                 builder = builder.addWriteResponses(wresp);
                 if (wOp.getClusterID() == this.clusterID) {
                     // Update DB data cache.
+//                    logger.info("Updating db cache for key: "+ wOp.getKey());
                     updateDBCache(epochNumber, wOp.getKey(), wOp.getValue(), epochNumber);
                 }
             }
