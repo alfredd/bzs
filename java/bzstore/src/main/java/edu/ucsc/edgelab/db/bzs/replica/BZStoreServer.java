@@ -41,13 +41,14 @@ public class BZStoreServer {
         Integer clusterID = Integer.decode(args[0]);
         Integer replicaID = Integer.decode(args[1]);
         if (args.length==3) {
-            if ("y".equalsIgnoreCase(args[2])) {
+            if ("y".equalsIgnoreCase(args[2].trim())) {
                 runBenchmarks=true;
             } else {
                 printOptionsAndExit(args);
             }
         }
         ID.setRunBenchMarkTests(runBenchmarks);
+        logger.info("Benchmarks will be run? "+ ID.canRunBenchMarkTests());
         BZStoreProperties properties = new BZStoreProperties();
         try {
             Integer port = Integer.decode(
