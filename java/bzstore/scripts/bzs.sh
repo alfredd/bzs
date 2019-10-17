@@ -7,7 +7,7 @@ then
     exit 1
 fi
 
-if [[ "$#" != "2" ]]
+if [[ "$#" -lt "2" ]]
 then
     echo "Usage: $0 CLUSTER_ID REPLICA_ID"
     echo "      where ID=0|1|2|3"
