@@ -13,6 +13,7 @@ import io.grpc.ServerBuilder;
 import org.rocksdb.RocksDBException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +41,7 @@ public class BZStoreServer {
         boolean runBenchmarks=false;
         Integer clusterID = Integer.decode(args[0]);
         Integer replicaID = Integer.decode(args[1]);
+        logger.info("Input args: "+Arrays.toString(args));
         if (args.length==3) {
             if ("y".equalsIgnoreCase(args[2].trim())) {
                 runBenchmarks=true;
