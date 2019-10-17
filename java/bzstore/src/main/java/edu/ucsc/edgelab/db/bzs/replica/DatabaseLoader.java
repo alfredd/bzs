@@ -160,6 +160,7 @@ public class DatabaseLoader implements Runnable {
             LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
             totalCount = drwtxns.size();
             currentCompleted = 0;
+            log.info(String.format("Total transactions for DRWT = %d", totalCount));
             for (Bzs.Transaction t : drwtxns) {
                 transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
             }
