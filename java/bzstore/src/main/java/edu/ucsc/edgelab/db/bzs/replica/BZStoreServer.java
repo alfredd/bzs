@@ -68,6 +68,11 @@ public class BZStoreServer {
     }
 
     private static void printOptionsAndExit(String[] args) {
+        int i=0;
+        for (String arg: args) {
+            System.err.println(i+" "+arg);
+            i++;
+        }
         System.err.println("Invalid Usage. Please read the following:");
         System.err.println("  USAGE: ");
         System.err.println("      bzserver CLUSTER_ID REPLICA_ID [RUN_BENCHMARK];");
