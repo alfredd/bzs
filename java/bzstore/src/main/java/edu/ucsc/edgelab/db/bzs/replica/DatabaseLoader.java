@@ -121,7 +121,7 @@ public class DatabaseLoader implements Runnable {
         }
         this.sendLocalOnly = true;
         started = true;
-        int txnCount = 2000;
+        int txnCount = 6000;
         int maxOperations = 8;
         this.totalCount = txnCount;
         this.processed = 0;
