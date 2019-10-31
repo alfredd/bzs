@@ -18,10 +18,16 @@ then
 elif [[ "$1" == "bftsmart" ]]
 then
     cp -rf ../../../library/config .
-elif [[ "$1" == "clean" ]]
+elif [[ "$1" == "cleanAll" ]]
 then
     echo "Cleaning up workspace."
     rm -rf *.jar
+    rm -rf BZS_data_*
+elif [[ "$1" == "cleanDB" ]]
+then
+    echo "Cleaning up workspace."
+    rm -rf *.jar
+    rm -rf BZS_data_*
 elif [[ "$1" == "install" ]]
 then
     java -version
