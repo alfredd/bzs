@@ -39,19 +39,19 @@ then
     run_command_on_all_nodes "$git_update"
 elif [[ "$2" == "stop" ]]
 then
-    run_command_on_all_nodes "wdb.sh stop"
+    run_command_on_all_nodes "./wdb.sh stop"
 elif [[ "$2" == "starty" ]]
 then
     echo "Starting wedgeDB cluster $clusterNumber, WITH BENCHMARKS***"
     echo "========="
     echo "== Cluster Node $clusterNumber $i"
-    run_command $leaderIP "bzs.sh $clusterNumber 0 y"
+    run_command $leaderIP "./bzs.sh $clusterNumber 0 y"
 
     for i in {1,2,3}
     do
         echo "========="
         echo "== Cluster Node $clusterNumber $i"
-        run_command ${clusterNodes[$i]} "bzs.sh $clusterNumber $i"
+        run_command ${clusterNodes[$i]} "./bzs.sh $clusterNumber $i"
         echo "========="
     done
 elif [[ "$2" == "start" ]]
@@ -61,13 +61,13 @@ then
     do
         echo "========="
         echo "== Cluster Node $clusterNumber $i"
-        run_command ${clusterNodes[$i]} "bzs.sh $clusterNumber $i"
+        run_command ${clusterNodes[$i]} "./bzs.sh $clusterNumber $i"
         echo "========="
     done
 elif [[ "$2" == "clean" ]]
 then
-    run_command_on_all_nodes "bzs-setup.sh cleanDB"
+    run_command_on_all_nodes "./bzs-setup.sh cleanDB"
 elif [[ "$2" == "build" ]]
 then
-    run_command_on_all_nodes "bzs-setup.sh install"
+    run_command_on_all_nodes "./bzs-setup.sh install"
 fi
