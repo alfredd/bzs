@@ -72,24 +72,34 @@ public class BenchmarkGenerator {
         }
 
         int remoteMaxKeyCount = remoteClusterKeys.size();
-        int remoteIndex = 0;
+
+        HashSet<String> remoteClusterKeySet = new HashSet<>();
+        HashSet<String> localClusterKeySet = new HashSet<>();
+        for (String remoteKey : remoteClusterKeys) {
+            remoteClusterKeySet.add(remoteKey.trim());
+        }
         for (String localKey : localClusterKeys) {
+            localClusterKeySet.add(localKey.trim());
+        }
+        int newWriteStartsAt = new Random().nextInt(100);
+        Iterator<String> iterator = remoteClusterKeySet.iterator();
+        for (String localKey : localClusterKeySet) {
             Transaction t = new Transaction();
-            if (remoteIndex >= remoteMaxKeyCount) {
-                break;
-            } else {
-                String remoteClusterKey = remoteClusterKeys.get(remoteIndex);
-                int remoteClusterID = hashmod(remoteClusterKey, totalClusterCount);
-                BZStoreClient client = clientList.get(remoteClusterID);
-                if (client!=null) {
-                    t.setClient(client);
-                    t.read(remoteClusterKey);
-                }
-                remoteIndex += 1;
+            String remoteClusterKey = iterator.next();
+            int remoteClusterID = hashmod(remoteClusterKey, totalClusterCount);
+            BZStoreClient client = clientList.get(remoteClusterID);
+            if (client!=null) {
+                t.setClient(client);
+                t.read(remoteClusterKey);
             }
+
             BZStoreData localData = storedData.get(localKey);
             if (localData != null) {
                 t.setReadHistory(localKey, localData.value, localData.version, clusterID);
+                t.write(remoteClusterKey, remoteClusterKey+newWriteStartsAt, remoteClusterID);
+                newWriteStartsAt+=1;
+            } else {
+                continue;
             }
             transactions.add(t.getTransaction());
         }
