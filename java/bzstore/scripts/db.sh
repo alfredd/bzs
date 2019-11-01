@@ -14,7 +14,7 @@ leaderIP=${clusterNodes[0]}
 function run_command {
     ip=$1
     command=$2
-    ssh -i cluster0_0.pem $ip  "cd $wdb_home; $command &> \"c_$1_$i.log\" & ; cd -; " ;
+    ssh -i cluster0_0.pem $ip  "cd $wdb_home; $command &> \"db.log\" & ; cd -; " ;
 }
 
 
@@ -27,8 +27,6 @@ function run_command_on_all_nodes {
 #        ssh -i cluster0_0.pem $i  "cd $wdb_home; $command; cd -; " ;
     done
 }
-
-
 
 if [ -f "$clusterIPFile" ]
 then
