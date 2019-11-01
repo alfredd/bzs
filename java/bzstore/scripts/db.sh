@@ -21,7 +21,7 @@ function get_file {
     ip=$1
     file_name=$2
     dest_file_name=$3
-    scp -i cluster0_0.pem $ip:$file_name $dest_file_name
+    scp -i cluster0_0.pem $ip:"$wdb_home/$file_name" $dest_file_name
 }
 
 function run_command_on_all_nodes {
@@ -83,5 +83,7 @@ then
 elif [[ "$2" == "log" ]]
 then
     nodeNumber=$3
-    get_file ${clusterNodes[$nodeNumber]} "db.log" "db_$clusterNumber_$nodeNumber.log"
+    dest_file_name="./db_$clusterNumber-$nodeNumber.log"
+    get_file ${clusterNodes[$nodeNumber]} "db.log" "$dest_file_name"
+    less $dest_file_name
 fi
