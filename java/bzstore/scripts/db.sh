@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+mkdir -p ~/logs
+
 wdb_home="/home/ubuntu/bzs/java/bzstore/scripts"
 git_update="git pull origin master"
 
@@ -9,20 +11,24 @@ clusterIPFile="c$clusterNumber"
 clusterNodes=(`cat $clusterIPFile`)
 leaderIP=${clusterNodes[0]}
 
+function run_command {
+    ip=$1
+    command=$2
+    ssh -i cluster0_0.pem $ip  "cd $wdb_home; $command &> \"c_$1_$i.log\" & ; cd -; " ;
+}
+
+
 function run_command_on_all_nodes {
     command=$1
     for i in  `cat $clusterIPFile` ;
     do
         echo "========"; echo "==== For IP $i"; echo "========";
-        ssh -i cluster0_0.pem $i  "cd $wdb_home; $command; cd -; " ;
+        run_command $i "$command"
+#        ssh -i cluster0_0.pem $i  "cd $wdb_home; $command; cd -; " ;
     done
 }
 
-function run_command {
-    ip=$1
-    command=$2
-    ssh -i cluster0_0.pem $ip  "cd $wdb_home; $command; cd -; " ;
-}
+
 
 if [ -f "$clusterIPFile" ]
 then
