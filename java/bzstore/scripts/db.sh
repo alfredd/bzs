@@ -14,9 +14,15 @@ leaderIP=${clusterNodes[0]}
 function run_command {
     ip=$1
     command=$2
-    ssh -i cluster0_0.pem $ip  "cd $wdb_home; $command &> \"db.log\" & ; cd -; " ;
+    ssh -i cluster0_0.pem $ip  "cd $wdb_home; $command &> db.log &" &
 }
 
+function get_file {
+    ip=$1
+    file_name=$2
+    dest_file_name=$3
+    scp -i cluster0_0.pem $ip:$file_name $dest_file_name
+}
 
 function run_command_on_all_nodes {
     command=$1
@@ -74,4 +80,8 @@ then
 elif [[ "$2" == "build" ]]
 then
     run_command_on_all_nodes "./bzs-setup.sh install"
+elif [[ "$2" == "log" ]]
+then
+    nodeNumber=$3
+    get_file ${clusterNodes[$nodeNumber]} "db.log" "db_$clusterNumber_$nodeNumber.log"
 fi
