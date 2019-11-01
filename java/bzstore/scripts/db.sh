@@ -14,7 +14,7 @@ leaderIP=${clusterNodes[0]}
 function run_command {
     ip=$1
     command=$2
-    ssh -i cluster0_0.pem $ip  "cd $wdb_home; $command &> db.log &" &
+    ssh -i cluster0_0.pem $ip  ". ~/.profile ; cd $wdb_home; $command &> db.log &" &
 }
 
 function get_file {
