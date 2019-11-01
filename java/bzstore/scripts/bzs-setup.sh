@@ -26,7 +26,6 @@ then
 elif [[ "$1" == "cleanDB" ]]
 then
     echo "Cleaning up workspace."
-    rm -rf *.jar
     rm -rf BZS_data_*
 elif [[ "$1" == "install" ]]
 then
