@@ -36,10 +36,10 @@ fi
 
 if [[ "$2" == "uprepo" ]]
 then
-    run_command_on_all_nodes $git_update
+    run_command_on_all_nodes "$git_update"
 elif [[ "$2" == "stop" ]]
 then
-    run_command_on_all_nodes "wbd.sh stop"
+    run_command_on_all_nodes "wdb.sh stop"
 elif [[ "$2" == "starty" ]]
 then
     echo "Starting wedgeDB cluster $clusterNumber, WITH BENCHMARKS***"
