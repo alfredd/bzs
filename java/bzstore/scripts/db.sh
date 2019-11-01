@@ -86,4 +86,7 @@ then
     dest_file_name="./db_$clusterNumber-$nodeNumber.log"
     get_file ${clusterNodes[$nodeNumber]} "db.log" "$dest_file_name"
     less $dest_file_name
+elif [[ "$2" == "bftclear" ]]
+then
+    run_command_on_all_nodes "rm ./config/currentView"
 fi
