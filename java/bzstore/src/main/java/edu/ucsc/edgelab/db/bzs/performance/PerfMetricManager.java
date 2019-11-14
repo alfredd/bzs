@@ -19,7 +19,7 @@ public class PerfMetricManager {
 
     private static final Logger logger = Logger.getLogger(PerfMetricManager.class.getName());
 
-    public void insertLocalPerfData (
+    public void insertLocalPerfData(
             Integer epochNumber,
             int lrwtCount,
             int drwtLPrepareCount,
@@ -28,7 +28,7 @@ public class PerfMetricManager {
             long epochProcessingTimeMS,
             long localPrepareTime,
             long localCommitTime
-            ) {
+    ) {
         synchronized (epochNumber) {
 
             PerfData performanceData = getPerfData(epochNumber);
@@ -50,7 +50,7 @@ public class PerfMetricManager {
         return performanceInfo.get(epochNumber);
     }
 
-    public void insertDTxnPerfData (Integer epochNumber, long dRWT2PCTime, long dRWT2PCCount) {
+    public void insertDTxnPerfData(Integer epochNumber, long dRWT2PCTime, long dRWT2PCCount) {
         synchronized (epochNumber) {
             PerfData performanceData = getPerfData(epochNumber);
             performanceData.setdRWT2PCCount(dRWT2PCCount);
@@ -63,7 +63,7 @@ public class PerfMetricManager {
             if (performanceInfo.containsKey(epochNumber)) {
                 PerfData perfData = performanceInfo.get(epochNumber);
                 logger.info(String.format("Epoch Metrics: " +
-                        "(#Epoch, #Bytes, #lRWT, #dRWTLPrepare, #dRWTLCommit, EPxngTime, LPrepTime, LCommitTime, #dRWT2PC, dRWT2PCTime) = " +
+                                "(#Epoch, #Bytes, #lRWT, #dRWTLPrepare, #dRWTLCommit, EPxngTime, LPrepTime, LCommitTime, #dRWT2PC, dRWT2PCTime) = " +
                                 "( %d, %d, %d, %d, %d, %d, %d, %d, %d, %d )",
                         epochNumber.intValue(),
                         perfData.getNumBytes(),
@@ -94,7 +94,7 @@ class PerfData {
     private long localCommitTime = 0;
     private long dRWT2PCTime = 0;
     private long dRWT2PCCount = 0;
-    private int dRWT2PCTimeCounter=0;
+    private int dRWT2PCTimeCounter = 0;
 
 
     public int getLrwtCount() {
@@ -158,7 +158,8 @@ class PerfData {
     }
 
     public void setdRWT2PCTime(long dRWT2PCTime) {
-        this.dRWT2PCTime += dRWT2PCTime;
+        if (this.dRWT2PCTime < dRWT2PCTime)
+            this.dRWT2PCTime = dRWT2PCTime;
 //        this.dRWT2PCTimeCounter+=1;
     }
 
