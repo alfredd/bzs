@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.txn;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.performance.PerfMetricManager;
 import edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
@@ -19,6 +20,7 @@ public class EpochManager {
     private volatile Integer sequenceNumber = 0;
     private WedgeDBThreadPoolExecutor epochThreadPoolExecutor;
     private WedgeDBThreadPoolExecutor dTxnThreadPoolExecutor;
+    private PerfMetricManager perfMetricManager = PerfMetricManager.getInstance();
     public static final int EPOCH_BUFFER = 5;
 
     private LinkedBlockingQueue<ClusterPC> clusterPrepareBatch = new LinkedBlockingQueue<>();
@@ -79,6 +81,7 @@ public class EpochManager {
 
     protected void processEpoch(final Integer epoch, final Integer txnCount) {
         EpochProcessor processor = new EpochProcessor(epoch, txnCount, dTxnThreadPoolExecutor);
+        processor.setPerfMetricManager(perfMetricManager);
         processor.addPerformanceTracer(perfTracer);
         processor.addClusterPrepare(clusterPrepareBatch);
         clusterPrepareBatch.clear();

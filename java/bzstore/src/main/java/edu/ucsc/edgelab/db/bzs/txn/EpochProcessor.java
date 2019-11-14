@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
+import edu.ucsc.edgelab.db.bzs.performance.PerfMetricManager;
 import edu.ucsc.edgelab.db.bzs.replica.*;
 import io.grpc.stub.StreamObserver;
 
@@ -25,6 +26,7 @@ public class EpochProcessor implements Runnable {
     private Map<String, ClusterPC> clusterPrepareMap;
     private Map<String, ClusterPC> clusterCommitMap;
     private PerformanceTrace perfTracer;
+    private PerfMetricManager perfLogger;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
@@ -142,12 +144,13 @@ public class EpochProcessor implements Runnable {
             Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = txnUtils.mapTransactionsToCluster(dRWTxns, ID.getClusterID());
             for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
                 DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
+                drwtProcessor.setPerfMetricManager(perfLogger);
                 threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
             }
             if (dRWTxns.size() > 0)
                 DTxnCache.addToInProgressQueue(epochNumber, dRWTxns);
         }
-
+        long prepareTimeMS = System.currentTimeMillis() - startTime;
         int epochLCE = -1;
         if (clusterCommitMap.size() > 0) {
             log.info("Creating BFT 2PC commit request in SMR log.");
@@ -247,14 +250,23 @@ public class EpochProcessor implements Runnable {
             }
         }
         long processingTime = System.currentTimeMillis() - startTime;
-        String metrics = String.format("Epoch Metrics: Epoch # = %d,  Bytes = %d, Txn Count:#LRWT = %d, #DRWT = %d, Epoch pxng time = %dms"
-                , epochNumber.intValue()
-                , logEntry.toByteArray().length
-                , logEntry.getLRWTxnsCount()
-                , logEntry.getCommittedDRWTxnsCount()
-                , processingTime
-        );
-        log.info(metrics);
+//        String metrics = String.format("Epoch Metrics: Epoch # = %d,  Bytes = %d, Txn Count:#LRWT = %d, #DRWT = %d, Epoch pxng time = %dms"
+//                , epochNumber.intValue()
+//                , logEntry.toByteArray().length
+//                , logEntry.getLRWTxnsCount()
+//                , logEntry.getCommittedDRWTxnsCount()
+//                , processingTime
+//        );
+        perfLogger.insertLocalPerfData(epochNumber,
+                logEntry.getLRWTxnsCount(),
+                logEntry.getPreparedDRWTxnsCount(),
+                logEntry.getCommittedDRWTxnsCount(),
+                logEntry.toByteArray().length,
+                processingTime,
+                prepareTimeMS,
+                processingTime-prepareTimeMS );
+        perfLogger.logMetrics(epochNumber, log);
+//        log.info(metrics);
     }
 
     @Override
@@ -279,6 +291,10 @@ public class EpochProcessor implements Runnable {
 
     public void addPerformanceTracer(PerformanceTrace perfTracer) {
         this.perfTracer = perfTracer;
+    }
+
+    public void setPerfMetricManager(PerfMetricManager perfMetricManager) {
+        this.perfLogger = perfMetricManager;
     }
 }
 

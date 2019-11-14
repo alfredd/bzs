@@ -74,7 +74,6 @@ public class PerfMetricManager {
                         perfData.getdRWT2PCCount(),
                         perfData.getdRWT2PCTime()
                         )
-
                 );
             }
         }
