@@ -265,7 +265,7 @@ public class EpochProcessor implements Runnable {
                 processingTime,
                 prepareTimeMS,
                 processingTime-prepareTimeMS );
-        perfLogger.logMetrics(epochNumber, log);
+        perfLogger.logMetrics(epochNumber);
 //        log.info(metrics);
     }
 

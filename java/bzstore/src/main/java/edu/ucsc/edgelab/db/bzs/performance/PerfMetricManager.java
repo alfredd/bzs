@@ -17,6 +17,8 @@ public class PerfMetricManager {
         performanceInfo = new ConcurrentHashMap<>();
     }
 
+    private static final Logger logger = Logger.getLogger(PerfMetricManager.class.getName());
+
     public void insertLocalPerfData (
             Integer epochNumber,
             int lrwtCount,
@@ -56,7 +58,7 @@ public class PerfMetricManager {
         }
     }
 
-    public void logMetrics (Integer epochNumber, Logger logger) {
+    public void logMetrics(Integer epochNumber) {
         synchronized (epochNumber) {
             if (performanceInfo.containsKey(epochNumber)) {
                 PerfData perfData = performanceInfo.get(epochNumber);
