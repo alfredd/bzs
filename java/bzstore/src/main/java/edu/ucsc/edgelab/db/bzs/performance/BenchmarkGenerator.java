@@ -54,7 +54,7 @@ public class BenchmarkGenerator {
     }
 
     // TODO: pass localOnly Keys and remoteOnly Keys to the function to generate transactions.
-    public LinkedList<Bzs.Transaction> generate_DRWTransactions(List<String> localClusterKeys, List<String> remoteClusterKeys) {
+    public LinkedList<Bzs.Transaction> generate_DRWTransactions(LinkedList<String> localClusterKeys, LinkedList<String> remoteClusterKeys, int writeOpCount) {
         LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
         loadKeysFromFileForCluster(localClusterKeys);
 
@@ -73,8 +73,8 @@ public class BenchmarkGenerator {
 
         int remoteMaxKeyCount = remoteClusterKeys.size();
 
-        HashSet<String> remoteClusterKeySet = new HashSet<>();
-        HashSet<String> localClusterKeySet = new HashSet<>();
+        LinkedList<String> remoteClusterKeySet = new LinkedList<>();
+        LinkedList<String> localClusterKeySet = new LinkedList<>();
         for (String remoteKey : remoteClusterKeys) {
             remoteClusterKeySet.add(remoteKey.trim());
         }
@@ -82,22 +82,42 @@ public class BenchmarkGenerator {
             localClusterKeySet.add(localKey.trim());
         }
         int newWriteStartsAt = new Random().nextInt(100);
-        Iterator<String> iterator = remoteClusterKeySet.iterator();
+
         for (String localKey : localClusterKeySet) {
             Transaction t = new Transaction();
-            String remoteClusterKey = iterator.next();
-            int remoteClusterID = hashmod(remoteClusterKey, totalClusterCount);
-            BZStoreClient client = clientList.get(remoteClusterID);
-            if (client!=null) {
-                t.setClient(client);
-                t.read(remoteClusterKey);
+            List<String> transactionKeys = new LinkedList<>();
+            int writeOperationsCount = writeOpCount;
+            boolean endLoop = false;
+            while (writeOperationsCount>0) {
+                String remoteClusterKey;
+                try {
+                    remoteClusterKey = remoteClusterKeySet.removeFirst();
+                } catch (Exception e) {
+                    endLoop = true;
+                    break;
+                }
+                int remoteClusterID = hashmod(remoteClusterKey, totalClusterCount);
+                BZStoreClient client = clientList.get(remoteClusterID);
+                if (client!=null) {
+                    t.setClient(client);
+                    BZStoreData readResponse = t.read(remoteClusterKey);
+                    if (!readResponse.value.equalsIgnoreCase("")) {
+                        writeOperationsCount-=1;
+                        transactionKeys.add(remoteClusterKey);
+                    }
+                }
             }
+            if (endLoop)
+                break;
 
             BZStoreData localData = storedData.get(localKey);
             if (localData != null) {
                 t.setReadHistory(localKey, localData.value, localData.version, clusterID);
-                t.write(remoteClusterKey, remoteClusterKey+newWriteStartsAt, remoteClusterID);
-                newWriteStartsAt+=1;
+
+                for(String remoteTransactionKey: transactionKeys) {
+                    t.write(remoteTransactionKey, remoteTransactionKey+newWriteStartsAt, hashmod(remoteTransactionKey, totalClusterCount));
+                    newWriteStartsAt+=1;
+                }
             } else {
                 continue;
             }

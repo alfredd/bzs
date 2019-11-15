@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class DatabaseLoader implements Runnable {
 
     private final Integer clusterID;
-    private List<String> wordList = new LinkedList<>();
+    private LinkedList<String> wordList = new LinkedList<>();
     private int transactionCount = 0;
     private int transactionsCompleted = 0;
     private int transactionsFailed = 0;
@@ -33,10 +33,9 @@ public class DatabaseLoader implements Runnable {
     private int totalCount;
     private int processed;
     private int flushed = 0;
-    private final List<String> allWords;
-    private final List<String> remoteClusterKeys = new LinkedList<>();
+    private final LinkedList<String> allWords;
+    private final LinkedList<String> remoteClusterKeys = new LinkedList<>();
     private boolean sendLocalOnly;
-    private List<String> writeOnlyWordList = new LinkedList<>();
 
     public DatabaseLoader(TransactionProcessorINTF transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
@@ -82,29 +81,15 @@ public class DatabaseLoader implements Runnable {
 
     }
 
-    public Bzs.Transaction generateWriteSet(Integer operationCount) {
-        ConnectionLessTransaction transactionManager = new ConnectionLessTransaction();
-        Random random = new Random();
-        List<String> wordListForGeneratingWriteSet = this.wordList;
-        if (!sendLocalOnly) {
-            wordListForGeneratingWriteSet = allWords;
+    public List<Bzs.Transaction> generateWriteSet(List<String> wordList) {
+        List<Bzs.Transaction> writeOnlyTransactions = new LinkedList<>();
+        for (String word: wordList) {
+
+            ConnectionLessTransaction transactionManager = new ConnectionLessTransaction();
+            transactionManager.write(word, word+word, ID.getClusterID());
+            writeOnlyTransactions.add(transactionManager.getTransaction());
         }
-        int writeCount = 0;
-        while (writeCount == 0) {
-            writeCount = random.nextInt(operationCount);
-        }
-        for (int i = 0; i < writeCount; i++) {
-            int keyIndex = random.nextInt(wordListForGeneratingWriteSet.size());
-            int valueIndex = random.nextInt(wordListForGeneratingWriteSet.size());
-            int cid = clusterID;
-            String key = wordListForGeneratingWriteSet.get(keyIndex);
-            this.writeOnlyWordList.add(key);
-            if (!sendLocalOnly) {
-                cid = TxnUtils.hashmod(key, totalClusters);
-            }
-            transactionManager.write(key, wordListForGeneratingWriteSet.get(valueIndex), cid);
-        }
-        return transactionManager.getTransaction();
+        return writeOnlyTransactions;
     }
 
     @Override
@@ -121,12 +106,12 @@ public class DatabaseLoader implements Runnable {
         }
         this.sendLocalOnly = true;
         started = true;
-        int txnCount = 6000;
+        int txnCount = wordList.size();
         int maxOperations = 3;
         this.totalCount = txnCount;
         this.processed = 0;
-        sendTransactions(txnCount, maxOperations);
-        txnCount = 100;
+        sendWriteOnlyTransactions(wordList);
+//        txnCount = 100;
         log.info(String.format("Total transactions for W-ONLY LRWT = %d", totalCount));
 
 //        log.info("Completed local transactions. Waiting for " + delayMs + "milliseconds before sending distributed transactions.");
@@ -143,7 +128,7 @@ public class DatabaseLoader implements Runnable {
         log.info("GENERATING L-RWT.");
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator();
         benchmarkGenerator.setTotalClusterCount(totalClusters);
-        LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(writeOnlyWordList);
+        LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
         totalCount = txns.size();
         currentCompleted = 0;
 
@@ -155,12 +140,24 @@ public class DatabaseLoader implements Runnable {
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
         if (ID.canRunBenchMarkTests()) {
 
-            log.info("GENERATING D-RWT.");
+            log.info("GENERATING D-RWT ( 1R, 1W op).");
 
-            LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
+            LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, 1);
             totalCount = drwtxns.size();
             currentCompleted = 0;
                 log.info(String.format("Total transactions for DRWT = %d", totalCount));
+            for (Bzs.Transaction t : drwtxns) {
+                transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
+            }
+            waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
+
+
+            log.info("GENERATING D-RWT ( 1R, 1W op).");
+
+            drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, 2);
+            totalCount = drwtxns.size();
+            currentCompleted = 0;
+            log.info(String.format("Total transactions for DRWT = %d", totalCount));
             for (Bzs.Transaction t : drwtxns) {
                 transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
             }
@@ -185,18 +182,20 @@ public class DatabaseLoader implements Runnable {
         }
     }
 
-    public void sendTransactions(int n, int m) {
-        while ((--n) >= 0) {
-            sendWriteOnlyTransactions(m);
+//    public void sendTransactions(int n, int m) {
+//        while ((--n) >= 0) {
+//            sendWriteOnlyTransactions(m);
+//        }
+//    }
+
+    public void sendWriteOnlyTransactions(List<String> wordList) {
+
+        List<Bzs.Transaction> writeOnlyTransactions = generateWriteSet(wordList);
+        for (Bzs.Transaction writeTransaction: writeOnlyTransactions) {
+            StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
+            transactionProcessor.processTransaction(writeTransaction, responseObserver);
+            transactionCount += 1;
         }
-    }
-
-    public void sendWriteOnlyTransactions(int totalOperations) {
-
-        Bzs.Transaction writeTransaction = generateWriteSet(totalOperations);
-        StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
-        transactionProcessor.processTransaction(writeTransaction, responseObserver);
-        transactionCount += 1;
     }
 
     public StreamObserver<Bzs.TransactionResponse> getTransactionResponseStreamObserver() {
