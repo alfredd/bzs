@@ -141,27 +141,29 @@ public class DatabaseLoader implements Runnable {
         if (ID.canRunBenchMarkTests()) {
 
             log.info("GENERATING D-RWT ( 1R, 1W op).");
+            for (int i = 0; i < 3; i++) {
 
-            LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, 1);
-            totalCount = drwtxns.size();
-            currentCompleted = 0;
+                LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, i%8);
+                totalCount = drwtxns.size();
+                currentCompleted = 0;
                 log.info(String.format("Total transactions for DRWT = %d", totalCount));
-            for (Bzs.Transaction t : drwtxns) {
-                transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
-            }
-            waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
+                for (Bzs.Transaction t : drwtxns) {
+                    transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
+                }
+                waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
 
+            }
 
             log.info("GENERATING D-RWT ( 1R, 1W op).");
 
-            drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, 2);
-            totalCount = drwtxns.size();
-            currentCompleted = 0;
-            log.info(String.format("Total transactions for DRWT = %d", totalCount));
-            for (Bzs.Transaction t : drwtxns) {
-                transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
-            }
-            waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
+//            drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, 2);
+//            totalCount = drwtxns.size();
+//            currentCompleted = 0;
+//            log.info(String.format("Total transactions for DRWT = %d", totalCount));
+//            for (Bzs.Transaction t : drwtxns) {
+//                transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
+//            }
+//            waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
         }
         log.info("END OF BENCHMARK RUN.");
 
