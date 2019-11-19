@@ -46,6 +46,6 @@ sudo ldconfig # refresh shared library cache.
 
 cd
 cd $wdb_home
-./bzs-setup install 
+./bzs-setup.sh install 
 
 
