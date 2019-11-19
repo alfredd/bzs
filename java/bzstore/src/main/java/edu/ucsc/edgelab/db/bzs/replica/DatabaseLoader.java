@@ -140,8 +140,8 @@ public class DatabaseLoader implements Runnable {
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
         if (ID.canRunBenchMarkTests()) {
 
-            log.info("GENERATING D-RWT ( 1R, 1W op).");
-            for (int i = 0; i < 3; i++) {
+            for (int i = 1; i < 3; i++) {
+                log.info("GENERATING D-RWT ( 1R, "+i+"W op).");
 
                 LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, i%8);
                 totalCount = drwtxns.size();
@@ -154,7 +154,7 @@ public class DatabaseLoader implements Runnable {
 
             }
 
-            log.info("GENERATING D-RWT ( 1R, 1W op).");
+            //log.info("GENERATING D-RWT ( 1R, 1W op).");
 
 //            drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, 2);
 //            totalCount = drwtxns.size();
