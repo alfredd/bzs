@@ -15,7 +15,7 @@ leaderIP=${clusterNodes[0]}
 function run_command {
     ip=$1
     command=$2
-    if [ -z "$1" ]
+    if [ -z "$3" ]
     then 
       ssh -i chameleonkey.pem cc@$ip  ". ~/.profile ; cd $wdb_home; $command &> db.log &" &
     else
@@ -67,7 +67,7 @@ function get_file {
     ip=$1
     file_name=$2
     dest_file_name=$3
-    scp -i chameleonkey.pem $ip:"$wdb_home/$file_name" $dest_file_name
+    scp -i chameleonkey.pem cc@$ip:"$wdb_home/$file_name" $dest_file_name
 }
 
 function run_command_on_all_nodes {
@@ -139,8 +139,8 @@ then
       for i in  `cat $clusterIPFile` ;
       do
       	scp hosts.config cc@$i:"$wdb_home/config/"
-      	sed "s/= auto/= ${replica_ips[$j]}/" bftsmart_conf/system.config.bak > system.config$i
-      	scp system.config cc@${replica_floating_ips[$j]}:~/library/config/  
+      	sed "s/= auto/= ${replica_ips[$j]}/" bftsmart_conf/system.config.bak > system.config
+      	scp system.config cc@${replica_floating_ips[$j]}:"$wdb_home/config/"  
         j=$(( j + 1 ))
       done
     fi
