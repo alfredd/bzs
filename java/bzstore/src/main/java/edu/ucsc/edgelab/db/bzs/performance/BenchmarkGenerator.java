@@ -27,27 +27,29 @@ public class BenchmarkGenerator {
         this.clusterID = ID.getClusterID();
     }
 
-    private void loadKeysFromFileForCluster(List<String> words) {
-        for (String word : words) {
-            Integer wordHash = hashmod(word, totalClusterCount);
+    private void loadKeysFromDB(List<String> clusterKeys) {
+        for (String dbKey : clusterKeys) {
+            Integer wordHash = hashmod(dbKey, totalClusterCount);
             if (wordHash == clusterID) {
-                BZStoreData storedValue = BZDatabaseController.getlatest(word);
-                storedData.put(word, storedValue);
+                BZStoreData storedValue = BZDatabaseController.getlatest(dbKey);
+                storedData.put(dbKey, storedValue);
             }
         }
     }
 
-    public LinkedList<Bzs.Transaction> generateAndPush_LRWTransactions(List<String> words) {
+    public LinkedList<Bzs.Transaction> generateAndPush_LRWTransactions(List<String> clusterKeys) {
         LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
-        loadKeysFromFileForCluster(words);
+        loadKeysFromDB(clusterKeys);
+        int i = 1;
         for (Map.Entry<String, BZStoreData> entry : storedData.entrySet()) {
             BZStoreData storeData = entry.getValue();
             if (storeData.version > 0) {
                 ConnectionLessTransaction t = new ConnectionLessTransaction();
                 t.setReadHistory(entry.getKey(), storeData.value, storeData.version, clusterID);
-                t.write(entry.getKey(), storeData.value + storeData.value, clusterID);
+                t.write(entry.getKey(), storeData.value + i, clusterID);
                 Bzs.Transaction txn = t.getTransaction();
                 transactions.add(txn);
+                i++;
             }
         }
         return transactions;
@@ -56,7 +58,7 @@ public class BenchmarkGenerator {
     // TODO: pass localOnly Keys and remoteOnly Keys to the function to generate transactions.
     public LinkedList<Bzs.Transaction> generate_DRWTransactions(LinkedList<String> localClusterKeys, LinkedList<String> remoteClusterKeys, int writeOpCount) {
         LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
-        loadKeysFromFileForCluster(localClusterKeys);
+        loadKeysFromDB(localClusterKeys);
 
         Map<Integer, BZStoreClient> clientList = new LinkedHashMap<>();
         for (int i = 0; i < totalClusterCount; i++) {
