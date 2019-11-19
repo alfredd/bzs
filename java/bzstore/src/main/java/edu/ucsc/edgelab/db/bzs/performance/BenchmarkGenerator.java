@@ -33,6 +33,7 @@ public class BenchmarkGenerator {
             if (wordHash == clusterID) {
                 BZStoreData storedValue = BZDatabaseController.getlatest(dbKey);
                 storedData.put(dbKey, storedValue);
+                log.info("DEBUG: Key : "+dbKey+", Stored value: " + storedValue);
             }
         }
     }
@@ -52,6 +53,7 @@ public class BenchmarkGenerator {
                 i++;
             }
         }
+        log.info("DEBUG: Generated L-RWTs:  "+transactions);
         return transactions;
     }
 
