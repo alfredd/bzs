@@ -150,7 +150,7 @@ public class DatabaseLoader implements Runnable {
                 for (Bzs.Transaction t : drwtxns) {
                     transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
                 }
-                waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
+                waitForTransactionCompletion(delayMs, drwtxns.size(), "D-RW");
 
             }
 

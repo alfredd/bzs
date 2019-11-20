@@ -85,7 +85,7 @@ public class BenchmarkGenerator {
         for (String localKey : localClusterKeys) {
             localClusterKeySet.add(localKey.trim());
         }
-        int newWriteStartsAt = new Random().nextInt(100);
+        int newWriteStartsAt = 0;
 
         for (String localKey : localClusterKeySet) {
             Transaction t = new Transaction();
