@@ -130,7 +130,7 @@ public class BenchmarkGenerator {
             }
         }
 
-        log.info("Number of transactions for testing D-RW Txns: "+ transactions.size());
+        log.info("Number of transactions for testing D-RW Txns: "+ transactions.size()+ ". Transactions: "+transactions);
         return transactions;
     }
 
