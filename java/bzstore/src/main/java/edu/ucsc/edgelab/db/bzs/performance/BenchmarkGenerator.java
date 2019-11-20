@@ -113,9 +113,9 @@ public class BenchmarkGenerator {
                     }
                 }
             }
-            if (endLoop) {
-                break;
-            }
+//            if (endLoop) {
+//                break;
+//            }
 
 
             BZStoreData localData = storedData.get(localKey);
