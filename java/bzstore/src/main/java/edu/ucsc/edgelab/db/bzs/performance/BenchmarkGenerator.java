@@ -107,6 +107,7 @@ public class BenchmarkGenerator {
                 if (client!=null) {
                     t.setClient(client);
                     BZStoreData readResponse = t.read(remoteClusterKey);
+                    log.info("DEBUG: read response: " + readResponse);
                     if (!readResponse.value.equalsIgnoreCase("")) {
                         writeOperationsCount-=1;
                         transactionKeys.add(remoteClusterKey);
@@ -116,7 +117,7 @@ public class BenchmarkGenerator {
 //            if (endLoop) {
 //                break;
 //            }
-
+            log.info("DEBUG: creating transactions from remoteClusterKey: "+transactionKeys);
 
             BZStoreData localData = storedData.get(localKey);
             if (localData != null) {
