@@ -108,10 +108,10 @@ public class BenchmarkGenerator {
                     t.setClient(client);
                     BZStoreData readResponse = t.read(remoteClusterKey);
                     log.info("DEBUG: read response: " + readResponse);
-                    if (!readResponse.value.equalsIgnoreCase("")) {
+//                    if (!readResponse.value.equalsIgnoreCase("")) {
                         writeOperationsCount-=1;
                         transactionKeys.add(remoteClusterKey);
-                    }
+//                    }
                 }
             }
 //            if (endLoop) {
