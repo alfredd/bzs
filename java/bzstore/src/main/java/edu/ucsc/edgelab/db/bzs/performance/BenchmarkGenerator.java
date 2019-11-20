@@ -64,7 +64,7 @@ public class BenchmarkGenerator {
 
         Map<Integer, BZStoreClient> clientList = new LinkedHashMap<>();
         for (int i = 0; i < totalClusterCount; i++) {
-            if (!clusterID.equals(i) && ID.canRunBenchMarkTests()) {
+            if (!clusterID.equals(i)/* && ID.canRunBenchMarkTests()*/) {
                 try {
                     ServerInfo serverInfo = Configuration.getServerInfo(i, 0);
                     BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
@@ -85,6 +85,7 @@ public class BenchmarkGenerator {
         for (String localKey : localClusterKeys) {
             localClusterKeySet.add(localKey.trim());
         }
+
         int newWriteStartsAt = 0;
 
         for (String localKey : localClusterKeySet) {
@@ -97,6 +98,7 @@ public class BenchmarkGenerator {
                 try {
                     remoteClusterKey = remoteClusterKeySet.removeFirst();
                 } catch (Exception e) {
+                    log.log(Level.WARNING, "No more keys in remoteClusterKeySet");
                     endLoop = true;
                     break;
                 }
@@ -111,8 +113,10 @@ public class BenchmarkGenerator {
                     }
                 }
             }
-            if (endLoop)
+            if (endLoop) {
                 break;
+            }
+
 
             BZStoreData localData = storedData.get(localKey);
             if (localData != null) {
@@ -122,10 +126,8 @@ public class BenchmarkGenerator {
                     t.write(remoteTransactionKey, remoteTransactionKey+newWriteStartsAt, hashmod(remoteTransactionKey, totalClusterCount));
                     newWriteStartsAt+=1;
                 }
-            } else {
-                continue;
+                transactions.add(t.getTransaction());
             }
-            transactions.add(t.getTransaction());
         }
 
         log.info("Number of transactions for testing D-RW Txns: "+ transactions.size());
