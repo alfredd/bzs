@@ -53,7 +53,7 @@ public class BenchmarkGenerator {
                 i++;
             }
         }
-        log.info("DEBUG: Generated L-RWTs:  "+transactions);
+        log.info("DEBUG: Generated L-RWTs:  "+transactions.size());
         return transactions;
     }
 
@@ -98,7 +98,7 @@ public class BenchmarkGenerator {
                 try {
                     remoteClusterKey = remoteClusterKeySet.removeFirst();
                 } catch (Exception e) {
-                    log.log(Level.WARNING, "No more keys in remoteClusterKeySet");
+//                    log.log(Level.WARNING, "No more keys in remoteClusterKeySet");
                     endLoop = true;
                     break;
                 }
@@ -107,7 +107,7 @@ public class BenchmarkGenerator {
                 if (client!=null) {
                     t.setClient(client);
                     BZStoreData readResponse = t.read(remoteClusterKey);
-                    log.info("DEBUG: read response: " + readResponse);
+//                    log.info("DEBUG: read response: " + readResponse);
 //                    if (!readResponse.value.equalsIgnoreCase("")) {
                         writeOperationsCount-=1;
                         transactionKeys.add(remoteClusterKey);
@@ -117,7 +117,7 @@ public class BenchmarkGenerator {
 //            if (endLoop) {
 //                break;
 //            }
-            log.info("DEBUG: creating transactions from remoteClusterKey: "+transactionKeys);
+//            log.info("DEBUG: creating transactions from remoteClusterKey: "+transactionKeys);
 
             BZStoreData localData = storedData.get(localKey);
             if (localData != null && transactionKeys.size()>0) {
@@ -131,7 +131,7 @@ public class BenchmarkGenerator {
             }
         }
 
-        log.info("Number of transactions for testing D-RW Txns: "+ transactions.size()+ ". Transactions: "+transactions);
+        log.info("Number of transactions for testing D-RW Txns: "+ transactions.size()/*+ ". Transactions: "+transactions*/);
         return transactions;
     }
 

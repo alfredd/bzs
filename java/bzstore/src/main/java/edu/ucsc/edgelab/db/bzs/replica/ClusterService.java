@@ -36,11 +36,11 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        log.info(String.format("Received batch commit request: %s", request.toString()));
+//        log.info(String.format("Received batch commit request: %s", request.toString()));
         ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessorMap.get(request.getID());
         if (clusterDRWTProcessor == null || (!RemoteTxnCache.isPrepared(clusterDRWTProcessor.getID()))) {
-            log.info(String.format("Transaction batch with Request ID: %s not found in prepared jobs cache. Reqeust: %s", request.getID(),
-                    request.toString()));
+//            log.info(String.format("Transaction batch with Request ID: %s not found in prepared jobs cache. Reqeust: %s", request.getID(),
+//                    request.toString()));
             sendBatchAbort(request, responseObserver);
             return;
         }
@@ -101,7 +101,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 try {
                     batch = createTransactionBatch(request, operation);
                     batchResponse = BFTClient.getInstance().performCommitPrepare(batch);
-                    log.info("Response of ClusterService Prepare: " + batchResponse);
+//                    log.info("Response of ClusterService Prepare: " + batchResponse);
                 } catch (InvalidCommitException e) {
                     log.log(Level.WARNING, e.getLocalizedMessage());
                 }

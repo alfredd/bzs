@@ -93,10 +93,10 @@ public class EpochProcessor implements Runnable {
         if (actualTxnPrepareCount <= 0) {
             log.log(Level.WARNING, "No transactions found in this Epoch: " + epochNumber);
         } else {
-            log.info("Preparing transactions.");
+//            log.info("Preparing transactions.");
             transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
             if (transactionBatchResponse != null) {
-                log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
+//                log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
                 for (TransactionResponse txnResponse : transactionBatchResponse.getResponsesList()) {
                     TransactionStatus respStatus = txnResponse.getStatus();
                     TransactionID transactionID = TransactionID.getTransactionID(txnResponse.getTransactionID());
@@ -129,17 +129,17 @@ public class EpochProcessor implements Runnable {
                         }
                         SmrLog.twoPCPrepared(epochNumber, cpc.batch, cpc.callback.getID());
                         String id = responseClusterPC.getID();
-                        log.info("Adding prepared 2PC transactions to RemoteTxnCache: " + id + ", list of preparedTIDs: " + preparedTIDs);
+//                        log.info("Adding prepared 2PC transactions to RemoteTxnCache: " + id + ", list of preparedTIDs: " + preparedTIDs);
                         RemoteTxnCache.addTIDsToPreparedBatch(id, preparedTIDs);
                         cpc.callback.setPreparedEpoch(epochNumber);
                         cpc.callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
                         cpc.callback.sendResponseToClient();
                     }
                 }
-            } else {
+            } /*else {
                 log.log(Level.WARNING, "Transaction batch response was null. Epoch: " + epochNumber);
                 // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
-            }
+            }*/
 
             Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = txnUtils.mapTransactionsToCluster(dRWTxns, ID.getClusterID());
             for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
@@ -153,16 +153,16 @@ public class EpochProcessor implements Runnable {
         long prepareTimeMS = System.currentTimeMillis() - startTime;
         int epochLCE = -1;
         if (clusterCommitMap.size() > 0) {
-            log.info("Creating BFT 2PC commit request in SMR log.");
+//            log.info("Creating BFT 2PC commit request in SMR log.");
             for (Map.Entry<String, ClusterPC> cpcEntry : clusterCommitMap.entrySet()) {
                 ClusterPC cpc = cpcEntry.getValue();
                 String id = cpcEntry.getKey();
-                log.info("2PC Transactions to commit: " + cpc.batch + ", ID: " + id);
+//                log.info("2PC Transactions to commit: " + cpc.batch + ", ID: " + id);
                 Set<Transaction> prepared2PCTxns = new LinkedHashSet<>();
                 for (Transaction t : cpc.batch) {
                     TransactionID transactionID = TransactionID.getTransactionID(t.getTransactionID());
                     if (RemoteTxnCache.isTIDInPreparedBatch(id, transactionID)) {
-                        log.info("Found transaction in prepared batch: " + transactionID);
+//                        log.info("Found transaction in prepared batch: " + transactionID);
                         prepared2PCTxns.add(t);
                     } else {
                         cpc.callback.addToFailedList(t);
@@ -195,15 +195,15 @@ public class EpochProcessor implements Runnable {
         int status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
         long duration = System.currentTimeMillis() - smrCommitStartTime;
 
-        log.info("Time to prepare SMR log: " + (duration) + "ms.");
+//        log.info("Time to prepare SMR log: " + (duration) + "ms.");
         TransactionStatus commitStatus = TransactionStatus.COMMITTED;
         if (status < 0) {
-            log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch " + epochNumber);
+//            log.log(Level.SEVERE, "FAILURE in BFT consensus to add entry to SMR log for epoch " + epochNumber);
             commitStatus = TransactionStatus.ABORTED;
         } else {
             // Commit SMR log entry
             BFTClient.getInstance().commitSMR(epochNumber);
-            log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
+//            log.info(String.format("SMR log #%d: %s", epochNumber.intValue(), logEntry));
         }
 
 
@@ -214,7 +214,7 @@ public class EpochProcessor implements Runnable {
                 TransactionID transactionID = TransactionID.getTransactionID(id);
                 StreamObserver<TransactionResponse> responseObserver = TransactionCache.getObserver(transactionID);
                 if (lRWTxns.containsKey(transactionID)) {
-                    log.info("Sending a Transaction Response for transaction with ID " + id + ": " + transactionBatchResponse);
+//                    log.info("Sending a Transaction Response for transaction with ID " + id + ": " + transactionBatchResponse);
                     if (responseObserver != null) {
                         TransactionResponse newResponse = TransactionResponse.newBuilder(txnResponse)
                                 .putAllDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap())
@@ -223,11 +223,11 @@ public class EpochProcessor implements Runnable {
                         responseObserver.onNext(newResponse);
                         responseObserver.onCompleted();
                     } else {
-                        log.log(Level.WARNING,
-                                "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
+//                        log.log(Level.WARNING,
+//                                "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
                     }
                 } else {
-                    log.info("Response to clients for transaction with ID " + id + " WILL NOT BE SENT as it is a DRWTxn. : " + transactionBatchResponse);
+//                    log.info("Response to clients for transaction with ID " + id + " WILL NOT BE SENT as it is a DRWTxn. : " + transactionBatchResponse);
                 }
             }
         }
@@ -236,7 +236,7 @@ public class EpochProcessor implements Runnable {
             TransactionID ctid = TransactionID.getTransactionID(ct.getTransactionID());
             StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(ctid);
             TransactionResponse response = TransactionCache.getResponse(ctid);
-            log.info("Sending a Transaction Response for transaction with ID " + ctid + ": " + response);
+//            log.info("Sending a Transaction Response for transaction with ID " + ctid + ": " + response);
             observer.onNext(response);
             observer.onCompleted();
             LockManager.releaseLocks(ct);
@@ -275,14 +275,14 @@ public class EpochProcessor implements Runnable {
     }
 
     public void addClusterPrepare(final LinkedBlockingQueue<ClusterPC> clusterPrepareBatch) {
-        log.info("Adding clusterPrepareBatch to prepare map: " + clusterPrepareBatch);
+//        log.info("Adding clusterPrepareBatch to prepare map: " + clusterPrepareBatch);
         for (ClusterPC cpc : clusterPrepareBatch) {
             clusterPrepareMap.put(cpc.callback.getID(), cpc);
         }
     }
 
     public void addClusterCommit(LinkedBlockingQueue<ClusterPC> clusterCommitBatch) {
-        log.info("Adding clusterCommitBatch to commit map: " + clusterCommitBatch);
+//        log.info("Adding clusterCommitBatch to commit map: " + clusterCommitBatch);
         for (ClusterPC cpc : clusterCommitBatch) {
             clusterCommitMap.put(cpc.callback.getID(), cpc);
         }

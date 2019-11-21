@@ -45,9 +45,9 @@ public class TxnProcessor implements TransactionProcessorINTF {
     @Override
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {
         synchronized (this) {
-            log.info(String.format("Received transaction request: %s", request.toString()));
+//            log.info(String.format("Received transaction request: %s", request.toString()));
             if (!serializer.serialize(request)) {
-                log.info("Transaction cannot be serialized. Will abort. Request: " + request);
+//                log.info("Transaction cannot be serialized. Will abort. Request: " + request);
                 Bzs.TransactionResponse response =
                         Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
                 if (responseObserver != null) {
