@@ -170,12 +170,12 @@ public class DatabaseLoader implements Runnable {
     }
 
     private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
-        int end = 0;
-        while (end < 1) {
+        int endCounter = 5;
+        while (endCounter >= 0) {
             try {
                 Thread.sleep(delayMs);
-                if (currentCompleted >= txnCount) {
-                    end += 1;
+                if (currentCompleted < txnCount) {
+                    endCounter -= 1;
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
