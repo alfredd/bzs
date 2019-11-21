@@ -54,10 +54,10 @@ public class DatabaseLoader implements Runnable {
         log.info(String.format("Loading keys from: %s. Total number of clusters: %d", fileName, totalClusters));
         while (scanner.hasNext()) {
             String[] line = scanner.next().split(" ");
-            if (line != null)
+            /*if (line != null)
                 log.info(String.format("Line read from file. Number of words: %d", line.length));
             else
-                log.log(Level.WARNING, "Could not read data from file.");
+                log.log(Level.WARNING, "Could not read data from file.");*/
 
             for (String word : line) {
 
