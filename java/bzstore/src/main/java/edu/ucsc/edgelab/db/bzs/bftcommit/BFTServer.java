@@ -53,7 +53,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             logger.log(Level.WARNING, "Received BFT request is null");
             return getRandomBytes();
         }
-        logger.info("Received BFT request: "+ transactionBatch.toString());
+//        logger.info("Received BFT request: "+ transactionBatch.toString());
 
         Bzs.Operation operation = transactionBatch.getOperation();
         switch (operation) {
@@ -95,7 +95,7 @@ public class BFTServer extends DefaultSingleRecoverable {
             commitDBCache(epoch);
             BZDatabaseController.setEpochCount(epoch);
             BZDatabaseController.commitDepVector(smrLogEntry.getDepVectorMap());
-            logger.info(String.format("Committed SMR log for epoch %d. Smr Log Entry: %s", epoch.intValue(), smrLogEntry.toString()));
+//            logger.info(String.format("Committed SMR log for epoch %d. Smr Log Entry: %s", epoch.intValue(), smrLogEntry.toString()));
         }
 
         return ByteBuffer.allocate(4).putInt(1).array();
@@ -121,8 +121,8 @@ public class BFTServer extends DefaultSingleRecoverable {
         smrLogCache.put(smrLogEntry.getEpochNumber(), smrLogEntry);
         byte[] bytes = DigestUtils.md5(smrLogEntry.toByteArray());
         long duration = System.currentTimeMillis() - startTime;
-        logger.info("Time to generate Hash: "+duration);
-        logger.info("Generated Hash: " + Arrays.toString(bytes));
+//        logger.info("Time to generate Hash: "+duration);
+//        logger.info("Generated Hash: " + Arrays.toString(bytes));
         return bytes;
     }
 
