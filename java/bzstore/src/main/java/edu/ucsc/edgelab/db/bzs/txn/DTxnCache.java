@@ -13,6 +13,7 @@ public class DTxnCache {
     private static TreeSet<Integer> completedEpochs = new TreeSet<>();
     private static Map<Integer, CacheKeeper> txnCache = new ConcurrentHashMap<>();
     public static boolean log_debug_flag = false;
+    public static boolean statusHistory = true;
 
     public static final Logger logger = Logger.getLogger(DTxnCache.class.getName());
 
@@ -41,7 +42,10 @@ public class DTxnCache {
         boolean status;
         status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(epochQueue.getFirst());
         if (log_debug_flag) {
-            logger.info("Complexted DRWTxns exists? " + status);
+            if (status != statusHistory)
+                logger.info("Complexted DRWTxns exists? " + status);
+            statusHistory= status;
+
 //            logger.info("Epoch Queue: "+epochQueue);
         }
         return status;
