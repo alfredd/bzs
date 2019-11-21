@@ -21,7 +21,7 @@ public class DTxnCache {
     }
 
     public static Collection<Bzs.Transaction> getCommittedTransactions() {
-        logger.info("Returning committed transactions.");
+//        logger.info("Returning committed transactions.");
         Set<Bzs.Transaction> committedTxns = new LinkedHashSet<>();
         while (completedDRWTxnsExist()) {
             Integer head = epochQueue.getFirst();
@@ -42,7 +42,7 @@ public class DTxnCache {
         status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(epochQueue.getFirst());
         if (log_debug_flag) {
             logger.info("Complexted DRWTxns exists? " + status);
-            logger.info("Epoch Queue: "+epochQueue);
+//            logger.info("Epoch Queue: "+epochQueue);
         }
         return status;
     }

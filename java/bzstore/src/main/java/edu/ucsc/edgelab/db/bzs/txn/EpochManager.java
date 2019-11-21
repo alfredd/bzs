@@ -67,7 +67,7 @@ public class EpochManager {
             Integer seq = sequenceNumber;
             if (seq > 0 || clusterCommitBatch.size() > 0 || clusterPrepareBatch.size() > 0 || DTxnCache.completedDRWTxnsExist()) {
                 final int epoch = epochNumber;
-                logger.info("Processing Epoch: "+epoch);
+//                logger.info("Processing Epoch: "+epoch);
                 seq = sequenceNumber - 1;
                 sequenceNumber = 0;
                 epochNumber += 1;
