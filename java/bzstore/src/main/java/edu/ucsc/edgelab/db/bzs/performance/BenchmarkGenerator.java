@@ -120,7 +120,7 @@ public class BenchmarkGenerator {
             log.info("DEBUG: creating transactions from remoteClusterKey: "+transactionKeys);
 
             BZStoreData localData = storedData.get(localKey);
-            if (localData != null) {
+            if (localData != null && transactionKeys.size()>0) {
                 t.setReadHistory(localKey, localData.value, localData.version, clusterID);
 
                 for(String remoteTransactionKey: transactionKeys) {
