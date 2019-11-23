@@ -113,6 +113,7 @@ public class BZStoreServer {
                 .addService(new BZStoreReplica(this.transactionProcessor, isLeader))
                 .addService(new ClusterService(this.transactionProcessor, isLeader))
                 .addService(new PkiService())
+                .addService(new DBTracerService())
                 .build().start();
         logger.info("Server started.");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

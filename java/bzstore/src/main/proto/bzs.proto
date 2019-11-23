@@ -37,6 +37,15 @@ service PKIService {
     rpc GetPrivateKey (KeyType) returns (Key); // Possible interface to retrieve digital signatures from nodes
 }
 
+service DBTracer {
+    rpc GetLogEntry (EpochNumber) returns (SmrLogEntry);
+    rpc GetLatestLogEntry(EpochNumber) returns (SmrLogEntry);
+    rpc GetNextLogEntry (EpochNumber) returns (SmrLogEntry);
+}
+message EpochNumber {
+    int32 number = 1;
+}
+
 message KeyType {
     string algorithm = 1;
 }

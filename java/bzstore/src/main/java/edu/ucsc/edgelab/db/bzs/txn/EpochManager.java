@@ -33,7 +33,9 @@ public class EpochManager {
 
     public EpochManager() {
         epochThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
-        TimerTask epochUpdater = new TimerTask() {
+        maxEpochBatchSize = Configuration.getEpochBatchCount();
+        epochNumber = BZDatabaseController.getEpochCount() + 1;
+/*        TimerTask epochUpdater = new TimerTask() {
 
             @Override
             public void run() {
@@ -42,10 +44,8 @@ public class EpochManager {
 //                logger.info("Epoch updated.");
             }
         };
-        maxEpochBatchSize = Configuration.getEpochBatchCount();
-        epochNumber = BZDatabaseController.getEpochCount() + 1;
         Timer t = new Timer();
-        t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());
+        t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());*/
         dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
     }
 

@@ -95,8 +95,9 @@ public final class BZDatabaseController {
 
     public static Bzs.SmrLogEntry getSmrBlock(Integer epochNumber) {
         return BZ_DATABASE_CONTROLLER.db.getSmrBlock(getSMRLogKey(epochNumber));
-
     }
+
+//    public static Bzs.SmrLogEntry getLatestSmrBlock
 
     private static String getSMRLogKey(Integer epochNumber) {
         return String.format("S.%d", epochNumber.intValue());
