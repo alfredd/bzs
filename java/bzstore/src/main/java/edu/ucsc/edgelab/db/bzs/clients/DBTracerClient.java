@@ -2,7 +2,6 @@ package edu.ucsc.edgelab.db.bzs.clients;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.DBTracerGrpc;
-import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import io.grpc.ManagedChannel;
@@ -58,11 +57,23 @@ public class DBTracerClient {
     }
 
     public static void main(String[] args) {
+        if (args.length !=2 ) {
+            System.out.println("Input parameters must include space separated clusterid replicaid");
+            System.exit(1);
+        }
+        int clusterID = 0, replicaID = 0;
+        try {
+            clusterID = Integer.valueOf(args[0]);
+            replicaID = Integer.valueOf(args[1]);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
         Scanner scanner = new Scanner(System.in);
         int epochNumber = 0;
         ServerInfo serverInfo = null;
         try {
-            serverInfo = Configuration.getServerInfo(0, 0);
+            serverInfo = Configuration.getServerInfo(clusterID, replicaID);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Could not load server configurations.");
@@ -80,6 +91,7 @@ public class DBTracerClient {
                 System.out.println(logEntry);
             } else if (choice.equalsIgnoreCase("q")) {
                 System.out.println("Bye!");
+                scanner.close();
                 System.exit(0);
             } else if (choice.equalsIgnoreCase("n")) {
                 epochNumber+=1;
