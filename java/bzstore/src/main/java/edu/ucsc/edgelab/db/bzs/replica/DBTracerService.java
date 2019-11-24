@@ -20,11 +20,11 @@ public class DBTracerService extends DBTracerGrpc.DBTracerImplBase {
         responseObserver.onCompleted();
     }
 
-    @Override
+/*    @Override
     public void getNextLogEntry(Bzs.EpochNumber request, StreamObserver<Bzs.SmrLogEntry> responseObserver) {
         int epochNumber = request.getNumber();
         getLogEntryForEpochNumber(responseObserver, epochNumber + 1);
-    }
+    }*/
 
     private void getLogEntryForEpochNumber(StreamObserver<Bzs.SmrLogEntry> responseObserver, int epochNumber) {
         int currentEpochNumber = BZDatabaseController.getEpochCount();

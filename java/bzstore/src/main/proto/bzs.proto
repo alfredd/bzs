@@ -40,7 +40,7 @@ service PKIService {
 service DBTracer {
     rpc GetLogEntry (EpochNumber) returns (SmrLogEntry);
     rpc GetLatestLogEntry(EpochNumber) returns (SmrLogEntry);
-    rpc GetNextLogEntry (EpochNumber) returns (SmrLogEntry);
+//    rpc GetNextLogEntry (EpochNumber) returns (SmrLogEntry);
 }
 message EpochNumber {
     int32 number = 1;
