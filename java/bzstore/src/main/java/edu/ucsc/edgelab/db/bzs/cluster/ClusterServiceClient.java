@@ -69,29 +69,29 @@ public class ClusterServiceClient {
     }
 
     public Bzs.TransactionBatchResponse commitAll(Bzs.TransactionBatch transactionBatch) {
-        log.log(Level.INFO, "Beginning transaction batch commit for : " + transactionBatch.toString());
+        log.log(Level.INFO, "Beginning transaction batch commit for : " + transactionBatch.getID());
 
         Bzs.TransactionBatchResponse response =
                 blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).commitAll(transactionBatch);
-        log.log(Level.INFO, "Transaction batch commit response: " + response);
+        log.log(Level.INFO, "Transaction batch commit response: " + response.getID());
         return response;
     }
 
     public Bzs.TransactionBatchResponse prepareAll(Bzs.TransactionBatch transactionBatch) {
-        log.log(Level.INFO, "Beginning transaction batch prepare for : " + transactionBatch.toString());
+        log.log(Level.INFO, "Beginning transaction batch prepare for : " + transactionBatch.getID());
 
         Bzs.TransactionBatchResponse response =
                 blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).prepareAll(transactionBatch);
-        log.log(Level.INFO, "TransactionBatch prepared response: " + response);
+        log.log(Level.INFO, "TransactionBatch prepared response: " + response.getID());
         return response;
     }
 
     public Bzs.TransactionBatchResponse abortAll(Bzs.TransactionBatch transactionBatch) {
-        log.log(Level.INFO, "Beginning transaction batch abort for : " + transactionBatch.toString());
+        log.log(Level.INFO, "Beginning transaction batch abort for : " + transactionBatch.getID());
 
         Bzs.TransactionBatchResponse response =
                 blockingStub.withDeadlineAfter(Configuration.WAIT_TIMEOUT, TimeUnit.MILLISECONDS).abortAll(transactionBatch);
-        log.log(Level.INFO, "TransactionBatch abort response: " + response);
+        log.log(Level.INFO, "TransactionBatch abort response: " + response.getID());
         return response;
     }
 }
