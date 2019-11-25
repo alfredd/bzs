@@ -62,7 +62,7 @@ public class DatabaseLoader implements Runnable {
             for (String word : line) {
 
                 allWords.add(word);
-                if (totalClusters==1) {
+                if (totalClusters == 1) {
                     wordList.add(word);
                 } else {
                     Integer cid = TxnUtils.hashmod(word, totalClusters);
@@ -83,10 +83,10 @@ public class DatabaseLoader implements Runnable {
 
     public List<Bzs.Transaction> generateWriteSet(List<String> wordList) {
         List<Bzs.Transaction> writeOnlyTransactions = new LinkedList<>();
-        for (String word: wordList) {
+        for (String word : wordList) {
 
             ConnectionLessTransaction transactionManager = new ConnectionLessTransaction();
-            transactionManager.write(word, word+word, ID.getClusterID());
+            transactionManager.write(word, word + word, ID.getClusterID());
             writeOnlyTransactions.add(transactionManager.getTransaction());
         }
         return writeOnlyTransactions;
@@ -141,9 +141,9 @@ public class DatabaseLoader implements Runnable {
         if (ID.canRunBenchMarkTests()) {
 
             for (int i = 1; i < 3; i++) {
-                log.info("GENERATING D-RWT ( 1R, "+i+"W op).");
+                log.info("GENERATING D-RWT ( 1R, " + i + "W op).");
 
-                LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, i%8);
+                LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, i % 8);
                 totalCount = drwtxns.size();
                 currentCompleted = 0;
                 log.info(String.format("Total transactions for DRWT = %d", totalCount));
@@ -171,7 +171,7 @@ public class DatabaseLoader implements Runnable {
 
     private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
         int endCounter = 5;
-        while (endCounter >= 0) {
+        while (endCounter >= 0 && currentCompleted <= totalCount) {
             try {
                 Thread.sleep(delayMs);
                 if (currentCompleted < txnCount) {
@@ -193,7 +193,7 @@ public class DatabaseLoader implements Runnable {
     public void sendWriteOnlyTransactions(List<String> wordList) {
 
         List<Bzs.Transaction> writeOnlyTransactions = generateWriteSet(wordList);
-        for (Bzs.Transaction writeTransaction: writeOnlyTransactions) {
+        for (Bzs.Transaction writeTransaction : writeOnlyTransactions) {
             StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
             transactionProcessor.processTransaction(writeTransaction, responseObserver);
             transactionCount += 1;
@@ -261,8 +261,8 @@ public class DatabaseLoader implements Runnable {
     }
 
     public static void main(String[] args) {
-        String[] words={"abcd"};
-        for (String word: words)
+        String[] words = {"abcd"};
+        for (String word : words)
             System.out.println(word);
     }
 
