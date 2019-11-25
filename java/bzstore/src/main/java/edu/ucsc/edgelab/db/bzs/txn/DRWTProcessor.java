@@ -40,12 +40,12 @@ public class DRWTProcessor implements Runnable {
         String batchID = String.format("%d:%d", cid.intValue(), epochNumber.intValue());
         Bzs.TransactionBatch prepareBatch = txnUtils.getTransactionBatch(batchID, txns.values(), Bzs.Operation.DRWT_PREPARE);
 
-        logger.info(String.format("DRWT Prepare batch: %s", prepareBatch));
+        logger.info(String.format("DRWT Prepare batch: %s", prepareBatch.getID()));
         Bzs.TransactionBatchResponse batchResponse = clusterClient.execute(ClusterClient.DRWT_Operations.PREPARE_BATCH, prepareBatch, cid);
 
 
         DependencyVectorManager.updateLocalClock(batchResponse.getDepVectorMap());
-        logger.info("DRWTProcessor: Prepare Batch Response: " + batchResponse);
+        logger.info("DRWTProcessor: Prepare Batch Response: " + batchResponse.getID());
 
         Set<TransactionID> abortSet = new LinkedHashSet<>();
         for (Bzs.TransactionResponse response : batchResponse.getResponsesList()) {
@@ -65,9 +65,9 @@ public class DRWTProcessor implements Runnable {
 
 
         Bzs.TransactionBatch commitBatch = txnUtils.getTransactionBatch(batchID, txns.values(), Bzs.Operation.DRWT_COMMIT);
-        logger.info("Committing the following  batch: " + commitBatch);
+        logger.info("Committing the following  batch: " + commitBatch.getID());
         Bzs.TransactionBatchResponse commitResponse = clusterClient.execute(ClusterClient.DRWT_Operations.COMMIT_BATCH, commitBatch, cid);
-        logger.info("Response for commitAll: "+ commitResponse);
+        logger.info("Response for commitAll: "+ commitResponse.getID());
         DTxnCache.addToCompletedQueue(epochNumber, txns.keySet());
 //        TxnUtils.releaseLocks(commitResponse);
 
