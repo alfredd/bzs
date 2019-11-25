@@ -115,6 +115,7 @@ public class DBTracerClient {
                 epochNumber = Integer.valueOf(choice);
                 Bzs.SmrLogEntry logEntry = dbTracerClient.getSmrLogEntry(epochNumber);
                 System.out.println(logEntry);
+                dbTracerClient.printSMRDetails(logEntry);
             } else if (choice.equalsIgnoreCase("q")) {
                 System.out.println("Bye!");
                 scanner.close();
@@ -126,10 +127,12 @@ public class DBTracerClient {
                 Bzs.SmrLogEntry logEntry = dbTracerClient.getSmrLogEntry(epochNumber);
                 epochNumber = logEntry.getEpochNumber();
                 System.out.println(logEntry);
+                dbTracerClient.printSMRDetails(logEntry);
             } else if (choice.equalsIgnoreCase("l")) {
                 System.out.println("You chose latest epoch");
                 Bzs.SmrLogEntry logEntry = dbTracerClient.getLatestSmrLogEntry();
                 System.out.println(logEntry);
+                dbTracerClient.printSMRDetails(logEntry);
             } else {
                 System.out.println("Unrecognized choice. Try again.");
             }
