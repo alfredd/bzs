@@ -41,9 +41,13 @@ public class DBTracerClient {
         return !channel.isTerminated();
     }
 
-    public void shutdown() throws InterruptedException {
-        log.log(Level.FINE, "Shutting down forwarding client instance.");
-        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+    public void shutdown() {
+        log.log(Level.FINE, "Shutting down db tracer client instance.");
+        try {
+            channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public Bzs.SmrLogEntry getSmrLogEntry(int epochNumber) {
@@ -92,6 +96,7 @@ public class DBTracerClient {
             } else if (choice.equalsIgnoreCase("q")) {
                 System.out.println("Bye!");
                 scanner.close();
+                dbTracerClient.shutdown();
                 System.exit(0);
             } else if (choice.equalsIgnoreCase("n")) {
                 epochNumber+=1;
