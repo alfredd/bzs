@@ -89,7 +89,7 @@ public class DBTracerClient {
             System.out.print("SMR LOG Tracer\nEnter your choices:\na number for epoch number\nq to exit\nn for next epoch\nl for latest epoch\n\nchoice? ");
             String choice = scanner.next();
             if (choice.matches("[\\d]+")) {
-                System.out.println("You chose to pritn SMR log for epoch number "+choice);
+                System.out.println("You chose to print SMR log for epoch number "+choice);
                 epochNumber = Integer.valueOf(choice);
                 Bzs.SmrLogEntry logEntry = dbTracerClient.getSmrLogEntry(epochNumber);
                 System.out.println(logEntry);
@@ -102,6 +102,7 @@ public class DBTracerClient {
                 epochNumber+=1;
                 System.out.println("You chose next epoch: "+ epochNumber);
                 Bzs.SmrLogEntry logEntry = dbTracerClient.getSmrLogEntry(epochNumber);
+                epochNumber = logEntry.getEpochNumber();
                 System.out.println(logEntry);
             } else if (choice.equalsIgnoreCase("l")) {
                 System.out.println("You chose latest epoch");
