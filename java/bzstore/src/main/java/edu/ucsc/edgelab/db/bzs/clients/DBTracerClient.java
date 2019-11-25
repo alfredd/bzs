@@ -60,6 +60,28 @@ public class DBTracerClient {
         return blockingStub.getLatestLogEntry(request);
     }
 
+    public void printSMRDetails(Bzs.SmrLogEntry logEntry) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Epoch Number: = "+ logEntry.getEpochNumber());
+        stringBuilder.append("\n");
+        stringBuilder.append("Total LRWT= "+ logEntry.getLRWTxnsCount());
+        stringBuilder.append("\n");
+        stringBuilder.append("Total Prepared DRWT= "+ logEntry.getPreparedDRWTxnsCount());
+        stringBuilder.append("\n");
+        stringBuilder.append("Total Committed DRWT= "+ logEntry.getCommittedDRWTxnsCount());
+        stringBuilder.append("\n");
+        stringBuilder.append("Total 2PC Prepared DRWT= "+ logEntry.getRemotePreparedDRWTsCount());
+        stringBuilder.append("\n");
+        stringBuilder.append("Total 2PC Committed DRWT= "+ logEntry.getRemoteCommittedDRWTsCount());
+        stringBuilder.append("\n");
+        stringBuilder.append("Dependency Vector= "+ logEntry.getDepVectorMap());
+        stringBuilder.append("\n");
+        stringBuilder.append("LCE = "+ logEntry.getLce());
+        stringBuilder.append("\n");
+
+        System.out.println(stringBuilder.toString());
+    }
+
     public static void main(String[] args) {
         if (args.length !=2 ) {
             System.out.println("Input parameters must include space separated clusterid replicaid");
