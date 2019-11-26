@@ -6,6 +6,7 @@ import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
@@ -71,6 +72,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     @Override
     public void addToFailedList(Bzs.Transaction t) {
 //        TransactionID transactionID = TransactionID.getTransactionID(t.getTransactionID());
+        logger.log(Level.WARNING, "Transaction is not serializable : "+t);
         Bzs.TransactionResponse tr = Bzs.TransactionResponse.newBuilder()
                 .setTransactionID(t.getTransactionID())
                 .setEpochNumber(t.getEpochNumber())

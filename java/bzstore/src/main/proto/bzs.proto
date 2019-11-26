@@ -61,9 +61,12 @@ message TransactionBatch {
     repeated Transaction transactions = 3;
     repeated ClusterPC remotePrepareTxn = 4;
     repeated ClusterPC remoteCommitTxn = 5;
-    repeated ROTransaction rotransaction = 6;
+    repeated ClusterPC txnBatch = 6;
+//    repeated ROTransaction rotransaction = 6;
     SmrLogEntry smrLogEntry = 7;
     map<int32, int32> depVector = 8;
+    int32 epochNumber = 9;
+    int32 lce = 10;
 }
 
 message ClusterPC {
@@ -104,6 +107,8 @@ enum TransactionStatus {
     PREPARED = 2;
     COMMITTED = 3;
     FAILURE = 4;
+    PREPARE = 5;
+    COMMIT = 6;
 }
 
 enum OperationStatus {
@@ -125,6 +130,10 @@ enum Operation {
     DRWT_PREPARE = 5;
     DRWT_COMMIT = 6;
     DRWT_ABORT = 7;
+    LOCAL_RWT = 8;
+    TWO_PC_PREPARE = 9;
+    TWO_PC_COMMIT = 10;
+
 }
 
 message Write {
@@ -197,6 +206,7 @@ message Transaction {
     repeated Write writeOperations = 2;
     string transactionID = 3;
     int32 epochNumber = 4;
+    TransactionStatus status = 5;
     //    VectorClock clock = 5;
 }
 

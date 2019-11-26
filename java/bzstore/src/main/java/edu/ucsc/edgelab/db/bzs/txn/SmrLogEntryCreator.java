@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class SmrLogEntryCreator {
 
@@ -21,6 +22,10 @@ public class SmrLogEntryCreator {
     public void addDepVectorToSmrLog(List<Integer> dvec) {
         for (int i = 0; i < dvec.size(); i++)
             smrLogEntryBuilder = smrLogEntryBuilder.putDepVector(i, dvec.get(i));
+    }
+
+    public void addDepVecMap(Map<Integer, Integer> depVecMap) {
+        smrLogEntryBuilder = smrLogEntryBuilder.putAllDepVector(depVecMap);
     }
 
     public void addCommittedlWRTxns(Collection<Bzs.Transaction> lRWTxns) {

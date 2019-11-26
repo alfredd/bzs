@@ -90,9 +90,9 @@ public class TxnProcessor implements TransactionProcessorINTF {
     }
 
     public void commitTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
-        Set<Bzs.Transaction> txnsToPrepare = new LinkedHashSet<>();
-        txnsToPrepare.addAll(clusterDRWTProcessor.getRequest().getTransactionsList());
-        epochManager.clusterCommit(txnsToPrepare, clusterDRWTProcessor);
+        Set<Bzs.Transaction> txnsToCommit = new LinkedHashSet<>();
+        txnsToCommit.addAll(clusterDRWTProcessor.getRequest().getTransactionsList());
+        epochManager.clusterCommit(txnsToCommit, clusterDRWTProcessor);
     }
 
     private void startDatabaseInit() {

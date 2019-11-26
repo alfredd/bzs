@@ -117,6 +117,13 @@ public class SmrLog {
         }
     }
 
+    public static void dependencyVector(int epoch, Map<Integer, Integer> depVecMap) {
+        SmrLogEntryCreator smrData = smrEpochData.get(epoch);
+        if (smrData != null) {
+            smrData.addDepVecMap(depVecMap);
+        }
+    }
+
     public static void updateLastCommittedEpoch(final Integer epoch) {
         SmrLogEntryCreator smrData = getSMRData(epoch);
         if (smrData != null) {

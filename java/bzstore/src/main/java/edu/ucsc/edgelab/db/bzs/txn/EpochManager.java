@@ -83,10 +83,14 @@ public class EpochManager {
         EpochProcessor processor = new EpochProcessor(epoch, txnCount, dTxnThreadPoolExecutor);
         processor.setPerfMetricManager(perfMetricManager);
         processor.addPerformanceTracer(perfTracer);
-        processor.addClusterPrepare(clusterPrepareBatch);
-        clusterPrepareBatch.clear();
-        processor.addClusterCommit(clusterCommitBatch);
-        clusterCommitBatch.clear();
+        synchronized (clusterPrepareBatch) {
+            processor.addClusterPrepare(clusterPrepareBatch);
+            clusterPrepareBatch.clear();
+        }
+        synchronized (clusterCommitBatch) {
+            processor.addClusterCommit(clusterCommitBatch);
+            clusterCommitBatch.clear();
+        }
         epochThreadPoolExecutor.addToFixedQueue(processor);
     }
 
@@ -95,7 +99,7 @@ public class EpochManager {
     }
 
     public void clusterPrepare(Set<Bzs.Transaction> txnsToPrepare, ClusterDRWTProcessor clusterDRWTProcessor) {
-        synchronized (this) {
+        synchronized (clusterPrepareBatch) {
             ClusterPC clusterPC = createClusterPCObj(txnsToPrepare, clusterDRWTProcessor);
             clusterPrepareBatch.add(clusterPC);
         }
@@ -109,7 +113,7 @@ public class EpochManager {
     }
 
     public void clusterCommit(Set<Bzs.Transaction> txnsToCommit, ClusterDRWTProcessor clusterDRWTProcessor) {
-        synchronized (this) {
+        synchronized (clusterCommitBatch) {
             ClusterPC clusterPC = createClusterPCObj(txnsToCommit, clusterDRWTProcessor);
             clusterCommitBatch.add(clusterPC);
         }
