@@ -72,10 +72,18 @@ public class TransEdgeBFTServer extends DefaultSingleRecoverable {
         Bzs.SmrLogEntry logEntry = SmrLog.generateLogEntry(epochNumber);
         try {
             BZDatabaseController.commitSmrBlock(epochNumber, logEntry);
+            commitDBCache(epochNumber);
         } catch (InvalidCommitException e) {
             logger.log(Level.SEVERE, "Could not commit to SMR log: "+ logEntry, e);
         }
         return ByteBuffer.allocate(4).putInt(epochNumber).array();
+    }
+
+    private void commitDBCache(int epochNumber) throws InvalidCommitException {
+        Map<String, Bzs.DBData> cache = dbCache.get(epochNumber);
+        for(Map.Entry<String, Bzs.DBData> entry: cache.entrySet()) {
+            BZDatabaseController.commitDBData(entry.getKey(), entry.getValue());
+        }
     }
 
     private byte[] prepareSMRBlock(Bzs.TransactionBatch transactionBatch) {
@@ -105,12 +113,20 @@ public class TransEdgeBFTServer extends DefaultSingleRecoverable {
                         SmrLog.twoPCPrepared(epochNumber, transactionsList, txns.getID());
                         break;
                 }
+                updateDBCacheForTransactions(epochNumber, transactionsList);
             }
         }
         Bzs.SmrLogEntry logEntry = SmrLog.generateLogEntry(epochNumber);
         return logEntry.toByteArray();
     }
 
+    private void updateDBCacheForTransactions(int epochNumber, List<Bzs.Transaction> transactionsList) {
+        for (Bzs.Transaction t: transactionsList) {
+            for (Bzs.Write w: t.getWriteOperationsList()) {
+                updateDBCache(epochNumber, w.getKey(), w.getValue(), epochNumber);
+            }
+        }
+    }
 
 
     private List<Bzs.Transaction> prepareLRWTxns(List<Bzs.Transaction> transactionsList, List<Bzs.Transaction> abortList) {
