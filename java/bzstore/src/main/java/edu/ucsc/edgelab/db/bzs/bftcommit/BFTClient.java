@@ -127,6 +127,10 @@ public class BFTClient {
         byte[] response = sendBytesToBFTServer(batch.toByteArray());
 
         // TODO: How to know when the BFT consensus has failed?
+        if (response == null) {
+            LOGGER.log(Level.SEVERE, "Response returned null for transaction batch: "+ batch);
+            return  -10;
+        }
         return response.length;
     }
 
