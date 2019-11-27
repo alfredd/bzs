@@ -68,11 +68,12 @@ public class DTxnCache {
             return;
         }
         log_debug_flag = true;
-        logger.info(String.format("Adding transactions to txnCache for epoch: %d, %s", epochNumber.intValue(), completed.toString()));
+        logger.info(String.format("Adding transactions to txnCache for epoch: %d", epochNumber.intValue()/*, completed.toString()*/));
         CacheKeeper cache = txnCache.get(epochNumber);
         cache.addToCompleted(completed);
         if (cache.allCompleted()) {
             completedEpochs.add(epochNumber);
+            logger.info("Completed Epochs: "+ completedEpochs);
         }
 
     }
