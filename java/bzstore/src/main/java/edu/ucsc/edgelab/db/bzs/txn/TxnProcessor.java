@@ -46,26 +46,32 @@ public class TxnProcessor implements TransactionProcessorINTF {
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {
         synchronized (this) {
 //            log.info(String.format("Received transaction request: %s", request.toString()));
+            MetaInfo meta = localDataVerifier.getMetaInfo(request);
+
+            if (!(meta.remoteWrite || meta.localWrite)) {
+                log.log(Level.WARNING, "Transaction does not contain any write operations. Will be aborted: " + request.toString());
+                abortTransaction(request, responseObserver);
+            }
+
             if (!serializer.serialize(request)) {
-//                log.info("Transaction cannot be serialized. Will abort. Request: " + request);
-                Bzs.TransactionResponse response =
-                        Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
-                if (responseObserver != null) {
-                    responseObserver.onNext(response);
-                    responseObserver.onCompleted();
-                } else {
-                    log.log(Level.WARNING, "Transaction aborted: " + request.toString());
-                }
+                log.info("Transaction cannot be serialized. Will abort. Request: " + request);
+                abortTransaction(request, responseObserver);
                 return;
             }
 
-            MetaInfo meta = localDataVerifier.getMetaInfo(request);
             if (meta.remoteWrite)
                 LockManager.acquireLocks(request);
             final TransactionID tid = epochManager.getTID();
             Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
             TransactionCache.add(tid, transaction, responseObserver);
         }
+    }
+
+    private void abortTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {
+        Bzs.TransactionResponse response =
+                Bzs.TransactionResponse.newBuilder().setStatus(Bzs.TransactionStatus.ABORTED).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
     }
 
     public void prepareTransactionBatch(ClusterDRWTProcessor clusterDRWTProcessor) {
