@@ -73,9 +73,9 @@ public class DTxnCache {
         cache.addToCompleted(completed);
         if (cache.allCompleted()) {
             completedEpochs.add(epochNumber);
-            logger.info("Completed Epochs: "+ completedEpochs);
-            logger.info("Epoch queue: "+ epochQueue);
         }
+        logger.info("Completed Epochs: "+ completedEpochs);
+        logger.info("Epoch queue: "+ epochQueue);
 
     }
 
