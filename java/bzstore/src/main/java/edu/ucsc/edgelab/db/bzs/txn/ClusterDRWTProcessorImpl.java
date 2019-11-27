@@ -96,7 +96,7 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     public void sendResponseToClient() {
 
         Bzs.TransactionBatchResponse response = batchResponseBuilder.build();
-        logger.info("Sending 2PC transaction response: "+ response);
+        logger.info("Sending 2PC transaction response: "+ response.getID());
         getResponseObserver().onNext(response);
         getResponseObserver().onCompleted();
     }
