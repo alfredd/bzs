@@ -34,7 +34,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
             ServerInfo serverInfo = Configuration.getLeaderInfo(ID.getClusterID());
             clusterLeader = serverInfo.replicaID;
         } catch (IOException e) {
-            log.log(Level.WARNING, "Exception occurred while setting up transaction processor. "+ e.getLocalizedMessage(), e);
+            log.log(Level.WARNING, "Exception occurred while setting up transaction processor. " + e.getLocalizedMessage(), e);
             clusterLeader = 0;
         }
         if (ID.getReplicaID().equals(clusterLeader)) {
@@ -76,9 +76,11 @@ public class TxnProcessor implements TransactionProcessorINTF {
 
     private Set<Bzs.Transaction> commonRemoteTxnProcessCode(ClusterDRWTProcessor clusterDRWTProcessor, boolean acquireLocks) {
         Set<Bzs.Transaction> txnsToProcess = new LinkedHashSet<>();
+        int count = 0;
         for (Bzs.Transaction t : clusterDRWTProcessor.getRequest().getTransactionsList()) {
             if (!serializer.serialize(t)) {
                 clusterDRWTProcessor.addToFailedList(t);
+                count += 1;
             } else {
 
                 txnsToProcess.add(t);
@@ -86,6 +88,8 @@ public class TxnProcessor implements TransactionProcessorINTF {
                     LockManager.acquireLocks(t);
             }
         }
+        log.info("# of transactions from batch:" + clusterDRWTProcessor.getRequest().getID() + " which failed: " + count + ", out of "
+                + txnsToProcess.size() + count);
         return txnsToProcess;
     }
 

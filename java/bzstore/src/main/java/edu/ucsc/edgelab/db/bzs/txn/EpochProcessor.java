@@ -17,16 +17,16 @@ import static edu.ucsc.edgelab.db.bzs.Bzs.*;
 
 public class EpochProcessor implements Runnable {
 
-    private final Integer txnCount;
+    protected final Integer txnCount;
     private static final Logger log = Logger.getLogger(EpochProcessor.class.getName());
-    private final WedgeDBThreadPoolExecutor threadPoolExecutor;
-    private LocalDataVerifier localDataVerifier = new LocalDataVerifier();
+    protected final WedgeDBThreadPoolExecutor threadPoolExecutor;
+    protected LocalDataVerifier localDataVerifier = new LocalDataVerifier();
 
-    private final Integer epochNumber;
-    private Map<String, ClusterPC> clusterPrepareMap;
-    private Map<String, ClusterPC> clusterCommitMap;
-    private PerformanceTrace perfTracer;
-    private PerfMetricManager perfLogger;
+    protected final Integer epochNumber;
+    protected Map<String, ClusterPC> clusterPrepareMap;
+    protected Map<String, ClusterPC> clusterCommitMap;
+    protected PerformanceTrace perfTracer;
+    protected PerfMetricManager perfLogger;
 
     public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
@@ -224,10 +224,12 @@ public class EpochProcessor implements Runnable {
                         responseObserver.onCompleted();
                     } else {
 //                        log.log(Level.WARNING,
-//                                "Could not find appropriate transactionBatchResponse observer for transaction request: " + transactionBatchResponse);
+//                                "Could not find appropriate transactionBatchResponse observer for transaction request: " +
+// transactionBatchResponse);
                     }
                 } else {
-//                    log.info("Response to clients for transaction with ID " + id + " WILL NOT BE SENT as it is a DRWTxn. : " + transactionBatchResponse);
+//                    log.info("Response to clients for transaction with ID " + id + " WILL NOT BE SENT as it is a DRWTxn. : " +
+// transactionBatchResponse);
                 }
             }
         }
@@ -264,7 +266,7 @@ public class EpochProcessor implements Runnable {
                 logEntry.toByteArray().length,
                 processingTime,
                 prepareTimeMS,
-                processingTime-prepareTimeMS );
+                processingTime - prepareTimeMS);
         perfLogger.logMetrics(epochNumber);
 //        log.info(metrics);
     }

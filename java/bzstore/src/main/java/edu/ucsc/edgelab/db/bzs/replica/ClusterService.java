@@ -63,7 +63,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
     @Override
     public void prepareAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-        log.info(String.format("Received batch prepare request: %s", request.toString()));
+        log.info(String.format("Received batch prepare request: %s", request.getID()));
         ClusterDRWTProcessorImpl clusterDRWTProcessor = new ClusterDRWTProcessorImpl(processor);
         clusterDRWTProcessor.setRequest(request);
         clusterDRWTProcessor.setResponseObserver(responseObserver);
