@@ -99,9 +99,9 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
 //        data.digest = response.getResponseDigest();
         data.version = response.getVersion();
         setReadHistory(responseKey, data.value, data.version, response.getReadOperation().getClusterID());
-        long duration = System.currentTimeMillis() - startTime;
+//        long duration = System.currentTimeMillis() - startTime;
 
-        LOGGER.info("Read operation processed in " + duration + " msecs");
+//        LOGGER.info("Read operation processed in " + duration + " msecs");
         return data;
     }
 

@@ -30,7 +30,7 @@ public class TxnUtils {
             int clusterID = remoteTransaction.getWriteOperations(i).getClusterID();
             addToCidSet(cidSet, clusterID, cid);
         }
-        logger.info("Set of CIDs to which the request will be sent: " + cidSet);
+//        logger.info("Set of CIDs to which the request will be sent: " + cidSet);
         return cidSet;
     }
 

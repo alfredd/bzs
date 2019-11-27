@@ -29,24 +29,37 @@ public class EpochManager {
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
     private Serializer serializer;
     private PerformanceTrace perfTracer;
+    private boolean criticalRegionExecutionInProgressFlag = false;
 
 
     public EpochManager() {
         epochThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
         maxEpochBatchSize = Configuration.getEpochBatchCount();
         epochNumber = BZDatabaseController.getEpochCount() + 1;
-/*        TimerTask epochUpdater = new TimerTask() {
+        TimerTask epochUpdater = new TimerTask() {
 
             @Override
             public void run() {
 //                logger.info("Updating epoch.");
-                updateEpoch();
+                executeUpdateEpoch();
 //                logger.info("Epoch updated.");
             }
+
+
         };
         Timer t = new Timer();
-        t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());*/
+        t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());
         dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
+    }
+
+    private void executeUpdateEpoch() {
+        synchronized (this) {
+            if (!criticalRegionExecutionInProgressFlag) {
+                criticalRegionExecutionInProgressFlag = true;
+                updateEpoch();
+                criticalRegionExecutionInProgressFlag = false;
+            }
+        }
     }
 
     public TransactionID getTID() {
@@ -56,7 +69,7 @@ public class EpochManager {
             this.sequenceNumber += 1;
             if (sequenceNumber >= maxEpochBatchSize) {
                 // Probable race condition.
-                updateEpoch();
+                executeUpdateEpoch();
             }
             return new TransactionID(epochNumber, sequenceNumber);
         }
