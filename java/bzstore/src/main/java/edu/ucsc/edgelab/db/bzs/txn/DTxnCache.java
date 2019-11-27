@@ -15,7 +15,7 @@ public class DTxnCache {
     public static boolean log_debug_flag = false;
     public static boolean statusHistory = true;
 
-    public static final Logger logger = Logger.getLogger(DTxnCache.class.getName());
+    private static final Logger logger = Logger.getLogger(DTxnCache.class.getName());
 
     private static void addEpochToQueue(Integer epochNumber) {
         epochQueue.addLast(epochNumber);
@@ -71,6 +71,7 @@ public class DTxnCache {
         logger.info(String.format("Adding transactions to txnCache for epoch: %d", epochNumber.intValue()/*, completed.toString()*/));
         CacheKeeper cache = txnCache.get(epochNumber);
         cache.addToCompleted(completed);
+        logger.info("Remaining TIDs to be committed: "+ cache.getRemaining());
         if (cache.allCompleted()) {
             completedEpochs.add(epochNumber);
         }
@@ -93,9 +94,15 @@ class CacheKeeper {
     private Set<TransactionID> inProgressTxnMap = new LinkedHashSet<>();
     private Set<Bzs.Transaction> transactions = new LinkedHashSet<>();
 
+    private static final Logger logger = Logger.getLogger(CacheKeeper.class.getName());
+
     public void addToCompleted(Collection<TransactionID> completed) {
         for (TransactionID tid : completed)
             inProgressTxnMap.remove(tid);
+    }
+
+    public Set<TransactionID> getRemaining() {
+        return inProgressTxnMap;
     }
 
     public void addToInProgress(final Map<TransactionID, Bzs.Transaction> transactions) {
