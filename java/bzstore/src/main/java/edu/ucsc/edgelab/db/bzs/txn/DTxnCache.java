@@ -28,7 +28,9 @@ public class DTxnCache {
             Integer head = epochQueue.getFirst();
             if (head != null) {
                 CacheKeeper cache = txnCache.get(head);
-                if (cache.allCompleted()) {
+                boolean allCompleted = cache.allCompleted();
+                logger.info("Removing the head of the epoch queue: "+ head+", all Txns Completed? "+ allCompleted);
+                if (allCompleted) {
                     epochQueue.removeFirst();
                     completedEpochs.remove(head);
                     committedTxns.addAll(cache.getCompletedTxns());
@@ -40,7 +42,8 @@ public class DTxnCache {
 
     public static boolean completedDRWTxnsExist() {
         boolean status;
-        status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(epochQueue.getFirst());
+        final Integer first = epochQueue.getFirst();
+        status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(first);
         if (log_debug_flag) {
             if (status != statusHistory)
                 logger.info("Complexted DRWTxns exists? " + status);
