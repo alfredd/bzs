@@ -165,8 +165,15 @@ public class DatabaseLoader implements Runnable {
 //            }
 //            waitForTransactionCompletion(delayMs, txns.size(), "D-RW");
         }
-        log.info("END OF BENCHMARK RUN.");
 
+        try {
+            log.info("Waiting for all distributed Txn to complete.");
+            Thread.sleep(300*10*1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        log.info("END OF BENCHMARK RUN.");
     }
 
     private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
