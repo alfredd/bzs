@@ -41,6 +41,8 @@ public class EpochProcessor implements Runnable {
         TxnUtils txnUtils = new TxnUtils();
         // Perf trace
 //        perfTracer.setBatchStartTime(epochNumber, startTime);
+
+        log.info("Processing Epoch #"+epochNumber);
         SmrLog.createLogEntry(epochNumber);
 
         Epoch.setEpochUnderExecution(epochNumber);
