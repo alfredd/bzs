@@ -56,10 +56,10 @@ public class EpochManager {
     }
 
     private void executeUpdateEpoch() {
-        logger.info("Updating epoch.");
+//        logger.info("Updating epoch.");
         if (semaphore.tryAcquire()) {
             try {
-                logger.info("Calling epoch.");
+//                logger.info("Calling epoch.");
                 updateEpoch();
             } finally {
                 semaphore.release();
