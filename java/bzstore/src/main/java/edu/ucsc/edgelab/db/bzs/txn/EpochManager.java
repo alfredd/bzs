@@ -30,7 +30,6 @@ public class EpochManager {
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
     private Serializer serializer;
     private PerformanceTrace perfTracer;
-    private Boolean criticalRegionExecutionInProgressFlag = false;
     private Semaphore semaphore;
 
 
@@ -40,15 +39,10 @@ public class EpochManager {
         epochNumber = BZDatabaseController.getEpochCount() + 1;
         semaphore = new Semaphore(1);
         TimerTask epochUpdater = new TimerTask() {
-
             @Override
             public void run() {
-//                logger.info("Updating epoch.");
                 executeUpdateEpoch();
-//                logger.info("Epoch updated.");
             }
-
-
         };
         Timer t = new Timer();
         t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());
@@ -56,22 +50,13 @@ public class EpochManager {
     }
 
     private void executeUpdateEpoch() {
-//        logger.info("Updating epoch.");
         if (semaphore.tryAcquire()) {
             try {
-//                logger.info("Calling epoch.");
                 updateEpoch();
             } finally {
                 semaphore.release();
             }
         }
-
-//        synchronized (this) {
-//            if (!criticalRegionExecutionInProgressFlag) {
-//                criticalRegionExecutionInProgressFlag = true;
-//                criticalRegionExecutionInProgressFlag = false;
-//            }
-//        }
     }
 
     public TransactionID getTID() {
