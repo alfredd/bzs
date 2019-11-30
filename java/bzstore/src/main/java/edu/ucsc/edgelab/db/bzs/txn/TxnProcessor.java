@@ -45,7 +45,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
     @Override
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {
         synchronized (this) {
-            log.info(String.format("Received transaction request: %s", request.toString()));
+//            log.info(String.format("Received transaction request: %s", request.toString()));
             MetaInfo meta = localDataVerifier.getMetaInfo(request);
 
             if (!(meta.remoteWrite || meta.localWrite)) {

@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
 public class EpochManager {
@@ -29,13 +30,15 @@ public class EpochManager {
     public static final Logger logger = Logger.getLogger(EpochManager.class.getName());
     private Serializer serializer;
     private PerformanceTrace perfTracer;
-    private boolean criticalRegionExecutionInProgressFlag = false;
+    private Boolean criticalRegionExecutionInProgressFlag = false;
+    private Semaphore semaphore;
 
 
     public EpochManager() {
         epochThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
         maxEpochBatchSize = Configuration.getEpochBatchCount();
         epochNumber = BZDatabaseController.getEpochCount() + 1;
+        semaphore = new Semaphore(1);
         TimerTask epochUpdater = new TimerTask() {
 
             @Override
@@ -53,13 +56,17 @@ public class EpochManager {
     }
 
     private void executeUpdateEpoch() {
-        synchronized (this) {
-            if (!criticalRegionExecutionInProgressFlag) {
-                criticalRegionExecutionInProgressFlag = true;
-                updateEpoch();
-                criticalRegionExecutionInProgressFlag = false;
-            }
+        if (semaphore.tryAcquire()) {
+            updateEpoch();
+            semaphore.release();
         }
+
+//        synchronized (this) {
+//            if (!criticalRegionExecutionInProgressFlag) {
+//                criticalRegionExecutionInProgressFlag = true;
+//                criticalRegionExecutionInProgressFlag = false;
+//            }
+//        }
     }
 
     public TransactionID getTID() {
