@@ -41,9 +41,12 @@ public class DTxnCache {
     }
 
     public static boolean completedDRWTxnsExist() {
-        boolean status;
-        final Integer first = epochQueue.getFirst();
-        status = epochQueue.size() > 0 && completedEpochs.size() > 0 && completedEpochs.contains(first);
+        boolean status = false;
+        if (epochQueue.size()>0) {
+            final Integer first = epochQueue.getFirst();
+            status = completedEpochs.size() > 0 && completedEpochs.contains(first);
+        }
+
         if (log_debug_flag) {
             if (status != statusHistory)
                 logger.info("Complexted DRWTxns exists? " + status);
