@@ -68,11 +68,13 @@ public class DRWTProcessor implements Runnable {
         logger.info("Committing the following  batch: " + commitBatch.getID());
         Bzs.TransactionBatchResponse commitResponse = clusterClient.execute(ClusterClient.DRWT_Operations.COMMIT_BATCH, commitBatch, cid);
         logger.info("Response for commitAll: "+ commitResponse.getID());
-        DTxnCache.addToCompletedQueue(epochNumber, txns.keySet());
-//        TxnUtils.releaseLocks(commitResponse);
 
         long processingTime = System.currentTimeMillis() - startTime;
         perfMetricManager.insertDTxnPerfData(Epoch.getEpochNumber(), processingTime, txns.size());
+
+        DTxnCache.addToCompletedQueue(epochNumber, txns.keySet());
+//        TxnUtils.releaseLocks(commitResponse);
+
     }
 
     public void setPerfMetricManager(PerfMetricManager perfLogger) {
