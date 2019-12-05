@@ -66,9 +66,9 @@ public class EpochProcessor implements Runnable {
                     }
                     allRWT.put(tid, rwt);
                     actualTxnPrepareCount += 1;
-                } else {
+                } /*else {
                     log.log(Level.WARNING, "Transaction with TID" + tid + ", not found in transaction inProgressTxnMap.");
-                }
+                }*/
             }
         }
 

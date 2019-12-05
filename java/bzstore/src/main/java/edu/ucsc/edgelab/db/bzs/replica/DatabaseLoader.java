@@ -129,6 +129,7 @@ public class DatabaseLoader implements Runnable {
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator();
         benchmarkGenerator.setTotalClusterCount(totalClusters);
         LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
+        Collections.shuffle(txns);
         totalCount = txns.size();
         currentCompleted = 0;
 
@@ -144,6 +145,7 @@ public class DatabaseLoader implements Runnable {
                 log.info("GENERATING D-RWT ( 1R, " + i + "W op).");
 
                 LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys, i % 8);
+                Collections.shuffle(drwtxns);
                 totalCount = drwtxns.size();
                 currentCompleted = 0;
                 log.info(String.format("Total transactions for DRWT = %d", totalCount));
@@ -189,6 +191,7 @@ public class DatabaseLoader implements Runnable {
     public void sendWriteOnlyTransactions(List<String> wordList) {
 
         List<Bzs.Transaction> writeOnlyTransactions = generateWriteSet(wordList);
+        Collections.shuffle(writeOnlyTransactions);
         for (Bzs.Transaction writeTransaction : writeOnlyTransactions) {
             StreamObserver<Bzs.TransactionResponse> responseObserver = getTransactionResponseStreamObserver();
             transactionProcessor.processTransaction(writeTransaction, responseObserver);

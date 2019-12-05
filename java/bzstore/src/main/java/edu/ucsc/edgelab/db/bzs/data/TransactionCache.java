@@ -72,8 +72,8 @@ public class TransactionCache {
                         .setVersion(version).build();
                 tuple.rb = tuple.rb.addWriteResponses(writeResponse);
 //                tuple.writeOps.remove(key);
-                logger.info(String.format("Updated transaction response entry for TID: %s, (%s, %s, %d). Updated response is: %s", tid.toString(),
-                        key, value, version, tuple.rb.build().toString()));
+//                logger.info(String.format("Updated transaction response entry for TID: %s, (%s, %s, %d). Updated response is: %s", tid.toString(),
+//                        key, value, version, tuple.rb.build().toString()));
             }
         }
     }
