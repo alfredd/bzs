@@ -43,7 +43,23 @@ public class DatabaseLoader implements Runnable {
 
         BZStoreProperties properties = new BZStoreProperties();
         this.totalClusters = Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count));
-        //String dataFile = properties.getProperty(clusterID, BZStoreProperties.Configuration.data);
+        String[] strRWRatio= properties.getProperty(BZStoreProperties.Configuration.dtxn_read_write_ratio).trim().split(":");
+        if (strRWRatio==null || strRWRatio.length!=2) {
+            strRWRatio=new String[]{"1", "5"};
+        }
+        Integer[] rwRatio = new Integer[2];
+        try {
+            rwRatio[0] = Integer.decode(strRWRatio[0]);
+            rwRatio[1] = Integer.decode(strRWRatio[1]);
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Could not parse RW Ratio for distributed transactions from config.properties." +
+                    "Setting default RW ratio of 1:5.");
+            rwRatio[0] = 1;
+            rwRatio[1] = 5;
+        }
+
+
+
         String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/" + dataFile;
         log.info("Data File path: " + fileName);
