@@ -70,15 +70,15 @@ public class BenchmarkGenerator {
 
         Map<Integer, BZStoreClient> clientList = new LinkedHashMap<>();
         for (int i = 0; i < totalClusterCount; i++) {
-            if (!clusterID.equals(i)/* && ID.canRunBenchMarkTests()*/) {
-                try {
-                    ServerInfo serverInfo = Configuration.getServerInfo(i, 0);
-                    BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
-                    clientList.put(i, client);
-                } catch (Exception e) {
-                    log.log(Level.WARNING, "Exception occurred while retrieving data from client. " + e.getLocalizedMessage(), e);
-                }
+            //if (!clusterID.equals(i)/* && ID.canRunBenchMarkTests()*/) {
+            try {
+                ServerInfo serverInfo = Configuration.getServerInfo(i, 0);
+                BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
+                clientList.put(i, client);
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Exception occurred while creating client connection to cluster: "+ i+ ":  " + e.getLocalizedMessage(), e);
             }
+            //}
         }
 
         int remoteMaxKeyCount = remoteClusterKeys.size();
@@ -172,12 +172,12 @@ public class BenchmarkGenerator {
                     drwt.write(writeKey, writeKey + i, clusterID);
                 }
             } catch (Exception e) {
-                log.log(Level.WARNING, "Exception occurred while creating DRWT batch: "+ e.getLocalizedMessage(), e);
+                log.log(Level.WARNING, "Exception occurred while creating DRWT batch: " + e.getLocalizedMessage(), e);
                 break;
             }
             transactions.addLast(drwt.getTransaction());
         }
-        log.info("Total DRWT transactions: "+ transactions.size());
+        log.info("Total DRWT transactions: " + transactions.size());
         return transactions;
     }
 
