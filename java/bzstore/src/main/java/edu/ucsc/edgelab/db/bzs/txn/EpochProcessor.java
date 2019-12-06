@@ -95,7 +95,7 @@ public class EpochProcessor implements Runnable {
         if (actualTxnPrepareCount <= 0) {
             log.log(Level.WARNING, "No transactions found in this Epoch: " + epochNumber);
         } else {
-//            log.info("Preparing transactions.");
+            log.info("Preparing transactions for epoch: "+epochNumber);
             transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
             if (transactionBatchResponse != null) {
 //                log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
@@ -145,6 +145,7 @@ public class EpochProcessor implements Runnable {
 
             Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = txnUtils.mapTransactionsToCluster(dRWTxns, ID.getClusterID());
             for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
+                log.info("Starting DRWTProcessor for cluster: "+ entry.getKey()+", and TIDs: "+ entry.getValue().keySet());
                 DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
                 drwtProcessor.setPerfMetricManager(perfLogger);
                 threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
