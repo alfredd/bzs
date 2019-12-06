@@ -61,11 +61,11 @@ public class TxnProcessor implements TransactionProcessorINTF {
 
             if (meta.remoteWrite) {
                 LockManager.acquireLocks(request);
-                log.info("Transaction with remote writes found.");
+//                log.info("Transaction with remote writes found.");
             }
             final TransactionID tid = epochManager.getTID();
             Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
-            log.info("Adding transaction to pre-processing cache, TID: "+tid);
+//            log.info("Adding transaction to pre-processing cache, TID: "+tid);
             TransactionCache.add(tid, transaction, responseObserver);
         }
     }

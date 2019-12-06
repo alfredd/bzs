@@ -168,7 +168,7 @@ public class BenchmarkGenerator {
 
                 for (int i = 0; i < writeOpCountPerTxn; i++) {
                     String writeKey = getKey(remoteClusterKeys, localClusterKeys, rnd);
-                    drwt.write(writeKey, writeKey + i, clusterID);
+                    drwt.write(writeKey, writeKey + i, hashmod(writeKey, totalClusterCount));
                 }
             } catch (Exception e) {
                 log.log(Level.WARNING, "Exception occurred while creating DRWT batch: " + e.getLocalizedMessage(), e);
