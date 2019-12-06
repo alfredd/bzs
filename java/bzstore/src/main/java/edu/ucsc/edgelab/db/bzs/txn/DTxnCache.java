@@ -24,18 +24,23 @@ public class DTxnCache {
     public static Collection<Bzs.Transaction> getCommittedTransactions() {
 //        logger.info("Returning committed transactions.");
         Set<Bzs.Transaction> committedTxns = new LinkedHashSet<>();
-        while (completedDRWTxnsExist()) {
-            Integer head = epochQueue.getFirst();
-            if (head != null) {
-                CacheKeeper cache = txnCache.get(head);
-                boolean allCompleted = cache.allCompleted();
-                logger.info("Removing the head of the epoch queue: "+ head+", all Txns Completed? "+ allCompleted);
-                if (allCompleted) {
-                    epochQueue.removeFirst();
-                    completedEpochs.remove(head);
-                    committedTxns.addAll(cache.getCompletedTxns());
+        try {
+
+            while (completedDRWTxnsExist()) {
+                Integer head = epochQueue.getFirst();
+                if (head != null) {
+                    CacheKeeper cache = txnCache.get(head);
+                    boolean allCompleted = cache.allCompleted();
+                    logger.info("Removing the head of the epoch queue: "+ head+", all Txns Completed? "+ allCompleted);
+                    if (allCompleted) {
+                        epochQueue.removeFirst();
+                        completedEpochs.remove(head);
+                        committedTxns.addAll(cache.getCompletedTxns());
+                    }
                 }
             }
+        } catch (Exception e ) {
+            logger.log(Level.WARNING, "DEBUG: "+e.getLocalizedMessage(), e);
         }
         return committedTxns;
     }
