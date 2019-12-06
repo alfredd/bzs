@@ -75,8 +75,10 @@ public class EpochManager {
     private Integer updateEpoch() {
         synchronized (this) {
             Integer seq = sequenceNumber;
+            logger.info("Checking if epoch can be updated.");
             if (seq > 0 || clusterCommitBatch.size() > 0 || clusterPrepareBatch.size() > 0 || DTxnCache.completedDRWTxnsExist()) {
                 final int epoch = epochNumber;
+                logger.info("Updating epoch: "+ epoch);
 //                logger.info("Processing Epoch: "+epoch);
                 seq = sequenceNumber - 1;
                 sequenceNumber = 0;
