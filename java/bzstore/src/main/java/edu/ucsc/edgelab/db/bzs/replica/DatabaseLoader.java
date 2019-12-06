@@ -36,6 +36,7 @@ public class DatabaseLoader implements Runnable {
     private final LinkedList<String> allWords;
     private final LinkedList<String> remoteClusterKeys = new LinkedList<>();
     private boolean sendLocalOnly;
+    private Integer[] rwRatio;
 
     public DatabaseLoader(TransactionProcessorINTF transactionProcessor) throws IOException {
         this.transactionProcessor = transactionProcessor;
@@ -43,21 +44,7 @@ public class DatabaseLoader implements Runnable {
 
         BZStoreProperties properties = new BZStoreProperties();
         this.totalClusters = Integer.parseInt(properties.getProperty(BZStoreProperties.Configuration.cluster_count));
-        String[] strRWRatio= properties.getProperty(BZStoreProperties.Configuration.dtxn_read_write_ratio).trim().split(":");
-        if (strRWRatio==null || strRWRatio.length!=2) {
-            strRWRatio=new String[]{"1", "5"};
-        }
-        Integer[] rwRatio = new Integer[2];
-        try {
-            rwRatio[0] = Integer.decode(strRWRatio[0]);
-            rwRatio[1] = Integer.decode(strRWRatio[1]);
-        } catch (Exception e) {
-            log.log(Level.WARNING, "Could not parse RW Ratio for distributed transactions from config.properties." +
-                    "Setting default RW ratio of 1:5.");
-            rwRatio[0] = 1;
-            rwRatio[1] = 5;
-        }
-
+        setupRWRatio(properties);
 
 
         String dataFile = "data.txt";
@@ -95,6 +82,24 @@ public class DatabaseLoader implements Runnable {
 
         log.info("Total words read from file: " + wordList.size());
 
+    }
+
+    private void setupRWRatio(BZStoreProperties properties) {
+        String[] strRWRatio= properties.getProperty(BZStoreProperties.Configuration.dtxn_read_write_ratio).trim().split(":");
+        if (strRWRatio==null || strRWRatio.length!=2) {
+            strRWRatio=new String[]{"1", "5"};
+        }
+        rwRatio = new Integer[2];
+        try {
+            rwRatio[0] = Integer.decode(strRWRatio[0]);
+            rwRatio[1] = Integer.decode(strRWRatio[1]);
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Could not parse RW Ratio for distributed transactions from config.properties." +
+                    "Setting default RW ratio.");
+            rwRatio[0] = 1;
+            rwRatio[1] = 5;
+        }
+        log.info(String.format("RW Operation Ratio set to %d:%d", rwRatio[0], rwRatio[1]));
     }
 
     public List<Bzs.Transaction> generateWriteSet(List<String> wordList) {
@@ -142,7 +147,7 @@ public class DatabaseLoader implements Runnable {
         }
 
         log.info("GENERATING L-RWT.");
-        BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator();
+        BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator(rwRatio[0], rwRatio[1]);
         benchmarkGenerator.setTotalClusterCount(totalClusters);
         LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
         Collections.shuffle(txns);
