@@ -67,12 +67,16 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     @Override
     public void rOCommit(Bzs.ROTransaction request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
+
+        log.info("Received ROT read request: " + request);
         Bzs.ROTransactionResponse.Builder responseBuilder = Bzs.ROTransactionResponse.newBuilder();
         for (Bzs.Read readRequest : request.getReadOperationsList()) {
             Bzs.ReadResponse readResponse = getReadResponse(readRequest);
             responseBuilder = responseBuilder.addReadResponses(readResponse);
         }
-        responseObserver.onNext(responseBuilder.build());
+        Bzs.ROTransactionResponse response = responseBuilder.build();
+        log.info("ROT response: " + response);
+        responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
@@ -111,7 +115,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
             }
         } else {
             data = BZDatabaseController.getlatest(key);
-            if (data.version!=0) {
+            if (data.version != 0) {
                 Bzs.SmrLogEntry smrBlock = BZDatabaseController.getSmrBlock(data.version);
                 responseBuilder = responseBuilder.putAllDepVector(smrBlock.getDepVectorMap());
                 responseBuilder = responseBuilder.setLce(smrBlock.getLce());
