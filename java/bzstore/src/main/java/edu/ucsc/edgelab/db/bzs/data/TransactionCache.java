@@ -63,7 +63,7 @@ public class TransactionCache {
     }
 
 
-    public static void updateResponse(TransactionID tid, String key, String value, long version, int clusterID) {
+    public static void updateResponse(TransactionID tid, String key, String value, int version, int clusterID) {
         synchronized (CACHE) {
             TxnTuple tuple = CACHE.storage.get(tid);
             if (tuple.writeOps.contains(key)) {

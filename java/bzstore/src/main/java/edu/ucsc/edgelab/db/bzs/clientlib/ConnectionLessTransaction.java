@@ -13,7 +13,7 @@ public class ConnectionLessTransaction {
 
 
 
-    public void setReadHistory(String responseKey, String responseValue, long responseVersion,
+    public void setReadHistory(String responseKey, String responseValue, int responseVersion,
                                Integer clusterId) {
         Bzs.ReadHistory history = Bzs.ReadHistory.newBuilder()
                 .setReadOperation(Bzs.Read.newBuilder().setClusterID(clusterId).setKey(responseKey).build())

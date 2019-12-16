@@ -4,7 +4,7 @@ public class BZStoreData {
 
     public String value;
 
-    public long version;
+    public int version;
 
 //    public String digest;
 
@@ -32,7 +32,7 @@ public class BZStoreData {
 //        this.digest = digest;
 //    }
 
-    public BZStoreData(String value, long version) {
+    public BZStoreData(String value, int version) {
         this.value = value;
         this.version = version;
     }

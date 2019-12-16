@@ -71,7 +71,7 @@ public class DistributedClient {
         }
     }
 
-    public Bzs.ROTransactionResponse roTransaction(String[] keys) {
+    public Bzs.ROTransactionResponse roTransaction(List<String> keys) {
         Bzs.ROTransaction.Builder roTBuilder = Bzs.ROTransaction.newBuilder();
         Map<Integer, List<Bzs.Read>> clusterKeyMap = new HashMap<>();
         for (String key: keys) {
@@ -86,15 +86,7 @@ public class DistributedClient {
         }
         Map<Bzs.ROTransaction, Bzs.ROTransactionResponse> roTransactionResponseMap = new LinkedHashMap<>();
         List<Bzs.ReadResponse> readResponses = new LinkedList<>();
-        for (Map.Entry<Integer, List<Bzs.Read>> entry: clusterKeyMap.entrySet()) {
-            Bzs.ROTransaction roTransaction = Bzs.ROTransaction.newBuilder().addAllReadOperations(entry.getValue()).setClusterID(entry.getKey()).build();
-            transaction.setClient(clientHashMap.get(entry.getKey()));
-            Bzs.ROTransactionResponse response = transaction.readOnly(roTransaction);
-            readResponses.addAll(response.getReadResponsesList());
-            roTransactionResponseMap.put(roTransaction, response);
-        }
-
-        // TODO: Validate Response object.
+        Map<String, String> response = transaction.readOnly(clusterKeyMap, clientHashMap);
         try {
             int valid = validator.validate(readResponses);
         } catch (ValidityException e) {

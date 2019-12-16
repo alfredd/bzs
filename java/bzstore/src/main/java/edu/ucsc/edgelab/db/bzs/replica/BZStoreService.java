@@ -13,6 +13,7 @@ import edu.ucsc.edgelab.db.bzs.txn.TxnProcessor;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,7 +68,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     @Override
     public void rOCommit(Bzs.ROTransaction request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
         Bzs.ROTransactionResponse.Builder responseBuilder = Bzs.ROTransactionResponse.newBuilder();
-        for (Bzs.Read readRequest: request.getReadOperationsList()) {
+        for (Bzs.Read readRequest : request.getReadOperationsList()) {
             Bzs.ReadResponse readResponse = getReadResponse(readRequest);
             responseBuilder = responseBuilder.addReadResponses(readResponse);
         }
@@ -91,6 +92,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         Integer cid = request.getClusterID();
         Integer rid = request.getReplicaID();
         BZStoreData data;
+        Bzs.ReadResponse.Builder responseBuilder = Bzs.ReadResponse.newBuilder();
 //        log.info("Received read reqeust: "+request.toString());
         if (cid != clusterID) {
 //            log.info("Read request is from another cluster ("+cid+")");
@@ -103,16 +105,21 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
                 data = readClient.read(request);
                 readClient.close();
             } catch (Exception e) {
-                log.log(Level.SEVERE, e.getLocalizedMessage(),e);
+                log.log(Level.SEVERE, e.getLocalizedMessage(), e);
                 data = new BZStoreData();
                 status = Bzs.OperationStatus.FAILED;
             }
         } else {
             data = BZDatabaseController.getlatest(key);
+            if (data.version!=0) {
+                Bzs.SmrLogEntry smrBlock = BZDatabaseController.getSmrBlock(data.version);
+                responseBuilder = responseBuilder.putAllDepVector(smrBlock.getDepVectorMap());
+                responseBuilder = responseBuilder.setLce(smrBlock.getLce());
+            }
         }
 
 //        log.info("Read response from cluster "+cid+": "+data);
-        return Bzs.ReadResponse.newBuilder()
+        return responseBuilder
                 .setReadOperation(request)
                 .setValue(data.value)
                 .setVersion(data.version)

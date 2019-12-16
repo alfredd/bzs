@@ -22,7 +22,7 @@ public class Serializer {
 
     private List<Bzs.Transaction> epochList = new LinkedList<>();
     // Keeping track of current object changes to the epochList.
-    private HashMap<String, Long> readMap = new HashMap<>();
+    private HashMap<String, Integer> readMap = new HashMap<>();
 
     private Integer clusterID;
     private Integer replicaID;
@@ -74,7 +74,7 @@ public class Serializer {
             return true;
         }
         if (!readMap.containsKey(readOperation.getKey())) {
-            readMap.put(readOperation.getKey(), Long.valueOf(data.version));
+            readMap.put(readOperation.getKey(), data.version);
         }
         // Handling case 2 and 3 from the table in the google doc
         if (readMap.get(readOperation.getKey()) > c.getVersion() && checkLocks && LockManager.isLocked(readOperation.getKey())) {
@@ -96,7 +96,7 @@ public class Serializer {
                 BZStoreData data = BZDatabaseController.getlatest(key);
                 readMap.put(key, data.version);
             }
-            long version = readMap.get(key);
+            int version = readMap.get(key);
             readMap.put(key, version + 1);
         }
         epochList.add(t);

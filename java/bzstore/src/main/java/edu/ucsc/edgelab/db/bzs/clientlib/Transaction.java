@@ -105,7 +105,13 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
         return data;
     }
 
-    public Bzs.ROTransactionResponse readOnly(Bzs.ROTransaction roTransaction) {
-        return client.readOnly(roTransaction);
+    public Map<String, String> readOnly(Map<Integer, List<Bzs.Read>> clusterKeyMap, HashMap<Integer, BZStoreClient> clientHashMap) {
+
+        for (Map.Entry<Integer, List<Bzs.Read>> entry: clusterKeyMap.entrySet()) {
+            setClient(clientHashMap.get(entry.getKey()));
+            Bzs.ROTransaction roTransaction = Bzs.ROTransaction.newBuilder().addAllReadOperations(entry.getValue()).setClusterID(entry.getKey()).build();
+            Bzs.ROTransactionResponse rotResponses = client.readOnly(roTransaction);
+        }
+        return null;
     }
 }
