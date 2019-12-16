@@ -66,11 +66,26 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
 
     @Override
     public void rOCommit(Bzs.ROTransaction request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
-        super.rOCommit(request, responseObserver);
+        Bzs.ROTransactionResponse.Builder responseBuilder = Bzs.ROTransactionResponse.newBuilder();
+        for (Bzs.Read readRequest: request.getReadOperationsList()) {
+            Bzs.ReadResponse readResponse = getReadResponse(readRequest);
+            responseBuilder = responseBuilder.addReadResponses(readResponse);
+        }
+        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onCompleted();
     }
 
     @Override
     public void readOperation(Bzs.Read request, StreamObserver<Bzs.ReadResponse> responseObserver) {
+        Bzs.ReadResponse response = getReadResponse(request);
+
+//        log.info("Read response to client: "+response.toString());
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+    }
+
+    private Bzs.ReadResponse getReadResponse(Bzs.Read request) {
         Bzs.OperationStatus status = Bzs.OperationStatus.SUCCESS;
         String key = request.getKey();
         Integer cid = request.getClusterID();
@@ -97,16 +112,11 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         }
 
 //        log.info("Read response from cluster "+cid+": "+data);
-        Bzs.ReadResponse response = Bzs.ReadResponse.newBuilder()
+        return Bzs.ReadResponse.newBuilder()
                 .setReadOperation(request)
                 .setValue(data.value)
                 .setVersion(data.version)
                 .setStatus(status)
                 .build();
-
-//        log.info("Read response to client: "+response.toString());
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-
     }
 }
