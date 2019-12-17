@@ -6,7 +6,8 @@ option java_package = "edu.ucsc.edgelab.db.bzs";
 
 service BZStore {
     rpc Commit (Transaction) returns (TransactionResponse);
-    rpc ROCommit (ROTransaction) returns (ROTransactionResponse);
+    rpc RORead (ROTransaction) returns (ROTransactionResponse);
+    rpc ROSecondRead (ROTransactionResponse) returns (ROTransactionResponse);
     rpc ReadOperation (Read) returns (ReadResponse);
 }
 
@@ -186,9 +187,6 @@ message ReadHistory {
     string value = 2;
     int32 version = 3;
     string responseDigest = 4;
-    //    string key = 1;
-    //    int32 clusterID = 5;
-//    int32 replicaID = 6;
 }
 
 message ROTransaction {

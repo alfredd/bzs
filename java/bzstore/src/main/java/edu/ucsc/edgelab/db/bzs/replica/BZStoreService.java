@@ -66,7 +66,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
     }
 
     @Override
-    public void rOCommit(Bzs.ROTransaction request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
+    public void rORead(Bzs.ROTransaction request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
 
         log.info("Received ROT read request: " + request);
         Bzs.ROTransactionResponse.Builder responseBuilder = Bzs.ROTransactionResponse.newBuilder();
@@ -78,6 +78,11 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         log.info("ROT response: " + response);
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void rOSecondRead(Bzs.ROTransactionResponse request, StreamObserver<Bzs.ROTransactionResponse> responseObserver) {
+        super.rOSecondRead(request, responseObserver);
     }
 
     @Override

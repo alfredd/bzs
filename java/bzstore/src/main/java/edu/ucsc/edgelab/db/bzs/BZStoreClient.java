@@ -52,7 +52,13 @@ public class BZStoreClient {
 
     public Bzs.ROTransactionResponse readOnly(Bzs.ROTransaction transaction) {
         log.log(Level.FINE, "Beginning RO-transaction commit for : " + transaction.toString());
-        Bzs.ROTransactionResponse response = blockingStub.rOCommit(transaction);
+        Bzs.ROTransactionResponse response = blockingStub.rORead(transaction);
+        log.log(Level.FINE, "RO-transaction completed with status: " + response.getStatus().name());
+        return response;
+    }
+    public Bzs.ROTransactionResponse secondReadOnly(Bzs.ROTransactionResponse readRequest) {
+        log.log(Level.FINE, "Beginning RO-transaction commit for : " + readRequest.toString());
+        Bzs.ROTransactionResponse response = blockingStub.rOSecondRead(readRequest);
         log.log(Level.FINE, "RO-transaction completed with status: " + response.getStatus().name());
         return response;
     }
