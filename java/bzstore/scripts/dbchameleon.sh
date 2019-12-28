@@ -7,8 +7,9 @@ git_update="git pull origin master"
 
 clusterNumber=$1
 clusterIPFile="c$clusterNumber"
+privateIPFile="cp$clusterNumber"
 
-numNodes=4
+numNodes=8
 clusterNodes=(`cat $clusterIPFile`)
 leaderIP=${clusterNodes[0]}
 
@@ -39,6 +40,23 @@ function update_replica_ips {
 }
 
 
+function update_replica_ips_from_file {
+  readarray -t replica_ips < $privateIPFile
+  echo "replica ips"
+ for i in "${replica_ips[@]}"; do
+    echo $i
+ done  
+}
+
+
+#clear the floating ips
+function clear_floating_ips {
+	for i in  `cat $clusterIPFile`; do 
+		ssh-keygen -f "/home/kohdmonkey/.ssh/known_hosts" -R $i
+	done
+}
+
+
 
 #update the hosts.config file with latest ips 
 function update_config {
@@ -51,7 +69,7 @@ function update_config {
 	
 	rcport=11000
   rrport=11001
-  for i in "${!replica_ips[@]}"; do
+  for i in "${replica_ips[@]}"; do
     echo "$i ${replica_ips[$i]} $rcport $rrport" >> hosts.config 
 		rcport=$(( rcport + 10 )) 
     rrport=$(( rrport + 10 )) 
@@ -61,6 +79,30 @@ function update_config {
   echo $ttp_ip >> hosts.config 
 }
 
+
+#temporary function to deal with multiple clusters in chameleon
+function update_config_from_file {
+  if [ -f "hosts.config" ]
+  then
+    rm hosts.config 
+  fi  
+
+  #cp bftsmart_conf/hosts.config.stub hosts.config 
+	
+	rcport=11000
+  rrport=11001
+  j=0
+  for i in `cat $privateIPFile`; do
+    #echo "$i ${replica_ips[$i]} $rcport $rrport" >> hosts.config 
+    echo "j $i $rcport $rrport"
+		rcport=$(( rcport + 10 )) 
+    rrport=$(( rrport + 10 )) 
+    j=$(( j + 1 ))
+  done
+  
+  #echo "" >> hosts.config 
+  #echo $ttp_ip >> hosts.config 
+}
 
 
 function get_file {
@@ -133,14 +175,16 @@ then
     elif [[ "$3" == "config" ]]
     then
       echo "configuring node ips"
-      update_replica_ips
-      update_config
+      update_replica_ips_from_file 
+      update_config 
       j=0
       for i in  `cat $clusterIPFile` ;
       do
+        echo "replica $j private ip: ${replica_ips[$j]} public ip: $i"
       	scp hosts.config cc@$i:"$wdb_home/config/"
       	sed "s/= auto/= ${replica_ips[$j]}/" bftsmart_conf/system.config.bak > system.config
-      	scp system.config cc@${replica_floating_ips[$j]}:"$wdb_home/config/"  
+      	scp system.config cc@$i:"$wdb_home/config/"  
+      	#scp system.config cc@${replica_floating_ips[$j]}:"$wdb_home/config/"  
         j=$(( j + 1 ))
       done
     fi
@@ -159,6 +203,9 @@ then
 elif [[ "$2" == "clean" ]]
 then
     run_command_on_all_nodes "./bzs-setup.sh cleanDB"
+elif [[ "$2" == "clearip" ]]
+then
+	clear_floating_ips 
 elif [[ "$2" == "build" ]]
 then
     echo "building"
