@@ -5,10 +5,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -130,6 +127,7 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
             xMap.put(partition, x);
         }
 
+        HashSet<String> secondROTKeys = new HashSet<String>();
         for (Map.Entry<Integer, V> entry : xMap.entrySet()) {
             V X = entry.getValue();
             int i = entry.getKey();
@@ -137,7 +135,10 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
                 if (i != j.getKey()) {
                     if (j.getValue() > xMap.get(j.getKey()).lce) {
                         Bzs.ReadResponse resp = xMap.get(j.getKey()).resp;
-                        secondRead.add(Bzs.ReadResponse.newBuilder(resp).setVersion(j.getValue()).build());
+                        if (!secondROTKeys.contains(resp.getReadOperation().getKey())) {
+                            secondRead.add(Bzs.ReadResponse.newBuilder(resp).setVersion(j.getValue()).build());
+                            secondROTKeys.add(resp.getReadOperation().getKey());
+                        }
                     }
                 }
             }
@@ -157,6 +158,10 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
             }
         }
         return v;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Hello World");
     }
 }
 

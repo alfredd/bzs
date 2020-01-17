@@ -52,7 +52,7 @@ public class TestROTransaction {
                                         .build())
                         .build());
         List<Bzs.ReadResponse> secondROT = rot.generateSecondROTxns(receivedResponses);
-
+        System.out.println("Transaction count for second ROT round: "+secondROT.size());
         System.out.println(secondROT);
     }
 }
