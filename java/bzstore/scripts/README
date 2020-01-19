@@ -34,6 +34,13 @@ After the script is finished executing, build bzs
 2. ./bzs-setup.sh install 
 
 
+Configuring for BFT-Smart
+-------------------------
+BFT-SMaRt needs the right hosts.conf and system.conf files to run correctly
+1. $./dbchameleon.sh 0 setup config
+   this will modify the hosts.conf with the correct private ips for replicas to connect
+   it will also modify system.conf to bind the correct ip to the replica
+
 Copying host files
 ------------------
 Now that the nodes are built, the updated host files needs to be copied over
