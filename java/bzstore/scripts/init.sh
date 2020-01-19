@@ -11,19 +11,23 @@ git clone --recurse-submodules git@github.com:alfredd/bzs.git
 echo "installing maven"
 sudo apt-get install -y maven
 
+sudo add-apt-repository ppa:openjdk-r/ppa -y
+sudo apt-get update
+sudo apt-get install openjdk-11-jdk -y 
+
 #echo "retrieving oracle JDK"
 #wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/13.0.1+9/cec27d702aa74d5a8630c65ae61e4305/jdk-13.0.1_linux-x64_bin.tar.gz
 
-sudo mkdir /opt/jdk
-sudo tar -zxf jdk-10.0.2_linux-x64_bin.tar.gz -C /opt/jdk
+#sudo mkdir /opt/jdk
+#sudo tar -zxf jdk-10.0.2_linux-x64_bin.tar.gz -C /opt/jdk
 
-export JAVA_HOME=/opt/jdk/jdk-10.0.2
-export PATH=$PATH:$JAVA_HOME/bin
+#export JAVA_HOME=/opt/jdk/jdk-10.0.2
+#export PATH=$PATH:$JAVA_HOME/bin
 
-sudo update-alternatives --install /usr/bin/java java /opt/jdk/jdk-10.0.2/bin/java 100
-sudo update-alternatives --install /usr/bin/javac javac /opt/jdk/jdk-10.0.2/bin/javac 100
-sudo update-alternatives --set java /opt/jdk/jdk-10.0.2/bin/java
-sudo update-alternatives --set javac /opt/jdk/jdk-10.0.2/bin/javac
+#sudo update-alternatives --install /usr/bin/java java /opt/jdk/jdk-10.0.2/bin/java 100
+#sudo update-alternatives --install /usr/bin/javac javac /opt/jdk/jdk-10.0.2/bin/javac 100
+#sudo update-alternatives --set java /opt/jdk/jdk-10.0.2/bin/java
+#sudo update-alternatives --set javac /opt/jdk/jdk-10.0.2/bin/javac
 
 echo "checking java version"
 java -version
@@ -44,8 +48,16 @@ make check
 sudo make install
 sudo ldconfig # refresh shared library cache.
 
+
 cd
-cd $wdb_home
-./bzs-setup.sh install 
+
+#copying java.security to the right place
+sudo cp java.security /usr/lib/jvm/java-11-openjdk-amd64/conf/security/
+
+#copying pom.xml
+cp pom.xml /home/cc/bzs/java/bzstore/
+
+#cd $wdb_home
+#./bzs-setup.sh install 
 
 

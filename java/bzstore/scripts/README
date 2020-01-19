@@ -1,0 +1,52 @@
+instructions for running experiment on Chameleon
+
+Creating nodes
+--------------
+1. make the node reservation on Chameleon, get the reservation id
+2. edit the dbchameleon.sh variable "nodeReservation" to the correct id
+3. edit the number of nodes if necessary
+4. create the instances "./dbchameleon.sh 0 new create"
+   this will create numNodes number of nodes for cluster 0
+5. as these nodes are creating, allocate the floating ips on chameleon
+6. after the nodes are up and running, "./dbchameleon.sh 0 new add_ip"
+   this will associate the floating ips (public) with the private ips of the nodes
+
+at this point these nodes are running fresh Ubuntu 16 images and needs to be setup with bzs
+
+
+Copying configuration files
+---------------------------
+1. "./dbchameleon.sh 0 setup copy"
+   this will copy the necessary files over to the nodes for setup
+ -> github_rsa: this is needed to clone the bzs repository
+ -> java.security: because we are running openjdk, we need to enable tls for bft-smart to work
+ -> pom.xml: this updated pom.xml contains an extra dependency needed to build 
+ -> init.sh: sets up the node with the repo, protobuf, java, and bzs
+
+
+Manual Configuration
+-------------------
+At this point, log into the nodes individually and execute the init.sh script to set up everything
+this step can be automated but is made manual because of instability of installing on Chameleon
+
+After the script is finished executing, build bzs
+1. cd bzs/java/bzstore/scripts
+2. ./bzs-setup.sh install 
+
+
+Copying host files
+------------------
+Now that the nodes are built, the updated host files needs to be copied over
+Make the changes necessary inside dbchameleon.sh to copy "c0, c1 ... cn" over
+
+
+Starting the experiments
+------------------------
+The nodes are now ready to experiment on
+1. $./dbchameleon.sh 0 start|starty
+
+
+Retrieving experimental results
+-------------------------------
+1. $./dbchameleon.sh 0 log
+
