@@ -96,6 +96,17 @@ public class Serializer {
                 BZStoreData data = BZDatabaseController.getlatest(key);
                 readMap.put(key, data.version);
             }
+            // TODO: Potential Bug.
+            /**
+             * Jan 24, 2020 10:57:00 PM edu.ucsc.edgelab.db.bzs.txn.EpochManager updateEpoch
+             * INFO: Updating epoch: 72
+             * Exception in thread "Thread-3" java.lang.NullPointerException
+             *         at edu.ucsc.edgelab.db.bzs.replica.Serializer.serialize(Serializer.java:99)
+             *         at edu.ucsc.edgelab.db.bzs.txn.TxnProcessor.processTransaction(TxnProcessor.java:56)
+             *         at edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader.sendWriteOnlyTransactions(DatabaseLoader.java:218)
+             *         at edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader.run(DatabaseLoader.java:134)
+             *         at java.base/java.lang.Thread.run(Thread.java:844)
+             */
             int version = readMap.get(key);
             readMap.put(key, version + 1);
         }
