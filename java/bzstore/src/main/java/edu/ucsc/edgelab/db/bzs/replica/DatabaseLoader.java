@@ -180,7 +180,7 @@ public class DatabaseLoader implements Runnable {
 
         try {
             log.info("Waiting for all distributed Txn to complete.");
-            Thread.sleep(30*10*1000);
+            Thread.sleep(60*10*1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
