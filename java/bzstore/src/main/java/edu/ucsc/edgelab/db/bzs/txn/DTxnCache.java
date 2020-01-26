@@ -82,7 +82,7 @@ public class DTxnCache {
         logger.info(String.format("Adding transactions to txnCache for epoch: %d", epochNumber.intValue()/*, completed.toString()*/));
         CacheKeeper cache = txnCache.get(epochNumber);
         cache.addToCompleted(completed);
-        logger.info("Remaining TIDs to be committed: "+ cache.getRemaining());
+//        logger.info("Remaining TIDs to be committed: "+ cache.getRemaining());
         if (cache.allCompleted()) {
             completedEpochs.add(epochNumber);
         }
