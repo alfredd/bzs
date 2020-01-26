@@ -108,13 +108,16 @@ public class Serializer {
              *         at java.base/java.lang.Thread.run(Thread.java:844)
              */
             // Possible fix.
-            if (readMap!=null ) {
-                int version = 0;
-                if (readMap.containsKey(key))
-                    version = readMap.get(key);
-                readMap.put(key, version + 1);
-            } else {
-                log.info("DEBUG: ReadMap: "+readMap);
+            synchronized (readMap) {
+                if (readMap!=null ) {
+                    int version = 0;
+                    if (readMap.containsKey(key)) {
+                        version = readMap.get(key);
+                    }
+                    readMap.put(key, version + 1);
+                } else {
+                    log.info("DEBUG: ReadMap: "+readMap);
+                }
             }
         }
         epochList.add(t);
