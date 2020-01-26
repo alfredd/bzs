@@ -107,8 +107,13 @@ public class Serializer {
              *         at edu.ucsc.edgelab.db.bzs.replica.DatabaseLoader.run(DatabaseLoader.java:134)
              *         at java.base/java.lang.Thread.run(Thread.java:844)
              */
-            int version = readMap.get(key);
-            readMap.put(key, version + 1);
+            // Possible fix.
+            if (readMap!=null && readMap.containsKey(key)) {
+                int version = readMap.get(key);
+                readMap.put(key, version + 1);
+            } else {
+                log.info("DEBUG: ReadMap: "+readMap);
+            }
         }
         epochList.add(t);
         return true;
