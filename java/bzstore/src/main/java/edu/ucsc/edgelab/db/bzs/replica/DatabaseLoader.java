@@ -77,9 +77,9 @@ public class DatabaseLoader implements Runnable {
                 }
             }
         }
+        scanner.close();
         Collections.shuffle(wordList);
         Collections.shuffle(remoteClusterKeys);
-        scanner.close();
 
 
         log.info("Total words read from file: " + wordList.size());
