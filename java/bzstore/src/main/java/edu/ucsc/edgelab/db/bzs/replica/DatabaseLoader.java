@@ -22,6 +22,7 @@ public class DatabaseLoader implements Runnable {
     private int transactionsCompleted = 0;
     private int transactionsFailed = 0;
     private boolean started = false;
+    private long latency = 0;
     private int previousCompleted = 0;
     private int currentCompleted = 0;
     private int totalClusters = 0;
@@ -147,6 +148,9 @@ public class DatabaseLoader implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        log.info(String.format("Total W-Only Txns  (latency, completed, failed) = (%d, %d, %d)", latency, transactionsCompleted, transactionsFailed)  );
+        //Reset variables
+        resetVariables();
 
         log.info("GENERATING L-RWT.");
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator(rwRatio[0], rwRatio[1]);
@@ -161,6 +165,9 @@ public class DatabaseLoader implements Runnable {
             transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
         }
         waitForTransactionCompletion(delayMs, txns.size(), "L-RW");
+        log.info(String.format("Total LRWTxns  (latency, completed, failed) = (%d, %d, %d)", latency, transactionsCompleted, transactionsFailed)  );
+        resetVariables();
+
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
         if (ID.canRunBenchMarkTests()) {
 
@@ -186,8 +193,17 @@ public class DatabaseLoader implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        log.info(String.format("Total DRWTxns  (latency, completed, failed) = (%d, %d, %d)", latency, transactionsCompleted, transactionsFailed)  );
+//        resetVariables();
 
         log.info("END OF BENCHMARK RUN.");
+    }
+
+    private void resetVariables() {
+        latency = 0;
+        transactionsCompleted = 0;
+        transactionsFailed = 0;
+        transactionCount = 0;
     }
 
     private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
@@ -223,27 +239,7 @@ public class DatabaseLoader implements Runnable {
     }
 
     public StreamObserver<Bzs.TransactionResponse> getTransactionResponseStreamObserver() {
-        return new StreamObserver<Bzs.TransactionResponse>() {
-            @Override
-            public void onNext(Bzs.TransactionResponse transactionResponse) {
-                if (transactionResponse.getStatus().equals(Bzs.TransactionStatus.ABORTED)) {
-                    transactionsFailed += 1;
-                } else {
-                    transactionsCompleted += 1;
-                }
-                currentCompleted = transactionsCompleted + transactionsFailed;
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-//                transactionsFailed += 1;
-            }
-
-            @Override
-            public void onCompleted() {
-
-            }
-        };
+        return new MyStreamObserver();
     }
 
     public void logTransactionDetails(int epochNumber, int epochTransactionCount, int transactionsProcessedInEpoch,
@@ -288,4 +284,37 @@ public class DatabaseLoader implements Runnable {
             System.out.println(word);
     }
 
+    private class MyStreamObserver implements StreamObserver<Bzs.TransactionResponse> {
+
+        private final long startTime;
+        private long endTime;
+
+        public MyStreamObserver() {
+            startTime = System.currentTimeMillis();
+        }
+
+        @Override
+        public void onNext(Bzs.TransactionResponse transactionResponse) {
+            if (transactionResponse.getStatus().equals(Bzs.TransactionStatus.ABORTED)) {
+                transactionsFailed += 1;
+            } else {
+                transactionsCompleted += 1;
+            }
+            currentCompleted = transactionsCompleted + transactionsFailed;
+            endTime = System.currentTimeMillis();
+            latency = endTime-startTime;
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+//                transactionsFailed += 1;
+        }
+
+        @Override
+        public void onCompleted() {
+
+        }
+    };
+
 }
+
