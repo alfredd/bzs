@@ -42,7 +42,7 @@ public class EpochProcessor implements Runnable {
         // Perf trace
 //        perfTracer.setBatchStartTime(epochNumber, startTime);
 
-        log.info("Processing Epoch #"+epochNumber);
+//        log.info("Processing Epoch #"+epochNumber);
         SmrLog.createLogEntry(epochNumber);
 
         Epoch.setEpochUnderExecution(epochNumber);
@@ -95,7 +95,7 @@ public class EpochProcessor implements Runnable {
         if (actualTxnPrepareCount <= 0) {
             log.log(Level.WARNING, "No transactions found in this Epoch: " + epochNumber);
         } else {
-            log.info("Preparing transactions for epoch: "+epochNumber);
+//            log.info("Preparing transactions for epoch: "+epochNumber);
             transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
             if (transactionBatchResponse != null) {
 //                log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
