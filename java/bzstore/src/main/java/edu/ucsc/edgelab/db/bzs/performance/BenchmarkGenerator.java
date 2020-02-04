@@ -153,7 +153,7 @@ public class BenchmarkGenerator {
 
         Random rnd = new Random();
         while (true) {
-            if (remoteClusterKeys.size() <= 0 || localClusterKeys.size() <= 0) {
+            if (remoteClusterKeys.size() < 1 || localClusterKeys.size() < 1) {
                 break;
             }
             Transaction drwt = new Transaction();
