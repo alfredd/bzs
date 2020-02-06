@@ -3,7 +3,7 @@
 function update_repo_on_all_nodes() {
   START=0
   END=$1
-  for ((c = $START; c <= $END; c++)); do
+  for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" uprepo
   done
 }
@@ -11,7 +11,7 @@ function update_repo_on_all_nodes() {
 function clear_db_and_working_directories() {
   START=0
   END=$1
-  for ((c = $START; c <= $END; c++)); do
+  for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" bftclear
     ./db.sh "$c" clean
   done
@@ -20,7 +20,7 @@ function clear_db_and_working_directories() {
 function build_code() {
   START=0
   END=$1
-  for ((c = $START; c <= $END; c++)); do
+  for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" build
   done
 }
@@ -28,7 +28,7 @@ function build_code() {
 function stop_all_clusters() {
   START=0
   END=$1
-  for ((c = $START; c <= $END; c++)); do
+  for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" stop
   done
 }
@@ -37,7 +37,7 @@ function start_all_clusters() {
   START=1
   END=$1
   ./db.sh "0" starty
-  for ((c = $START; c <= $END; c++)); do
+  for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" start
   done
 }
@@ -46,7 +46,7 @@ function get_logs_from_all_clusters() {
   START=1
   END=$1
   ./db.sh "0" starty
-  for ((c = $START; c <= $END; c++)); do
+  for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" logall
   done
 }
