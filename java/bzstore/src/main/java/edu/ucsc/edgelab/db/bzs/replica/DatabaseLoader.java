@@ -187,9 +187,13 @@ public class DatabaseLoader implements Runnable {
             }
         }
 
+        int counter = 15;
         try {
             log.info("Waiting for all distributed Txn to complete.");
-            Thread.sleep(60*10*1000);
+            while((transactionsFailed+transactionsCompleted) <= totalCount && counter >=0) {
+                Thread.sleep(60*1000);
+                counter--;
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -242,42 +246,6 @@ public class DatabaseLoader implements Runnable {
         return new MyStreamObserver();
     }
 
-    public void logTransactionDetails(int epochNumber, int epochTransactionCount, int transactionsProcessedInEpoch,
-                                      int transactionsFailedInEpoch, long epochProcessingStartTime,
-                                      long epochProcessingEndTime, int bytesProcessedInEpoch) {
- /*       currentCompleted = transactionsProcessedInEpoch == 0 ? transactionsFailedInEpoch : transactionsProcessedInEpoch;
-        processed += currentCompleted;
-        if (started && currentCompleted != previousCompleted) {
-            flushed = 0;
-            log.info(String.format("Total: %d, Completed: %d, Error: %d", transactionCount, transactionsCompleted,
-                    transactionsFailed));
-            long latency = epochProcessingEndTime - epochProcessingStartTime;
-            double throughputTps = latency == 0 ? 0 : (double) transactionsProcessedInEpoch * 1000 / (latency);
-            double throughputBps = latency == 0 ? 0 : (double) bytesProcessedInEpoch * 1000 / (latency);
-            String report = String.format("%d, %d, %d, %d, %d, %d, %d, %d, %f, %d, %f\n",
-                    epochNumber,
-                    epochTransactionCount,
-                    transactionsProcessedInEpoch,
-                    transactionsFailedInEpoch,
-                    transactionCount,
-                    transactionsCompleted,
-                    transactionsFailed,
-                    latency,
-                    throughputTps,
-                    bytesProcessedInEpoch,
-                    throughputBps
-            );
-            if (reportBuilder != null) {
-                reportBuilder.writeLine(report);
-            }
-        } else {
-            if (flushed == 0) {
-                flushed = 1;
-                reportBuilder.flush();
-            }
-        }*/
-    }
-
     public static void main(String[] args) {
         String[] words = {"abcd"};
         for (String word : words)
@@ -314,7 +282,7 @@ public class DatabaseLoader implements Runnable {
         public void onCompleted() {
 
         }
-    };
+    }
 
 }
 

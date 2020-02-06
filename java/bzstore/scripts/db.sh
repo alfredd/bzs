@@ -16,6 +16,12 @@ function run_command {
     command=$2
     ssh -i cluster0_0.pem $ip  ". ~/.profile ; cd $wdb_home; $command &> db.log &" &
 }
+function push_file {
+    ip=$1
+    file_name=$3
+    src_file_name=$2
+    scp -i cluster0_0.pem $src_file_name $ip:"$wdb_home/$file_name" 
+}
 
 function get_file {
     ip=$1
@@ -83,10 +89,28 @@ then
 elif [[ "$2" == "log" ]]
 then
     nodeNumber=$3
-    dest_file_name="./db_$clusterNumber-$nodeNumber.log"
+    suffix=`date +"%m-%d-%y_%H-%M-%S"`
+    dest_file_name="./db_$clusterNumber-$nodeNumber-$suffix.log"
     get_file ${clusterNodes[$nodeNumber]} "db.log" "$dest_file_name"
     less $dest_file_name
 elif [[ "$2" == "bftclear" ]]
 then
     run_command_on_all_nodes "rm ./config/currentView"
+elif [[ "$2" == "copydb" ]]
+then
+    for i in `cat $clusterIPFile`
+    do
+	push_file $i  "$wdb_home/data.txt" "data.txt"
+    done
+elif [[ "$2" == "logall" ]]
+then
+    suffix=`date +"%m-%d-%y_%H-%M-%S"`
+    let n=0
+    mkdir -p "./logs"
+    for i in  `cat $clusterIPFile` ;
+    do
+        dest_file_name=".logs/db_$clusterNumber-$n-$suffix.log"
+        get_file $i "db.log" "$dest_file_name"
+	let n++
+    done
 fi
