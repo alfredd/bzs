@@ -50,7 +50,7 @@ epoch_time_ms=100
 
 delay_start=30000
 
-epoch_batch_size=75
+epoch_batch_size=99
 
 cluster_count=3
 data=data.txt
