@@ -43,18 +43,16 @@ function start_all_clusters() {
 }
 
 function get_logs_from_all_clusters() {
-  START=1
+  START=0
   END=$1
-  ./db.sh "0" starty
   for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" logall
   done
 }
 
 function copy_data_to_all_nodes() {
-  START=1
+  START=0
   END=$1
-  ./db.sh "0" starty
   for ((c = $START; c < $END; c++)); do
     ./db.sh "$c" copydb
   done
