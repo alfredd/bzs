@@ -71,6 +71,7 @@ if [[ "$3" == "build" ]]; then
   echo "Rebuildng code on all clusters"
   update_repo_on_all_nodes $cluster_count
   build_code $cluster_count
+  sleep 45
 fi
 sleep 1
 create_nkey_data $key_count
