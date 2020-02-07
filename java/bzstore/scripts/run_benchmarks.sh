@@ -89,14 +89,14 @@ copy_data_to_all_nodes "$cluster_count"
 config_files=($(ls test_configurations_and_data/))
 S=0
 E=$cluster_count
-for ((c = $S; c < $E;)); do
+for ((c = $S; c < $E; )); do
   echo "Clearing old db and BFT-SMaRt state."
   i=${config_files[$c]}
   clear_db_and_working_directories $cluster_count
   sleep 3
-  batch_size=`echo $i | cut -d'_' -f 2`
-  rd_ratio=`echo $i | cut -d'_' -f 3`
-  wr_ratio=`echo $i | cut -d'_' -f 4`
+  batch_size=$(echo $i | cut -d'_' -f 2)
+  rd_ratio=$(echo $i | cut -d'_' -f 3)
+  wr_ratio=$(echo $i | cut -d'_' -f 4)
   config_file="test_configurations_and_data/$i"
   echo "Running benchmark for config file: $config_file"
   cp "$config_file" ./config.properties
@@ -110,24 +110,27 @@ for ((c = $S; c < $E;)); do
   while [[ $found -eq 1 ]]; do
     sleep 60
     grep "END OF BENCHMARK RUN" db.log
-    if [[ "$?"  == "0" ]]; then
+    if [[ "$?" == "0" ]]; then
       echo "Benchmark completed for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
-      found=0;
-      c=$((c+1))
-    fi
-    grep "DEADLINE_EXCEEDED" db.log
-    if [[ "$?"  == "0" ]]; then
-      echo "Benchmark failed with exception 'DEADLINE_EXCEEDED' for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
-      found=0;
-      if [[ "$try_again" == "1" ]]; then
-        echo "Benchmark failed AGAIN with exception 'DEADLINE_EXCEEDED' for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
-        echo "Will skip to next run."
-        c=$((c+1))
-      else
-        try_again=1
-        echo "Trying one more time."
+      found=0
+      c=$((c + 1))
+
+    else
+      grep "DEADLINE_EXCEEDED" db.log
+      if [[ "$?" == "0" ]]; then
+        echo "Benchmark failed with exception 'DEADLINE_EXCEEDED' for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
+        found=0
+        if [[ "$try_again" == "1" ]]; then
+          echo "Benchmark failed AGAIN with exception 'DEADLINE_EXCEEDED' for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
+          echo "Will skip to next run."
+          c=$((c + 1))
+        else
+          try_again=1
+          echo "Trying one more time."
+        fi
       fi
     fi
+
   done
 
   get_logs_from_all_clusters $cluster_count
