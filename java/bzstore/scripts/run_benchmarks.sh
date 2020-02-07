@@ -93,7 +93,7 @@ for ((c = $S; c < $E;)); do
   echo "Clearing old db and BFT-SMaRt state."
   clear_db_and_working_directories $cluster_count
   sleep 3
-
+  i=${config_files[$c]}
   batch_size=`echo $i | cut -d'_' -f 2`
   rd_ratio=`echo $i | cut -d'_' -f 3`
   wr_ratio=`echo $i | cut -d'_' -f 4`
