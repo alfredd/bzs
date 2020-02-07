@@ -89,7 +89,7 @@ copy_data_to_all_nodes "$cluster_count"
 config_files=($(ls test_configurations_and_data/))
 S=0
 E=$cluster_count
-for ((c = $s; c < $E;)); do
+for ((c = $S; c < $E;)); do
   echo "Clearing old db and BFT-SMaRt state."
   clear_db_and_working_directories $cluster_count
   sleep 3
