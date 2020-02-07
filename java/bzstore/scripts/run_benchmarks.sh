@@ -86,7 +86,10 @@ create_nkey_data "$key_count"
 
 copy_data_to_all_nodes "$cluster_count"
 
-for i in $(ls test_configurations_and_data/); do
+config_files=($(ls test_configurations_and_data/))
+S=0
+E=$cluster_count
+for ((c = $s; c < $E;)); do
   echo "Clearing old db and BFT-SMaRt state."
   clear_db_and_working_directories $cluster_count
   sleep 3
@@ -103,10 +106,28 @@ for i in $(ls test_configurations_and_data/); do
 
   echo "Waiting for benchmark run to complete for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
   found=1
+  try_again=0
   while [[ $found -eq 1 ]]; do
     sleep 60
     grep "END OF BENCHMARK RUN" db.log
-    found=$?
+    if [[ "$?"  == "0" ]]; then
+      echo "Benchmark completed for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
+      found=0;
+      c=$((c+1))
+    fi
+    grep "DEADLINE_EXCEEDED" db.log
+    if [[ "$?"  == "0" ]]; then
+      echo "Benchmark failed with exception 'DEADLINE_EXCEEDED' for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
+      found=0;
+      if [[ "$try_again" == "1" ]]; then
+        echo "Benchmark failed AGAIN with exception 'DEADLINE_EXCEEDED' for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
+        echo "Will skip to next run."
+        c=$((c+1))
+      else
+        try_again=1
+        echo "Trying one more time."
+      fi
+    fi
   done
 
   get_logs_from_all_clusters $cluster_count

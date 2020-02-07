@@ -187,7 +187,7 @@ public class DatabaseLoader implements Runnable {
             }
         }
 
-        int counter = 15;
+        int counter = 3;
         try {
             log.info("Waiting for all distributed Txn to complete.");
             while((transactionsFailed+transactionsCompleted) <= totalCount && counter >=0) {
