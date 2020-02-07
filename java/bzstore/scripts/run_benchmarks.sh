@@ -86,7 +86,9 @@ create_nkey_data "$key_count"
 copy_data_to_all_nodes "$cluster_count"
 
 for i in $(ls test_configurations_and_data/); do
+  echo "Clearing old db and BFT-SMaRt state."
   clear_db_and_working_directories $cluster_count
+  sleep 3
 
   batch_size=`echo $i | cut -d'_' -f 2`
   rd_ratio=`echo $i | cut -d'_' -f 3`
@@ -105,5 +107,7 @@ for i in $(ls test_configurations_and_data/); do
   done
 
   get_logs_from_all_clusters $cluster_count
-  mv logs "logs-$keysize-$batch_size-$rd_ratio-$wr_ratio"
+  benchmark_log_directory="logs-$keysize-$batch_size-$rd_ratio-$wr_ratio"
+  mkdir -p "$benchmark_log_directory"
+  mv logs "$benchmark_log_directory/"
 done
