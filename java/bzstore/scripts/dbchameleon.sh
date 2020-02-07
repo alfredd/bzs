@@ -13,18 +13,21 @@ numNodes=4
 clusterNodes=(`cat $clusterIPFile`)
 leaderIP=${clusterNodes[0]}
 
-nodeReservation=82678cce-4dfe-49d0-8fbc-484bd831695f
+key="chameleonkey-edge"
+pem="$key.pem"
+
+nodeReservation=9013597c-6a12-499f-b689-bd3c801a2790
 
 function run_command {
     ip=$1
     command=$2
     if [ -z $3 ]
     then
-      ssh -i chameleonkey.pem cc@$ip  ". ~/.profile ; cd $wdb_home; $command &> db.log &" &
+      ssh -i $pem cc@$ip  ". ~/.profile ; cd $wdb_home; $command &> db.log &" &
     else
       #running command at home
 			echo "running command at home"
-      ssh -i chameleonkey.pem cc@$ip  ". ~/.profile ; $command"  
+      ssh -i $pem cc@$ip  ". ~/.profile ; $command"  
     fi
 }
 
@@ -39,7 +42,7 @@ function create_instances {
     openstack server create \
       --image CC-Ubuntu16.04 \
       --flavor baremetal \
-      --key-name chameleonkey \
+      --key-name $key \
       --nic net-id=sharednet1 \
       --hint reservation=$nodeReservation \
       --user-data instance_init.sh \
@@ -89,6 +92,7 @@ function add_floating_ips {
     echo "adding ip for replica $replica"
     openstack server add floating ip $replica $i
     j=$(( j + 1 ))
+    sleep 5
   done
 }
 
@@ -183,23 +187,20 @@ elif [[ "$2" == "setup" ]]
 then
     if [[ "$3" == "copy" ]]
     then
+      clear_floating_ips
       echo "copying files onto machines"
       for i in  `cat $clusterIPFile` ;
       do
-        #scp c0 cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
-        scp c1 cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
+        #initial copy for initialization
+        #scp c1 cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
         echo "copying github key"
         scp github_rsa cc@$i:"~/.ssh/"   
+        echo "copying init.sh"
+        scp init.sh cc@$i:"~/"  
         echo "copying java.security"
         scp files/java.security cc@$i:"~/"  
         echo "copying pom.xml"
         scp files/pom.xml cc@$i:"~/"  
-        echo "copying init.sh"
-        scp init.sh cc@$i:"~/"  
-        #scp -i chameleonkey.pem files/pom.xml cc@$i:"~/"  
-        #run_command $i "cp pom.xml bzs/java/bzstore/"
-        #echo "copying jdk"
-        #scp ./jdk-10.0.2_linux-x64_bin.tar.gz cc@$i:~/ & 
       done 
     elif [[ "$3" == "init" ]]
     then

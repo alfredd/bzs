@@ -8,12 +8,21 @@ ssh-add .ssh/github_rsa
 echo "cloning bzs repo"
 git clone --recurse-submodules git@github.com:alfredd/bzs.git
 
+
+echo "installing oracle jdk"
+sudo add-apt-repository ppa:linuxuprising/java -y
+sudo apt-get update
+echo debconf shared/accepted-oracle-license-v1-2 select true | debconf-set-selections
+echo debconf shared/accepted-oracle-license-v1-2 seen true | debconf-set-selections
+sudo apt-get install oracle-java13-installer -y
+sudo apt-get install oracle-java13-set-default
+
 echo "installing maven"
 sudo apt-get install -y maven
 
-sudo add-apt-repository ppa:openjdk-r/ppa -y
-sudo apt-get update
-sudo apt-get install openjdk-11-jdk -y 
+#sudo add-apt-repository ppa:openjdk-r/ppa -y
+#sudo apt-get update
+#sudo apt-get install openjdk-11-jdk -y 
 
 #echo "retrieving oracle JDK"
 #wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/13.0.1+9/cec27d702aa74d5a8630c65ae61e4305/jdk-13.0.1_linux-x64_bin.tar.gz
