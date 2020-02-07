@@ -95,8 +95,9 @@ elif [[ "$2" == "logall" ]]; then
   let n=0
   mkdir -p "./logs"
   for i in $(cat $clusterIPFile); do
-    dest_file_name=".logs/db_$clusterNumber-$n-$suffix.log"
+    dest_file_name="db_$clusterNumber-$n-$suffix.log"
     get_file $i "db.log" "$dest_file_name"
+    mv "$dest_file_name" ./logs/
     let n++
   done
 fi

@@ -97,8 +97,10 @@ for i in $(ls test_configurations_and_data/); do
   echo "Running benchmark for config file: $config_file"
   cp "$config_file" ./config.properties
 
+  echo "Starting all clusters for benchmark run."
   start_all_clusters $cluster_count
 
+  echo "Waiting for benchmark run to complete for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
   found=1
   while [[ $found -eq 1 ]]; do
     sleep 60
@@ -109,5 +111,9 @@ for i in $(ls test_configurations_and_data/); do
   get_logs_from_all_clusters $cluster_count
   benchmark_log_directory="logs-$keysize-$batch_size-$rd_ratio-$wr_ratio"
   mkdir -p "$benchmark_log_directory"
-  mv logs "$benchmark_log_directory/"
+  mv logs/* "$benchmark_log_directory/"
+
+  echo "Stopping all clusters"
+  stop_all_clusters $cluster_count
+  sleep 1
 done
