@@ -51,6 +51,15 @@ function get_logs_from_all_clusters() {
   done
 }
 
+function copy_data_to_all_nodes() {
+  START=1
+  END=$1
+  ./db.sh "0" starty
+  for ((c = $START; c < $END; c++)); do
+    ./db.sh "$c" copydb
+  done
+}
+
 function create_nkey_data() {
   keysize=$1
   START=1
@@ -74,7 +83,9 @@ if [[ "$3" == "build" ]]; then
   sleep 45
 fi
 sleep 1
-create_nkey_data $key_count
+create_nkey_data "$key_count"
+
+copy_data_to_all_nodes "$cluster_count"
 
 for i in $(ls test_configurations_and_data/); do
   clear_db_and_working_directories $cluster_count
