@@ -62,6 +62,7 @@ function create_nkey_data() {
   keysize=$1
   START=1
   END=$keysize
+  rm "data.txt"
   for ((c = $START; c <= $END; c++)); do
     echo $c >>"data.txt"
   done
