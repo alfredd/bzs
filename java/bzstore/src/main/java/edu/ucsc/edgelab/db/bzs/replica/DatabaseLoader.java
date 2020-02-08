@@ -190,7 +190,7 @@ public class DatabaseLoader implements Runnable {
         int counter = 3;
         try {
             log.info("Waiting for all distributed Txn to complete.");
-            while((transactionsFailed+transactionsCompleted) <= totalCount && counter >=0) {
+            while((transactionsFailed+transactionsCompleted) <= (totalCount-1) && counter >=0) {
                 Thread.sleep(60*1000);
                 counter--;
             }

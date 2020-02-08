@@ -116,6 +116,7 @@ for ((c = $S; c < $E; )); do
       c=$((c + 1))
 
     else
+      echo "Checking if DEADLINE_EXCEEDED"
       grep "DEADLINE_EXCEEDED" db.log
       if [[ "$?" == "0" ]]; then
         echo "Benchmark failed with exception 'DEADLINE_EXCEEDED' for batch size: $batch_size, rd ratio: $rd_ratio, wr ratio: $wr_ratio"
