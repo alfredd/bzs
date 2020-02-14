@@ -57,6 +57,10 @@ public class EpochProcessor implements Runnable {
 
             if (tid != null) {
                 Transaction rwt = TransactionCache.getTransaction(tid);
+                /**
+                 * The next line logs the start time on the transaction observer.
+                 */
+                TransactionCache.getObserver(tid).onNext(TransactionResponse.newBuilder().build());
                 if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {

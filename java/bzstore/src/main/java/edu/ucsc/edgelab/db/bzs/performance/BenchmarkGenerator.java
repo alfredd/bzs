@@ -62,23 +62,17 @@ public class BenchmarkGenerator {
         return transactions;
     }
 
-    // TODO: pass localOnly Keys and remoteOnly Keys to the function to generate transactions.
+    public LinkedList<Bzs.Transaction> createMixedTransactions (int lrwtRatio, int drwtRatio, LinkedList<String> localClusterKeys, LinkedList<String> remoteClusterKeys) {
+        LinkedList<Bzs.Transaction> txnList = new LinkedList<>();
+
+        return txnList;
+    }
+
     public LinkedList<Bzs.Transaction> generate_DRWTransactions(LinkedList<String> localClusterKeys, LinkedList<String> remoteClusterKeys) {
         LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
         loadKeysFromDB(localClusterKeys);
 
-        Map<Integer, BZStoreClient> clientList = new LinkedHashMap<>();
-        for (int i = 0; i < totalClusterCount; i++) {
-            //if (!clusterID.equals(i)/* && ID.canRunBenchMarkTests()*/) {
-            try {
-                ServerInfo serverInfo = Configuration.getServerInfo(i, 0);
-                BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
-                clientList.put(i, client);
-            } catch (Exception e) {
-                log.log(Level.WARNING, "Exception occurred while creating client connection to cluster: "+ i+ ":  " + e.getLocalizedMessage(), e);
-            }
-            //}
-        }
+        Map<Integer, BZStoreClient> clientList = getBZStoreClientConnectionMap();
 
         int remoteMaxKeyCount = remoteClusterKeys.size();
 
@@ -91,48 +85,6 @@ public class BenchmarkGenerator {
             localClusterKeySet.add(localKey.trim());
         }
         transactions = createDTxns(remoteClusterKeySet, localClusterKeySet, clientList);
-/*        int newWriteStartsAt = 0;
-
-        for (String localKey : localClusterKeySet) {
-            Transaction t = new Transaction();
-            List<String> transactionKeys = new LinkedList<>();
-            int writeOperationsCount = writeOpCount;
-            boolean endLoop = false;
-            while (writeOperationsCount > 0) {
-                String remoteClusterKey;
-                try {
-                    remoteClusterKey = remoteClusterKeySet.removeFirst();
-                } catch (Exception e) {
-//                    log.log(Level.WARNING, "No more keys in remoteClusterKeySet");
-                    endLoop = true;
-                    break;
-                }
-                int remoteClusterID = hashmod(remoteClusterKey, totalClusterCount);
-                BZStoreClient client = clientList.get(remoteClusterID);
-                if (client != null) {
-                    t.setClient(client);
-                    BZStoreData readResponse = t.read(remoteClusterKey);
-//                    log.info("DEBUG: read response: " + readResponse);
-//                    if (!readResponse.value.equalsIgnoreCase("")) {
-                    writeOperationsCount -= 1;
-                    transactionKeys.add(remoteClusterKey);
-//                    }
-                }
-            }
-
-//            log.info("DEBUG: creating transactions from remoteClusterKey: "+transactionKeys);
-
-            BZStoreData localData = storedData.get(localKey);
-            if (localData != null && transactionKeys.size() > 0) {
-                t.setReadHistory(localKey, localData.value, localData.version, clusterID);
-
-                for (String remoteTransactionKey : transactionKeys) {
-                    t.write(remoteTransactionKey, remoteTransactionKey + newWriteStartsAt, hashmod(remoteTransactionKey, totalClusterCount));
-                    newWriteStartsAt += 1;
-                }
-                transactions.add(t.getTransaction());
-            }
-        }*/
 
         for (Map.Entry<Integer, BZStoreClient> client : clientList.entrySet()) {
             try {
@@ -144,6 +96,22 @@ public class BenchmarkGenerator {
 
         log.info("Number of transactions for testing D-RW Txns: " + transactions.size()/*+ ". Transactions: "+transactions*/);
         return transactions;
+    }
+
+    private Map<Integer, BZStoreClient> getBZStoreClientConnectionMap() {
+        Map<Integer, BZStoreClient> clientList = new LinkedHashMap<>();
+        for (int i = 0; i < totalClusterCount; i++) {
+            //if (!clusterID.equals(i)/* && ID.canRunBenchMarkTests()*/) {
+            try {
+                ServerInfo serverInfo = Configuration.getServerInfo(i, 0);
+                BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
+                clientList.put(i, client);
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Exception occurred while creating client connection to cluster: "+ i+ ":  " + e.getLocalizedMessage(), e);
+            }
+            //}
+        }
+        return clientList;
     }
 
     private LinkedList<Bzs.Transaction> createDTxns(LinkedList<String> remoteClusterKeys, LinkedList<String> localClusterKeys, Map<Integer,

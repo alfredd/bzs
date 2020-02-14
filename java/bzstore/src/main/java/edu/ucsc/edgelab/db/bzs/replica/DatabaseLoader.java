@@ -23,6 +23,8 @@ public class DatabaseLoader implements Runnable {
     private int transactionsFailed = 0;
     private boolean started = false;
     private long latency = 0;
+    private long minLatency = 0;
+    private long maxLatency = 0;
     private int previousCompleted = 0;
     private int currentCompleted = 0;
     private int totalClusters = 0;
@@ -88,9 +90,9 @@ public class DatabaseLoader implements Runnable {
     }
 
     private void setupRWRatio(BZStoreProperties properties) {
-        String[] strRWRatio= properties.getProperty(BZStoreProperties.Configuration.dtxn_read_write_ratio).trim().split(":");
-        if (strRWRatio==null || strRWRatio.length!=2) {
-            strRWRatio=new String[]{"1", "5"};
+        String[] strRWRatio = properties.getProperty(BZStoreProperties.Configuration.dtxn_read_write_ratio).trim().split(":");
+        if (strRWRatio == null || strRWRatio.length != 2) {
+            strRWRatio = new String[]{"1", "5"};
         }
         rwRatio = new Integer[2];
         try {
@@ -148,7 +150,7 @@ public class DatabaseLoader implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        log.info(String.format("Total W-Only Txns  (latency, completed, failed) = (%d, %d, %d)", latency, transactionsCompleted, transactionsFailed)  );
+        logClientMetrics("W-Only");
         //Reset variables
         resetVariables();
 
@@ -165,7 +167,7 @@ public class DatabaseLoader implements Runnable {
             transactionProcessor.processTransaction(txn, getTransactionResponseStreamObserver());
         }
         waitForTransactionCompletion(delayMs, txns.size(), "L-RW");
-        log.info(String.format("Total LRWTxns  (latency, completed, failed) = (%d, %d, %d)", latency, transactionsCompleted, transactionsFailed)  );
+        logClientMetrics("LRWTxns");
         resetVariables();
 
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
@@ -190,17 +192,21 @@ public class DatabaseLoader implements Runnable {
         int counter = 3;
         try {
             log.info("Waiting for all distributed Txn to complete.");
-            while((transactionsFailed+transactionsCompleted) <= (totalCount-1) && counter >=0) {
-                Thread.sleep(60*1000);
+            while ((transactionsFailed + transactionsCompleted) <= (totalCount - 1) && counter >= 0) {
+                Thread.sleep(60 * 1000);
                 counter--;
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        log.info(String.format("Total DRWTxns  (latency, completed, failed) = (%d, %d, %d)", latency, transactionsCompleted, transactionsFailed)  );
+        logClientMetrics("DRWTxns");
 //        resetVariables();
 
         log.info("END OF BENCHMARK RUN.");
+    }
+
+    private void logClientMetrics(String txnType) {
+        log.info(String.format("Total %s Txns  (latency, completed, failed) = (%d, %d, %d)", txnType, latency, transactionsCompleted, transactionsFailed));
     }
 
     private void resetVariables() {
@@ -208,6 +214,8 @@ public class DatabaseLoader implements Runnable {
         transactionsCompleted = 0;
         transactionsFailed = 0;
         transactionCount = 0;
+        minLatency = Long.MAX_VALUE;
+        maxLatency = Long.MIN_VALUE;
     }
 
     private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
@@ -225,11 +233,6 @@ public class DatabaseLoader implements Runnable {
         }
     }
 
-//    public void sendTransactions(int n, int m) {
-//        while ((--n) >= 0) {
-//            sendWriteOnlyTransactions(m);
-//        }
-//    }
 
     public void sendWriteOnlyTransactions(List<String> wordList) {
 
@@ -254,23 +257,36 @@ public class DatabaseLoader implements Runnable {
 
     private class MyStreamObserver implements StreamObserver<Bzs.TransactionResponse> {
 
-        private final long startTime;
+        private long startTime;
         private long endTime;
+        private int count = 0;
 
         public MyStreamObserver() {
-            startTime = System.currentTimeMillis();
         }
 
         @Override
         public void onNext(Bzs.TransactionResponse transactionResponse) {
-            if (transactionResponse.getStatus().equals(Bzs.TransactionStatus.ABORTED)) {
-                transactionsFailed += 1;
+            if (count == 0) {
+                startTime = System.currentTimeMillis();
+                count = 1;
             } else {
-                transactionsCompleted += 1;
+                if (transactionResponse.getStatus().equals(Bzs.TransactionStatus.ABORTED)) {
+                    transactionsFailed += 1;
+                } else {
+                    transactionsCompleted += 1;
+                }
+                currentCompleted = transactionsCompleted + transactionsFailed;
+                endTime = System.currentTimeMillis();
+                long txnLatency = endTime - startTime;
+                DatabaseLoader.this.latency += txnLatency;
+                if (minLatency > txnLatency) {
+                    minLatency = txnLatency;
+                }
+                if (maxLatency < txnLatency) {
+                    maxLatency = txnLatency;
+                }
             }
-            currentCompleted = transactionsCompleted + transactionsFailed;
-            endTime = System.currentTimeMillis();
-            latency = endTime-startTime;
+
         }
 
         @Override
