@@ -206,7 +206,8 @@ public class DatabaseLoader implements Runnable {
     }
 
     private void logClientMetrics(String txnType) {
-        log.info(String.format("Total %s Txns  (latency, completed, failed) = (%d, %d, %d)", txnType, latency, transactionsCompleted, transactionsFailed));
+        log.info(String.format("Total %s Txns  (total latency, completed, failed, min latency, max latency) = (%d, %d, %d, %d, %d)",
+                txnType, latency, transactionsCompleted, transactionsFailed, minLatency, maxLatency));
     }
 
     private void resetVariables() {
