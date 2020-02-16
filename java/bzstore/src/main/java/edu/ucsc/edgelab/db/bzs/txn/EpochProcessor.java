@@ -60,7 +60,12 @@ public class EpochProcessor implements Runnable {
                 /**
                  * The next line logs the start time on the transaction observer.
                  */
-                TransactionCache.getObserver(tid).onNext(TransactionResponse.newBuilder().build());
+                StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(tid);
+                if (observer!=null) {
+                    observer.onNext(TransactionResponse.newBuilder().build());
+                } else {
+                    log.log(Level.WARNING, "No stream observer found for tid: "+tid);
+                }
                 if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
