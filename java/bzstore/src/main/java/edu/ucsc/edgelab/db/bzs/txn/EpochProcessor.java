@@ -63,9 +63,9 @@ public class EpochProcessor implements Runnable {
                 StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(tid);
                 if (observer!=null) {
                     observer.onNext(TransactionResponse.newBuilder().build());
-                } else {
+                } /*else {
                     log.log(Level.WARNING, "No stream observer found for tid: "+tid);
-                }
+                }*/
                 if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
