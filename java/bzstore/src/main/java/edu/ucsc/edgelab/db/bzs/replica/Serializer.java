@@ -12,6 +12,7 @@ import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,7 +23,7 @@ public class Serializer {
 
     private List<Bzs.Transaction> epochList = new LinkedList<>();
     // Keeping track of current object changes to the epochList.
-    private HashMap<String, Integer> readMap = new HashMap<>();
+    private ConcurrentHashMap<String, Integer> readMap = new ConcurrentHashMap<>();
 
     private Integer clusterID;
     private Integer replicaID;
