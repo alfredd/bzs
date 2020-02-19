@@ -16,12 +16,12 @@ public class BatchMetricsManager {
             metrics.startTime = System.currentTimeMillis();
             metrics.txnStartedCount = 1;
             batchMetrics.put(epoch, metrics);
-        } else {
+        }/* else {
             BatchMetrics metrics = batchMetrics.get(epoch);
             metrics.txnStartedCount += 1;
             metrics.endTime = System.currentTimeMillis();
             batchMetrics.put(epoch, metrics);
-        }
+        }*/
     }
 
     public void setBatchMetrics(TransactionID tid) {
