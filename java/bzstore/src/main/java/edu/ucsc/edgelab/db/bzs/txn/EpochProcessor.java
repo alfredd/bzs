@@ -65,10 +65,12 @@ public class EpochProcessor implements Runnable {
                 /**
                  * The next line logs the start time on the transaction observer.
                  */
-//                StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(tid);
-//                if (observer!=null) {
-//                    observer.onNext(TransactionResponse.newBuilder().build());
-//                }
+                StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(tid);
+                if (observer!=null) {
+                    observer.onNext(TransactionResponse.newBuilder().build());
+                }
+
+
                 // Insert and set start time
                 if (rwt != null) {
                     batchMetricsManager.setBatchMetrics(tid);
