@@ -11,7 +11,7 @@ public class BatchMetricsManager {
     private static Logger log = Logger.getLogger(BatchMetricsManager.class.getName());
 
     public void setInitialBatchMetrics(int epoch, TransactionID tid) {
-        if (!batchMetrics.contains(epoch)) {
+        if (!batchMetrics.containsKey(epoch)) {
             BatchMetrics metrics = new BatchMetrics();
             metrics.startTime = System.currentTimeMillis();
             metrics.txnStartedCount = 1;
