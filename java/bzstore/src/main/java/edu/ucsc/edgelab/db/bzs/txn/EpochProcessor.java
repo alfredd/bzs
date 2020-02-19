@@ -73,7 +73,7 @@ public class EpochProcessor implements Runnable {
 
                 // Insert and set start time
                 if (rwt != null) {
-                    batchMetricsManager.setBatchMetrics(tid);
+                    batchMetricsManager.setInitialBatchMetrics(epochNumber, tid);
                 }
 
                 if (rwt != null) {

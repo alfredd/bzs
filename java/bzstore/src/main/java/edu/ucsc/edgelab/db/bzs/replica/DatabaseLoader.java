@@ -162,7 +162,7 @@ public class DatabaseLoader implements Runnable {
             int epochNumber = entryset.getKey();
             BatchMetrics batchMetrics = entryset.getValue();
             log.info(String.format("(Epoch, StartTime, EndTime, TxnCount)=%d, %d, %d, %d", epochNumber, batchMetrics.startTime,
-                    batchMetrics.endTime, batchMetrics.txnCount));
+                    batchMetrics.endTime, batchMetrics.txnStartedCount));
         }
         batchMetricsManager.getBatchMetrics().clear();
 
