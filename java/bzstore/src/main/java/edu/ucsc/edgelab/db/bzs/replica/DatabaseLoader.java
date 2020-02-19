@@ -157,14 +157,7 @@ public class DatabaseLoader implements Runnable {
         //Reset variables
         resetVariables();
 
-        BatchMetricsManager batchMetricsManager = transactionProcessor.getBatchMetricsManager();
-        for (Map.Entry<Integer, BatchMetrics> entryset : batchMetricsManager.getBatchMetrics().entrySet()) {
-            int epochNumber = entryset.getKey();
-            BatchMetrics batchMetrics = entryset.getValue();
-            log.info(String.format("(Epoch, StartTime, EndTime, TxnCount)=%d, %d, %d, %d", epochNumber, batchMetrics.startTime,
-                    batchMetrics.endTime, batchMetrics.txnStartedCount));
-        }
-        batchMetricsManager.getBatchMetrics().clear();
+        logBatchMetrics();
 
         log.info("GENERATING L-RWT.");
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator(rwRatio[0], rwRatio[1]);
@@ -181,6 +174,8 @@ public class DatabaseLoader implements Runnable {
         waitForTransactionCompletion(delayMs, txns.size(), "L-RW");
         logClientMetrics("LRWTxns");
         resetVariables();
+
+        logBatchMetrics();
 
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
         if (ID.canRunBenchMarkTests()) {
@@ -212,9 +207,22 @@ public class DatabaseLoader implements Runnable {
             e.printStackTrace();
         }
         logClientMetrics("DRWTxns");
+        logBatchMetrics();
 //        resetVariables();
 
         log.info("END OF BENCHMARK RUN.");
+    }
+
+    private void logBatchMetrics() {
+        BatchMetricsManager batchMetricsManager = transactionProcessor.getBatchMetricsManager();
+        for (Map.Entry<Integer, BatchMetrics> entryset : batchMetricsManager.getBatchMetrics().entrySet()) {
+            int epochNumber = entryset.getKey();
+
+            BatchMetrics batchMetrics = entryset.getValue();
+            long duration =batchMetrics.endTime-batchMetrics.startTime;
+            log.info(String.format("(Epoch, latency (ms), TxnCount)=%d, %d, %d", epochNumber, duration, batchMetrics.txnStartedCount));
+        }
+        batchMetricsManager.getBatchMetrics().clear();
     }
 
     private void logClientMetrics(String txnType) {
