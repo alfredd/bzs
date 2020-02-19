@@ -3,6 +3,8 @@ package edu.ucsc.edgelab.db.bzs.replica;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.clientlib.ConnectionLessTransaction;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
+import edu.ucsc.edgelab.db.bzs.performance.BatchMetrics;
+import edu.ucsc.edgelab.db.bzs.performance.BatchMetricsManager;
 import edu.ucsc.edgelab.db.bzs.performance.BenchmarkGenerator;
 import edu.ucsc.edgelab.db.bzs.txn.TransactionProcessorINTF;
 import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
@@ -28,6 +30,7 @@ public class DatabaseLoader implements Runnable {
     private int previousCompleted = 0;
     private int currentCompleted = 0;
     private int totalClusters = 0;
+    private int batchCounter = 0;
 
     private static final Logger log = Logger.getLogger(DatabaseLoader.class.getName());
 
@@ -153,6 +156,15 @@ public class DatabaseLoader implements Runnable {
         logClientMetrics("W-Only");
         //Reset variables
         resetVariables();
+
+        BatchMetricsManager batchMetricsManager = transactionProcessor.getBatchMetricsManager();
+        for (Map.Entry<Integer, BatchMetrics> entryset : batchMetricsManager.getBatchMetrics().entrySet()) {
+            int epochNumber = entryset.getKey();
+            BatchMetrics batchMetrics = entryset.getValue();
+            log.info(String.format("(Epoch, StartTime, EndTime, TxnCount)=%d, %d, %d, %d", epochNumber, batchMetrics.startTime,
+                    batchMetrics.endTime, batchMetrics.txnCount));
+        }
+        batchMetricsManager.getBatchMetrics().clear();
 
         log.info("GENERATING L-RWT.");
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator(rwRatio[0], rwRatio[1]);

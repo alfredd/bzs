@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
+import edu.ucsc.edgelab.db.bzs.performance.BatchMetricsManager;
 import edu.ucsc.edgelab.db.bzs.replica.*;
 import io.grpc.stub.StreamObserver;
 
@@ -68,6 +69,11 @@ public class TxnProcessor implements TransactionProcessorINTF {
 //            log.info("Adding transaction to pre-processing cache, TID: "+tid);
             TransactionCache.add(tid, transaction, responseObserver);
         }
+    }
+
+    @Override
+    public BatchMetricsManager getBatchMetricsManager() {
+        return epochManager.getBatchMetricsManager();
     }
 
     private void abortTransaction(Bzs.Transaction request, StreamObserver<Bzs.TransactionResponse> responseObserver) {

@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
+import edu.ucsc.edgelab.db.bzs.performance.BatchMetricsManager;
 import edu.ucsc.edgelab.db.bzs.txn.LocalDataVerifier;
 import edu.ucsc.edgelab.db.bzs.txn.MetaInfo;
 import edu.ucsc.edgelab.db.bzs.txn.TransactionProcessorINTF;
@@ -158,6 +159,11 @@ public class TransactionProcessor implements TransactionProcessorINTF {
         if (seqNum > maxBatchSize) {
             new Thread(() -> resetEpoch(false)).start();
         }
+    }
+
+    @Override
+    public BatchMetricsManager getBatchMetricsManager() {
+        return null;
     }
 
     /**

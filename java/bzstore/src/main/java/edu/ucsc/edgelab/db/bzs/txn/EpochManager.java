@@ -3,6 +3,7 @@ package edu.ucsc.edgelab.db.bzs.txn;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
+import edu.ucsc.edgelab.db.bzs.performance.BatchMetricsManager;
 import edu.ucsc.edgelab.db.bzs.performance.PerfMetricManager;
 import edu.ucsc.edgelab.db.bzs.replica.PerformanceTrace;
 import edu.ucsc.edgelab.db.bzs.replica.Serializer;
@@ -31,6 +32,8 @@ public class EpochManager {
     private Serializer serializer;
     private PerformanceTrace perfTracer;
     private Semaphore semaphore;
+
+    private BatchMetricsManager batchMetricsManager = new BatchMetricsManager();
 
 
     public EpochManager() {
@@ -93,6 +96,7 @@ public class EpochManager {
 
     protected void processEpoch(final Integer epoch, final Integer txnCount) {
         EpochProcessor processor = new EpochProcessor(epoch, txnCount, dTxnThreadPoolExecutor);
+        processor.setBatchMetricsManager(batchMetricsManager);
         processor.setPerfMetricManager(perfMetricManager);
         processor.addPerformanceTracer(perfTracer);
         synchronized (clusterPrepareBatch) {
@@ -133,6 +137,10 @@ public class EpochManager {
 
     public void setPerformanceTracer(PerformanceTrace performanceTracer) {
         this.perfTracer = performanceTracer;
+    }
+
+    public BatchMetricsManager getBatchMetricsManager() {
+        return batchMetricsManager;
     }
 }
 

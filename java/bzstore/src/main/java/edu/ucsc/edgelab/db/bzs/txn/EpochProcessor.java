@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.bftcommit.BFTClient;
 import edu.ucsc.edgelab.db.bzs.data.LockManager;
 import edu.ucsc.edgelab.db.bzs.data.TransactionCache;
+import edu.ucsc.edgelab.db.bzs.performance.BatchMetricsManager;
 import edu.ucsc.edgelab.db.bzs.performance.PerfMetricManager;
 import edu.ucsc.edgelab.db.bzs.replica.*;
 import io.grpc.stub.StreamObserver;
@@ -21,6 +22,10 @@ public class EpochProcessor implements Runnable {
     private static final Logger log = Logger.getLogger(EpochProcessor.class.getName());
     protected final WedgeDBThreadPoolExecutor threadPoolExecutor;
     protected LocalDataVerifier localDataVerifier = new LocalDataVerifier();
+
+
+
+    private BatchMetricsManager batchMetricsManager;
 
     protected final Integer epochNumber;
     protected Map<String, ClusterPC> clusterPrepareMap;
@@ -60,12 +65,15 @@ public class EpochProcessor implements Runnable {
                 /**
                  * The next line logs the start time on the transaction observer.
                  */
-                StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(tid);
-                if (observer!=null) {
-                    observer.onNext(TransactionResponse.newBuilder().build());
-                } /*else {
-                    log.log(Level.WARNING, "No stream observer found for tid: "+tid);
-                }*/
+//                StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(tid);
+//                if (observer!=null) {
+//                    observer.onNext(TransactionResponse.newBuilder().build());
+//                }
+                // Insert and set start time
+                if (rwt != null) {
+                    batchMetricsManager.setBatchMetrics(tid);
+                }
+
                 if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
@@ -154,7 +162,7 @@ public class EpochProcessor implements Runnable {
 
             Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = txnUtils.mapTransactionsToCluster(dRWTxns, ID.getClusterID());
             for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
-                log.info("Starting DRWTProcessor for cluster: "+ entry.getKey()+", and TIDs: "+ entry.getValue().keySet());
+                log.info("Starting DRWTProcessor for cluster: " + entry.getKey() + ", and TIDs: " + entry.getValue().keySet());
                 DRWTProcessor drwtProcessor = new DRWTProcessor(epochNumber, entry.getKey(), entry.getValue());
                 drwtProcessor.setPerfMetricManager(perfLogger);
                 threadPoolExecutor.addToConcurrentQueue(drwtProcessor);
@@ -248,6 +256,7 @@ public class EpochProcessor implements Runnable {
 
         for (Transaction ct : committedTransactions) {
             TransactionID ctid = TransactionID.getTransactionID(ct.getTransactionID());
+            batchMetricsManager.setBatchMetrics(ctid);
             StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(ctid);
             TransactionResponse response = TransactionCache.getResponse(ctid);
 //            log.info("Sending a Transaction Response for transaction with ID " + ctid + ": " + response);
@@ -309,6 +318,14 @@ public class EpochProcessor implements Runnable {
 
     public void setPerfMetricManager(PerfMetricManager perfMetricManager) {
         this.perfLogger = perfMetricManager;
+    }
+
+    public BatchMetricsManager getBatchMetricsManager() {
+        return batchMetricsManager;
+    }
+
+    public void setBatchMetricsManager(BatchMetricsManager batchMetricsManager) {
+        this.batchMetricsManager = batchMetricsManager;
     }
 }
 
