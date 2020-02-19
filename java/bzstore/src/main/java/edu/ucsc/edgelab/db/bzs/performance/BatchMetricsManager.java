@@ -26,7 +26,7 @@ public class BatchMetricsManager {
 
     public void setBatchMetrics(TransactionID tid) {
         Integer epochNumber = tid.getEpochNumber();
-        if (!batchMetrics.contains(epochNumber)) {
+        if (!batchMetrics.containsKey(epochNumber)) {
             log.log(Level.WARNING, "Could not find entry for epoch "+epochNumber+" in batch metrics manager");
         } else {
             BatchMetrics metrics = batchMetrics.get(epochNumber);
