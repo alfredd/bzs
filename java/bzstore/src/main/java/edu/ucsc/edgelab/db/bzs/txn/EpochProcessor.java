@@ -258,7 +258,7 @@ public class EpochProcessor implements Runnable {
 
         for (Transaction ct : committedTransactions) {
             TransactionID ctid = TransactionID.getTransactionID(ct.getTransactionID());
-            batchMetricsManager.setBatchMetrics(ctid);
+            batchMetricsManager.setTxnCommitCompleted(ctid);
             StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(ctid);
             TransactionResponse response = TransactionCache.getResponse(ctid);
 //            log.info("Sending a Transaction Response for transaction with ID " + ctid + ": " + response);

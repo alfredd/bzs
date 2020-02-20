@@ -10,11 +10,11 @@ public class BatchMetricsManager {
     ConcurrentHashMap<Integer, BatchMetrics> batchMetrics = new ConcurrentHashMap<>();
     private static Logger log = Logger.getLogger(BatchMetricsManager.class.getName());
 
-    public void setInitialBatchMetrics(int epoch, TransactionID tid) {
+    public void setInitialBatchMetrics(final int epoch, final TransactionID tid) {
         if (!batchMetrics.containsKey(epoch)) {
             BatchMetrics metrics = new BatchMetrics();
             metrics.startTime = System.currentTimeMillis();
-            metrics.txnStartedCount = 1;
+            metrics.txnCommittedCount = 1;
             batchMetrics.put(epoch, metrics);
         }/* else {
             BatchMetrics metrics = batchMetrics.get(epoch);
@@ -24,14 +24,25 @@ public class BatchMetricsManager {
         }*/
     }
 
-    public void setBatchMetrics(TransactionID tid) {
+    public void setTxnCommitCompleted(final TransactionID tid) {
         Integer epochNumber = tid.getEpochNumber();
         if (!batchMetrics.containsKey(epochNumber)) {
             log.log(Level.WARNING, "Could not find entry for epoch "+epochNumber+" in batch metrics manager");
         } else {
             BatchMetrics metrics = batchMetrics.get(epochNumber);
-            metrics.txnStartedCount += 1;
-            metrics.endTime = System.currentTimeMillis();
+            metrics.txnCommittedCount += 1;
+            metrics.epochCommitTime = System.currentTimeMillis();
+            batchMetrics.put(epochNumber, metrics);
+        }
+    }
+    public void setTxnProcessingCompleted(final TransactionID tid) {
+        Integer epochNumber = tid.getEpochNumber();
+        if (!batchMetrics.containsKey(epochNumber)) {
+            log.log(Level.WARNING, "Could not find entry for epoch "+epochNumber+" in batch metrics manager");
+        } else {
+            BatchMetrics metrics = batchMetrics.get(epochNumber);
+            metrics.txnCompletedCount += 1;
+            metrics.txnProcessingTime = System.currentTimeMillis();
             batchMetrics.put(epochNumber, metrics);
         }
     }

@@ -1,6 +1,7 @@
 package edu.ucsc.edgelab.db.bzs.txn;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
+import edu.ucsc.edgelab.db.bzs.performance.BatchMetricsManager;
 import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 
 import java.util.*;
@@ -16,6 +17,7 @@ public class DTxnCache {
     public static boolean statusHistory = true;
 
     private static final Logger logger = Logger.getLogger(DTxnCache.class.getName());
+    private static BatchMetricsManager batchMetricsManagerObj;
 
     private static void addEpochToQueue(Integer epochNumber) {
         epochQueue.addLast(epochNumber);
@@ -53,8 +55,8 @@ public class DTxnCache {
         }
 
         if (log_debug_flag) {
-            if (status != statusHistory)
-                logger.info("Complexted DRWTxns exists? " + status);
+//            if (status != statusHistory)
+//                logger.info("Complexted DRWTxns exists? " + status);
             statusHistory= status;
 
 //            logger.info("Epoch Queue: "+epochQueue);
@@ -79,15 +81,17 @@ public class DTxnCache {
             return;
         }
         log_debug_flag = true;
-        logger.info(String.format("Adding transactions to txnCache for epoch: %d", epochNumber.intValue()/*, completed.toString()*/));
+//        logger.info(String.format("Adding transactions to txnCache for epoch: %d", epochNumber.intValue()/*, completed.toString()*/));
         CacheKeeper cache = txnCache.get(epochNumber);
         cache.addToCompleted(completed);
+        for (TransactionID tid: completed)
+            batchMetricsManagerObj.setTxnProcessingCompleted(tid);
 //        logger.info("Remaining TIDs to be committed: "+ cache.getRemaining());
         if (cache.allCompleted()) {
             completedEpochs.add(epochNumber);
         }
-        logger.info("Completed Epochs: "+ completedEpochs);
-        logger.info("Epoch queue: "+ epochQueue);
+//        logger.info("Completed Epochs: "+ completedEpochs);
+//        logger.info("Epoch queue: "+ epochQueue);
 
     }
 
@@ -98,6 +102,10 @@ public class DTxnCache {
         }
         CacheKeeper cache = txnCache.get(epochNumber);
         cache.addToAborted(abortSet);
+    }
+
+    public static void setBatMetricsManager(BatchMetricsManager batchMetricsManager) {
+        batchMetricsManagerObj = batchMetricsManager;
     }
 }
 

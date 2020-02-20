@@ -219,8 +219,19 @@ public class DatabaseLoader implements Runnable {
             int epochNumber = entryset.getKey();
 
             BatchMetrics batchMetrics = entryset.getValue();
-            long duration =batchMetrics.endTime-batchMetrics.startTime;
-            log.info(String.format("(Epoch, latency (ms), TxnCount)=%d, %d, %d", epochNumber, duration, batchMetrics.txnStartedCount));
+            long commitLatency =batchMetrics.epochCommitTime -batchMetrics.startTime;
+            long completionLatency =batchMetrics.txnProcessingTime -batchMetrics.startTime;
+            log.info(String.format(
+                    "(Epoch, BatchStartedTimeStamp (ms), BatchCompletedTimeStamp, BatchCommittedTimeStamp,  TxnCompleted Count, Txn Committed Count, Completion latency (ms), Commit latency (ms)" +
+                            "=%d, %d, %d, %d, %d, %d, %d, %d",
+                    epochNumber,
+                    batchMetrics.startTime,
+                    batchMetrics.txnProcessingTime,
+                    batchMetrics.epochCommitTime,
+                    batchMetrics.txnCompletedCount,
+                    batchMetrics.txnCommittedCount,
+                    completionLatency,
+                    commitLatency));
         }
         batchMetricsManager.getBatchMetrics().clear();
     }
