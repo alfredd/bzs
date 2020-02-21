@@ -50,7 +50,7 @@ public class EpochManager {
         Timer t = new Timer();
         t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());
         dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
-        DTxnCache.setBatMetricsManager(batchMetricsManager);
+        DTxnCache.setEpochMetricsManager(batchMetricsManager);
     }
 
     private void executeUpdateEpoch() {

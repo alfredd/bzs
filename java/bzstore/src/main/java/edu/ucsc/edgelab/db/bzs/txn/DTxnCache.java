@@ -104,7 +104,7 @@ public class DTxnCache {
         cache.addToAborted(abortSet);
     }
 
-    public static void setBatMetricsManager(BatchMetricsManager batchMetricsManager) {
+    public static void setEpochMetricsManager(BatchMetricsManager batchMetricsManager) {
         batchMetricsManagerObj = batchMetricsManager;
     }
 }

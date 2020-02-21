@@ -33,7 +33,7 @@ public class EpochProcessor implements Runnable {
     protected PerformanceTrace perfTracer;
     protected PerfMetricManager perfLogger;
 
-    public EpochProcessor(Integer epochNumber, Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
+    public EpochProcessor(final Integer epochNumber, final Integer txnCount, WedgeDBThreadPoolExecutor threadPoolExecutor) {
         this.epochNumber = epochNumber;
         this.txnCount = txnCount;
         this.threadPoolExecutor = threadPoolExecutor;
