@@ -10,18 +10,13 @@ public class BatchMetricsManager {
     ConcurrentHashMap<Integer, BatchMetrics> batchMetrics = new ConcurrentHashMap<>();
     private static Logger log = Logger.getLogger(BatchMetricsManager.class.getName());
 
-    public void setInitialBatchMetrics(final int epoch, final TransactionID tid) {
+    public void setInitialBatchMetrics(final int epoch) {
         if (!batchMetrics.containsKey(epoch)) {
             BatchMetrics metrics = new BatchMetrics();
             metrics.startTime = System.currentTimeMillis();
             metrics.txnCommittedCount = 1;
             batchMetrics.put(epoch, metrics);
-        }/* else {
-            BatchMetrics metrics = batchMetrics.get(epoch);
-            metrics.txnStartedCount += 1;
-            metrics.endTime = System.currentTimeMillis();
-            batchMetrics.put(epoch, metrics);
-        }*/
+        }
     }
 
     public void setTxnCommitCompleted(final TransactionID tid) {

@@ -57,6 +57,8 @@ public class EpochProcessor implements Runnable {
         Map<TransactionID, Transaction> lRWTxns = new LinkedHashMap<>();
         Map<TransactionID, Transaction> dRWTxns = new LinkedHashMap<>();
         int actualTxnPrepareCount = 0;
+        // Insert and set start time
+        batchMetricsManager.setInitialBatchMetrics(epochNumber);
         for (int i = 0; i <= txnCount; i++) {
             TransactionID tid = new TransactionID(epochNumber, i);
 
@@ -71,10 +73,7 @@ public class EpochProcessor implements Runnable {
                 }
 
 
-                // Insert and set start time
-                if (rwt != null) {
-                    batchMetricsManager.setInitialBatchMetrics(epochNumber, tid);
-                }
+
 
                 if (rwt != null) {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
