@@ -243,6 +243,8 @@ public class EpochProcessor implements Runnable {
                                 .build();
                         responseObserver.onNext(newResponse);
                         responseObserver.onCompleted();
+                        batchMetricsManager.setTxnCommitCompleted(transactionID);
+                        batchMetricsManager.setTxnProcessingCompleted(transactionID);
                     } else {
 //                        log.log(Level.WARNING,
 //                                "Could not find appropriate transactionBatchResponse observer for transaction request: " +

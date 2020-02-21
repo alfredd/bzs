@@ -13,7 +13,7 @@ public class BatchMetricsManager {
     public void setInitialBatchMetrics(final int epoch) {
         if (!batchMetrics.containsKey(epoch)) {
             BatchMetrics metrics = new BatchMetrics();
-            metrics.startTime = System.nanoTime();
+            metrics.startTime = System.currentTimeMillis();
             metrics.txnCommittedCount = 1;
             batchMetrics.put(epoch, metrics);
         }
@@ -26,7 +26,7 @@ public class BatchMetricsManager {
         } else {
             BatchMetrics metrics = batchMetrics.get(epochNumber);
             metrics.txnCommittedCount += 1;
-            metrics.epochCommitTime = System.nanoTime();
+            metrics.epochCommitTime = System.currentTimeMillis();
             batchMetrics.put(epochNumber, metrics);
         }
     }
@@ -37,7 +37,7 @@ public class BatchMetricsManager {
         } else {
             BatchMetrics metrics = batchMetrics.get(epochNumber);
             metrics.txnCompletedCount += 1;
-            metrics.txnProcessingTime = System.nanoTime();
+            metrics.txnProcessingTime = System.currentTimeMillis();
             batchMetrics.put(epochNumber, metrics);
         }
     }
