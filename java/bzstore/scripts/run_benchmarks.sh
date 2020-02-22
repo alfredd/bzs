@@ -12,8 +12,16 @@ function clear_db_and_working_directories() {
   START=0
   END=$1
   for ((c = $START; c < $END; c++)); do
-    ./db.sh "$c" bftclear
-    ./db.sh "$c" clean
+    if (( c < 1 )); then
+      key="aws_key"
+      user="ubuntu"
+    else
+      key="mykey"
+      user="cc"
+    fi 
+    echo "clearing db with key $key and $user"
+    ./db.sh "$c" bftclear $key $user 
+    ./db.sh "$c" clean $key $user 
   done
 }
 
@@ -29,7 +37,15 @@ function stop_all_clusters() {
   START=0
   END=$1
   for ((c = $START; c < $END; c++)); do
-    ./db.sh "$c" stop
+    if (( c < 1 )); then
+      key="aws_key"
+      user="ubuntu"
+    else
+      key="mykey"
+      user="cc"
+    fi 
+    echo "clearing db with key $key and $user"
+    ./db.sh "$c" stop $key $user 
   done
 }
 
@@ -38,7 +54,15 @@ function start_all_clusters() {
   END=$1
   ./db.sh "0" starty
   for ((c = $START; c < $END; c++)); do
-    ./db.sh "$c" start
+    if (( c < 1 )); then
+      key="aws_key"
+      user="ubuntu"
+    else
+      key="mykey"
+      user="cc"
+    fi 
+    echo "clearing db with key $key and $user"
+    ./db.sh "$c" start $key $user 
   done
 }
 
@@ -46,7 +70,15 @@ function get_logs_from_all_clusters() {
   START=0
   END=$1
   for ((c = $START; c < $END; c++)); do
-    ./db.sh "$c" logall
+    if (( c < 1 )); then
+      key="aws_key"
+      user="ubuntu"
+    else
+      key="mykey"
+      user="cc"
+    fi 
+    echo "clearing db with key $key and $user"
+    ./db.sh "$c" logall $key $user 
   done
 }
 
@@ -55,10 +87,14 @@ function copy_data_to_all_nodes() {
   END=$1
   for ((c = $START; c < $END; c++)); do
     if (( c < 1 )); then
-      ./db.sh "$c" copydb "ubuntu"
+      key="aws_key"
+      user="ubuntu"
     else
-      ./db.sh "$c" copydb "cc" 
-    fi
+      key="mykey"
+      user="cc"
+    fi 
+    echo "clearing db with key $key and $user"
+    ./db.sh "$c" copydb $key $user
   done
 }
 

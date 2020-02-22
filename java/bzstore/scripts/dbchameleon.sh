@@ -208,11 +208,11 @@ then
         echo "copying pom.xml"
         scp files/pom.xml cc@$i:"~/"  
        '
-       echo "copying config file"
-       scp config.properties cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
-       echo "copying data.txt"
-       scp data.txt cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
-       #scp tinit.sh cc@$i:"~/"
+       #echo "copying config file"
+       #scp config.properties cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
+       #echo "copying data.txt"
+       #scp data.txt cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
+       scp tinit.sh cc@$i:"~/"
       done 
     elif [[ "$3" == "init" ]]
     then
