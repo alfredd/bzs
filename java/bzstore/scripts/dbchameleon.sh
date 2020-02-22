@@ -13,10 +13,14 @@ numNodes=4
 clusterNodes=(`cat $clusterIPFile`)
 leaderIP=${clusterNodes[0]}
 
-key="chameleonkey-edge"
-pem="$key.pem"
+key="mykey"
+pem="$key"
+#pem="$key.pem"
 
-nodeReservation=9013597c-6a12-499f-b689-bd3c801a2790
+nodeReservation=c028c769-e9d8-4103-a0df-f7fb8581550f
+
+
+
 
 function run_command {
     ip=$1
@@ -31,6 +35,7 @@ function run_command {
     fi
 }
 
+      #--image CC-Ubuntu16.04 \
 
 #launch ubuntu instances on chameleon
 function create_instances {
@@ -40,7 +45,7 @@ function create_instances {
     nodeName="r$clusterNumber-$i"
     echo $nodeName 
     openstack server create \
-      --image CC-Ubuntu16.04 \
+      --image TransedgeNew \
       --flavor baremetal \
       --key-name $key \
       --nic net-id=sharednet1 \
@@ -187,12 +192,13 @@ elif [[ "$2" == "setup" ]]
 then
     if [[ "$3" == "copy" ]]
     then
-      clear_floating_ips
+      #clear_floating_ips
       echo "copying files onto machines"
       for i in  `cat $clusterIPFile` ;
       do
         #initial copy for initialization
         #scp c1 cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
+        : '
         echo "copying github key"
         scp github_rsa cc@$i:"~/.ssh/"   
         echo "copying init.sh"
@@ -201,11 +207,17 @@ then
         scp files/java.security cc@$i:"~/"  
         echo "copying pom.xml"
         scp files/pom.xml cc@$i:"~/"  
+       '
+       echo "copying config file"
+       scp config.properties cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
+       echo "copying data.txt"
+       scp data.txt cc@$i:"/home/cc/bzs/java/bzstore/scripts/"
+       #scp tinit.sh cc@$i:"~/"
       done 
     elif [[ "$3" == "init" ]]
     then
       echo "running init.sh"
-      run_command_on_all_nodes "./init.sh"
+      run_command_on_all_nodes "./tinit.sh"
     elif [[ "$3" == "config" ]]
     then
       echo "configuring node ips"
