@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+key=""
+user=""
+wdb_home=""
+num_aws_clusters=1
+
+function setvars() {
+  cluster=$1
+  if (( $cluster < $num_aws_clusters )); then
+    key="aws_key"
+    user="ubuntu"
+		wdb_home="/home/ubuntu/bzs/java/bzstore/scripts"
+  else
+    key="mykey"
+    user="cc"
+		wdb_home="/home/cc/bzs/java/bzstore/scripts"
+  fi  
+}
+
+
 function update_repo_on_all_nodes() {
   START=0
   END=$1
@@ -8,20 +27,15 @@ function update_repo_on_all_nodes() {
   done
 }
 
+
 function clear_db_and_working_directories() {
   START=0
   END=$1
   for ((c = $START; c < $END; c++)); do
-    if (( c < 1 )); then
-      key="aws_key"
-      user="ubuntu"
-    else
-      key="mykey"
-      user="cc"
-    fi 
-    echo "clearing db with key $key and $user"
-    ./db.sh "$c" bftclear $key $user 
-    ./db.sh "$c" clean $key $user 
+		setvars $c 
+    echo "clearing db with key $key and $user at $wdb_home"
+    ./db.sh "$c" bftclear $key $user $wdb_home  
+    ./db.sh "$c" clean $key $user $wdb_home  
   done
 }
 
@@ -37,32 +51,21 @@ function stop_all_clusters() {
   START=0
   END=$1
   for ((c = $START; c < $END; c++)); do
-    if (( c < 1 )); then
-      key="aws_key"
-      user="ubuntu"
-    else
-      key="mykey"
-      user="cc"
-    fi 
-    echo "clearing db with key $key and $user"
-    ./db.sh "$c" stop $key $user 
+		setvars $c 
+    echo "stopping all clusters with key $key and $user at $wdb_home"
+    ./db.sh "$c" stop $key $user $wdb_home 
   done
 }
 
 function start_all_clusters() {
   START=1
   END=$1
-  ./db.sh "0" starty
+  setvars 0
+  ./db.sh "0" starty $wdb_home 
   for ((c = $START; c < $END; c++)); do
-    if (( c < 1 )); then
-      key="aws_key"
-      user="ubuntu"
-    else
-      key="mykey"
-      user="cc"
-    fi 
-    echo "clearing db with key $key and $user"
-    ./db.sh "$c" start $key $user 
+		setvars $c 
+    echo "starting clusters with key $key and $user at $wdb_home"
+    ./db.sh "$c" start $key $user $wdb_home   
   done
 }
 
@@ -70,15 +73,9 @@ function get_logs_from_all_clusters() {
   START=0
   END=$1
   for ((c = $START; c < $END; c++)); do
-    if (( c < 1 )); then
-      key="aws_key"
-      user="ubuntu"
-    else
-      key="mykey"
-      user="cc"
-    fi 
-    echo "clearing db with key $key and $user"
-    ./db.sh "$c" logall $key $user 
+		setvars $c 
+    echo "getting logs with key $key and $user at $wdb_home"
+    ./db.sh "$c" logall $key $user $wdb_home  
   done
 }
 
@@ -86,15 +83,9 @@ function copy_data_to_all_nodes() {
   START=0
   END=$1
   for ((c = $START; c < $END; c++)); do
-    if (( c < 1 )); then
-      key="aws_key"
-      user="ubuntu"
-    else
-      key="mykey"
-      user="cc"
-    fi 
-    echo "clearing db with key $key and $user"
-    ./db.sh "$c" copydb $key $user
+		setvars $c 
+    echo "copying data with key $key and $user at $wdb_home"
+    ./db.sh "$c" copydb $key $user $wdb_home 
   done
 }
 
