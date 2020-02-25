@@ -68,7 +68,7 @@ delay_start=30000
 
 epoch_batch_size=199
 
-cluster_count=3
+cluster_count=4
 data=data.txt
 data.0=data.0.txt
 data.1=data.1.txt
