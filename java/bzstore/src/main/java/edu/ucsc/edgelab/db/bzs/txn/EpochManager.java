@@ -56,7 +56,8 @@ public class EpochManager {
     private void executeUpdateEpoch() {
         if (semaphore.tryAcquire()) {
             try {
-                updateEpoch();
+                if (sequenceNumber >= maxEpochBatchSize)
+                    updateEpoch();
             } finally {
                 semaphore.release();
             }
@@ -82,7 +83,7 @@ public class EpochManager {
             //logger.info("Checking if epoch can be updated.");
             if (seq > 0 || clusterCommitBatch.size() > 0 || clusterPrepareBatch.size() > 0 || DTxnCache.completedDRWTxnsExist()) {
                 final int epoch = epochNumber;
-                logger.info("Updating epoch: "+ epoch);
+                logger.info("Updating epoch: " + epoch);
 //                logger.info("Processing Epoch: "+epoch);
                 seq = sequenceNumber - 1;
                 sequenceNumber = 0;
