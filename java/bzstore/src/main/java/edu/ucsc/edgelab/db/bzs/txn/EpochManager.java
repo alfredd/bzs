@@ -41,14 +41,14 @@ public class EpochManager {
         maxEpochBatchSize = Configuration.getEpochBatchCount();
         epochNumber = BZDatabaseController.getEpochCount() + 1;
         semaphore = new Semaphore(1);
-        TimerTask epochUpdater = new TimerTask() {
-            @Override
-            public void run() {
-                executeUpdateEpoch();
-            }
-        };
-        Timer t = new Timer();
-        t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());
+//        TimerTask epochUpdater = new TimerTask() {
+//            @Override
+//            public void run() {
+//                executeUpdateEpoch();
+//            }
+//        };
+//        Timer t = new Timer();
+//        t.scheduleAtFixedRate(epochUpdater, Configuration.getEpochTimeInMS(), Configuration.getEpochTimeInMS());
         dTxnThreadPoolExecutor = new WedgeDBThreadPoolExecutor();
         DTxnCache.setEpochMetricsManager(batchMetricsManager);
     }
@@ -56,8 +56,8 @@ public class EpochManager {
     private void executeUpdateEpoch() {
         if (semaphore.tryAcquire()) {
             try {
-                if (sequenceNumber >= maxEpochBatchSize)
-                    updateEpoch();
+//                if (sequenceNumber >= maxEpochBatchSize)
+                updateEpoch();
             } finally {
                 semaphore.release();
             }
