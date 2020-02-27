@@ -180,8 +180,8 @@ public class DatabaseLoader implements Runnable {
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
         if (ID.canRunBenchMarkTests()) {
 
-            for (int i = 1; i < 2; i++) {
-                log.info("GENERATING D-RWT ( 1R, " + i + "W op).");
+            for (int i = 1; i < 5; i++) {
+                log.info("GENERATING D-RWT ( Set Number " + i + "of "+4+"). ");
 
                 LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
                 Collections.shuffle(drwtxns);
