@@ -50,5 +50,21 @@ public class BatchMetricsManager {
         ConcurrentHashMap<Integer, BatchMetrics> bmm = new ConcurrentHashMap<>();
 
     }
+
+    public void incrementLRWT(final Integer epochNumber) {
+        if (batchMetrics.containsKey(epochNumber)) {
+            BatchMetrics metrics = batchMetrics.get(epochNumber);
+            metrics.LRWTxnCount+=1;
+            batchMetrics.put(epochNumber, metrics);
+        }
+    }
+
+    public void incrementDRWT(final Integer epochNumber) {
+        if (batchMetrics.containsKey(epochNumber)) {
+            BatchMetrics metrics = batchMetrics.get(epochNumber);
+            metrics.DRWTxnCount+=1;
+            batchMetrics.put(epochNumber, metrics);
+        }
+    }
 }
 

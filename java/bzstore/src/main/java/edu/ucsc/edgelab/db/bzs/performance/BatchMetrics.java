@@ -6,4 +6,6 @@ public class BatchMetrics {
     public long txnProcessingTime = 0;
     public int txnCommittedCount = 0;
     public int txnCompletedCount = 0;
+    public int DRWTxnCount = 0;
+    public int LRWTxnCount = 0;
 }

@@ -79,8 +79,10 @@ public class EpochProcessor implements Runnable {
                     MetaInfo metaInfo = localDataVerifier.getMetaInfo(rwt);
                     if (metaInfo.remoteRead || metaInfo.remoteWrite) {
                         dRWTxns.put(tid, rwt);
+                        batchMetricsManager.incrementLRWT(epochNumber);
                     } else {
                         lRWTxns.put(tid, rwt);
+                        batchMetricsManager.incrementLRWT(epochNumber);
                     }
                     allRWT.put(tid, rwt);
                     actualTxnPrepareCount += 1;

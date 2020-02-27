@@ -222,8 +222,8 @@ public class DatabaseLoader implements Runnable {
             long commitLatency =batchMetrics.epochCommitTime -batchMetrics.startTime;
             long completionLatency =batchMetrics.txnProcessingTime -batchMetrics.startTime;
             log.info(String.format(
-                    "(Epoch, BatchStartedTimeStamp (ms), BatchCompletedTimeStamp, BatchCommittedTimeStamp,  TxnCompleted Count, Txn Committed Count, Completion latency (ms), Commit latency (ms)" +
-                            "=%d, %d, %d, %d, %d, %d, %d, %d",
+                    "(Epoch, BatchStartedTimeStamp (ms), BatchCompletedTimeStamp, BatchCommittedTimeStamp,  TxnCompleted Count, Txn Committed Count, Completion latency (ms), Commit latency (ms), LRWT Count, DRWT Count" +
+                            "=%d, %d, %d, %d, %d, %d, %d, %d, %d, %d",
                     epochNumber,
                     batchMetrics.startTime,
                     batchMetrics.txnProcessingTime,
@@ -231,7 +231,9 @@ public class DatabaseLoader implements Runnable {
                     batchMetrics.txnCompletedCount,
                     batchMetrics.txnCommittedCount,
                     completionLatency,
-                    commitLatency));
+                    commitLatency,
+                    batchMetrics.LRWTxnCount,
+                    batchMetrics.DRWTxnCount));
         }
         batchMetricsManager.getBatchMetrics().clear();
     }
