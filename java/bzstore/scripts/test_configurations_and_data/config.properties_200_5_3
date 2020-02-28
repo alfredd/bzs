@@ -63,7 +63,7 @@ leader.1=0
 leader.2=0
 leader.3=0
 
-epoch_time_ms=120
+epoch_time_ms=60
 
 delay_start=30000
 
