@@ -192,7 +192,8 @@ public class DatabaseLoader implements Runnable {
                     transactionProcessor.processTransaction(t, getTransactionResponseStreamObserver());
                 }
                 waitForTransactionCompletion(delayMs, drwtxns.size(), "D-RW");
-
+                logClientMetrics("DRWTxns");
+                logBatchMetrics();
             }
         }
 
