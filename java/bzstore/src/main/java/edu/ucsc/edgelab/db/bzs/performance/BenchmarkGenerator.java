@@ -9,6 +9,7 @@ import edu.ucsc.edgelab.db.bzs.configuration.ServerInfo;
 import edu.ucsc.edgelab.db.bzs.data.BZDatabaseController;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.replica.ID;
+import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -46,23 +47,35 @@ public class BenchmarkGenerator {
     public LinkedList<Bzs.Transaction> generateAndPush_LRWTransactions(List<String> clusterKeys) {
         LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
         loadKeysFromDB(clusterKeys);
-        int i = 1;
-        for (Map.Entry<String, BZStoreData> entry : storedData.entrySet()) {
-            BZStoreData storeData = entry.getValue();
-            if (storeData.version > 0) {
-                ConnectionLessTransaction t = new ConnectionLessTransaction();
-                t.setReadHistory(entry.getKey(), storeData.value, storeData.version, clusterID);
-                t.write(entry.getKey(), storeData.value + i, clusterID);
-                Bzs.Transaction txn = t.getTransaction();
-                transactions.add(txn);
-                i++;
+
+        Iterator<String> keys = storedData.keySet().iterator();
+        int ops = (readOpCountPerTxn + writeOpCountPerTxn)/2;
+        for (int k = 0; k < storedData.size(); k++) {
+            ConnectionLessTransaction t = new ConnectionLessTransaction();
+
+            for (int j = 0; j < ops; j++) {
+                BZStoreData storeData;
+                String key;
+                if (keys.hasNext()) {
+                    key = keys.next();
+                    storeData = storedData.get(key);
+                } else {
+                    break;
+                }
+                if (storeData.version > 0) {
+                    t.setReadHistory(key, storeData.value, storeData.version, clusterID);
+                    t.write(key, storeData.value + 1, clusterID);
+                }
             }
+            Bzs.Transaction txn = t.getTransaction();
+            transactions.add(txn);
         }
         log.info("DEBUG: Generated L-RWTs:  " + transactions.size());
         return transactions;
     }
 
-    public LinkedList<Bzs.Transaction> createMixedTransactions (int lrwtRatio, int drwtRatio, LinkedList<String> localClusterKeys, LinkedList<String> remoteClusterKeys) {
+    public LinkedList<Bzs.Transaction> createMixedTransactions(int lrwtRatio, int drwtRatio, LinkedList<String> localClusterKeys,
+                                                               LinkedList<String> remoteClusterKeys) {
         LinkedList<Bzs.Transaction> txnList = new LinkedList<>();
 
         return txnList;
@@ -107,7 +120,7 @@ public class BenchmarkGenerator {
                 BZStoreClient client = new BZStoreClient(serverInfo.host, serverInfo.port);
                 clientList.put(i, client);
             } catch (Exception e) {
-                log.log(Level.WARNING, "Exception occurred while creating client connection to cluster: "+ i+ ":  " + e.getLocalizedMessage(), e);
+                log.log(Level.WARNING, "Exception occurred while creating client connection to cluster: " + i + ":  " + e.getLocalizedMessage(), e);
             }
             //}
         }
@@ -159,6 +172,41 @@ public class BenchmarkGenerator {
             readKey = localClusterKeys.remove(rnd.nextInt(localSize));
         }
         return readKey;
+    }
+
+    public LinkedList<Bzs.Transaction> generate_Mixed_Transactions(LinkedList<String> localClusterKeys, LinkedList<String> remoteClusterKeys) {
+        LinkedList<Bzs.Transaction> transactions = new LinkedList<>();
+        Map<Integer, BZStoreClient> clientList = getBZStoreClientConnectionMap();
+        int remoteKeyIndex = 0;
+        for (int i = 0; i < localClusterKeys.size(); ) {
+            boolean createDRWT = i % 10 == 0;
+
+            Bzs.Transaction.Builder t = Bzs.Transaction.newBuilder();
+            Transaction txn = new Transaction();
+            if (createDRWT) {
+                String localKey = localClusterKeys.get(i);
+                BZStoreData dbEntry = BZDatabaseController.getlatest(localKey);
+                txn.setReadHistory(localKey, dbEntry.value, dbEntry.version, hashmod(localKey, totalClusterCount));
+                for (int j = 0; j < 4; j++) {
+                    String remoteKey = remoteClusterKeys.get(remoteKeyIndex);
+                    Integer remoteCID = hashmod(remoteKey, totalClusterCount);
+                    txn.setClient(clientList.get(remoteCID));
+                    txn.read(remoteKey);
+                    remoteKeyIndex += 1;
+                }
+                i += 1;
+            } else {
+
+                for (int j = 0; j < 5; j++) {
+                    String localKey = localClusterKeys.get(i + j);
+                    BZStoreData dbEntry = BZDatabaseController.getlatest(localKey);
+                    txn.setReadHistory(localKey, dbEntry.value, dbEntry.version, hashmod(localKey, totalClusterCount));
+                }
+                i += 5;
+            }
+            transactions.add(txn.getTransaction());
+        }
+        return transactions;
     }
 
     public void setTotalClusterCount(int totalClusters) {
