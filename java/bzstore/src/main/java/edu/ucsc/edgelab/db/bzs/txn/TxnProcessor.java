@@ -47,6 +47,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
     public void processTransaction(final Bzs.Transaction request, final StreamObserver<Bzs.TransactionResponse> responseObserver) {
         synchronized (this) {
 //            log.info(String.format("Received transaction request: %s", request.toString()));
+            long startTime = System.currentTimeMillis();
             MetaInfo meta = localDataVerifier.getMetaInfo(request);
 
             if (!(meta.remoteWrite || meta.localWrite)) {
@@ -68,6 +69,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
             Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
 //            log.info("Adding transaction to pre-processing cache, TID: "+tid);
             TransactionCache.add(tid, transaction, responseObserver);
+            log.info("TXN Added to queue. Duration: "+ (System.currentTimeMillis()-startTime));
         }
     }
 

@@ -71,10 +71,10 @@ public class DRWTProcessor implements Runnable {
 
         long processingTime = System.currentTimeMillis() - startTime;
         perfMetricManager.insertDTxnPerfData(Epoch.getEpochNumber(), processingTime, txns.size());
-
+        logger.info("DRWT Processing time: " + processingTime);
         DTxnCache.addToCompletedQueue(epochNumber, txns.keySet());
 //        TxnUtils.releaseLocks(commitResponse);
-
+        logger.info("DRWT Completed, duration: " + (System.currentTimeMillis()-startTime));
     }
 
     public void setPerfMetricManager(PerfMetricManager perfLogger) {

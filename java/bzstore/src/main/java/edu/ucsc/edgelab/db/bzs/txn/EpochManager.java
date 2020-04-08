@@ -79,6 +79,7 @@ public class EpochManager {
 
     private Integer updateEpoch() {
         synchronized (this) {
+            long startTime = System.currentTimeMillis();
             Integer seq = sequenceNumber;
             //logger.info("Checking if epoch can be updated.");
             if (seq > 0 || clusterCommitBatch.size() > 0 || clusterPrepareBatch.size() > 0 || DTxnCache.completedDRWTxnsExist()) {
@@ -92,6 +93,7 @@ public class EpochManager {
                 Epoch.setEpochNumber(epochNumber);
                 processEpoch(epoch, seq + EPOCH_BUFFER);
             }
+            logger.info("UPDATED EPOCH, duration: " + (System.currentTimeMillis()-startTime));
             return seq;
         }
     }
