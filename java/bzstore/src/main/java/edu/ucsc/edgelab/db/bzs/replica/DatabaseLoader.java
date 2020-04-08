@@ -193,6 +193,11 @@ public class DatabaseLoader implements Runnable {
                 log.info(String.format("Total transactions for DRWT = %d", totalCount));
 //                for (Bzs.Transaction t : drwtxns) {
                 for (int j = 0; j < size; j++) {
+                    try {
+                        Thread.sleep(1500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     transactionProcessor.processTransaction(drwtxns.get(i), getTransactionResponseStreamObserver());
                 }
                 waitForTransactionCompletion(delayMs, size, "D-RW");
