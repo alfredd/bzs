@@ -263,7 +263,7 @@ public class DatabaseLoader implements Runnable {
     }
 
     private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
-        int endCounter = 5;
+        int endCounter = 2;
         while (endCounter >= 0 && currentCompleted < totalCount) {
             try {
                 Thread.sleep(delayMs);
