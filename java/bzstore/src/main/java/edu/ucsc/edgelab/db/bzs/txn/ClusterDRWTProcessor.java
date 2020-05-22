@@ -21,6 +21,8 @@ public interface ClusterDRWTProcessor {
 
     void addToFailedList(Bzs.Transaction t);
 
+    void addToFailedList(Bzs.TransactionResponse t);
+
     void setDepVector(Map<Integer, Integer> depVector);
 
     void addProcessedResponse(Bzs.TransactionResponse txnResponse);
@@ -30,4 +32,11 @@ public interface ClusterDRWTProcessor {
     void setPreparedEpoch(Integer epochNumber);
 
     int getPreparedEpoch();
+
+    boolean commitCompleted();
+
+    static enum Phase {
+        PREPARE,
+        COMMIT
+    }
 }

@@ -1,12 +1,12 @@
 package edu.ucsc.edgelab.db.bzs.replica;
 
 import edu.ucsc.edgelab.db.bzs.Bzs;
-import edu.ucsc.edgelab.db.bzs.txn.Epoch;
 import edu.ucsc.edgelab.db.bzs.txn.SmrLogEntryCreator;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,7 +68,7 @@ public class SmrLog {
         }
     }
 
-    public static void twoPCCommitted(final Integer epoch, Collection<Bzs.Transaction> twoPCPreparedTxns, String ID) {
+    public static void twoPCCommitted(final Integer epoch, Set<Bzs.TransactionResponse> twoPCPreparedTxns, String ID) {
         SmrLogEntryCreator smrData = smrEpochData.get(epoch);
         if (smrData != null) {
             smrData.add2PCCommitted(twoPCPreparedTxns, ID);
@@ -82,12 +82,12 @@ public class SmrLog {
         }
     }
 
-    public static void committedDRWT(int commitToEpoch, Collection<Bzs.Transaction> transactions) {
+    public static void committedDRWT(int commitToEpoch, Collection<Bzs.TransactionResponse> transactions) {
         if (transactions.size() < 1)
             return;
 
         int lce = -1;
-        for (Bzs.Transaction t: transactions) {
+        for (Bzs.TransactionResponse t: transactions) {
             if (lce<t.getEpochNumber()) {
                 lce = t.getEpochNumber();
             }
@@ -104,7 +104,7 @@ public class SmrLog {
 //        lceMap.put(commitToEpoch, lce);
         SmrLogEntryCreator smrData = getSMRData(commitToEpoch);
         if (smrData != null) {
-            for (Bzs.Transaction transaction : transactions) {
+            for (Bzs.TransactionResponse transaction : transactions) {
                 smrData.addCommittedDRWTxns(transaction);
             }
         }

@@ -5,6 +5,7 @@ import edu.ucsc.edgelab.db.bzs.Bzs;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SmrLogEntryCreator {
 
@@ -43,12 +44,12 @@ public class SmrLogEntryCreator {
         smrLogEntryBuilder = smrLogEntryBuilder.addRemotePreparedDRWTs(entry);
     }
 
-    public void add2PCCommitted(Collection<Bzs.Transaction> txns, String id) {
-        Bzs.TwoPCDRWTxn entry = Bzs.TwoPCDRWTxn.newBuilder().addAllTransactions(txns).setID(id).build();
+    public void add2PCCommitted(Set<Bzs.TransactionResponse> txns, String id) {
+        Bzs.TwoPCDRWTxn entry = Bzs.TwoPCDRWTxn.newBuilder().addAllCommitted(txns).setID(id).build();
         smrLogEntryBuilder = smrLogEntryBuilder.addRemoteCommittedDRWTs(entry);
     }
 
-    public void addCommittedDRWTxns(Bzs.Transaction dRWTxns) {
+    public void addCommittedDRWTxns(Bzs.TransactionResponse dRWTxns) {
         smrLogEntryBuilder = smrLogEntryBuilder.addCommittedDRWTxns(dRWTxns);
     }
 

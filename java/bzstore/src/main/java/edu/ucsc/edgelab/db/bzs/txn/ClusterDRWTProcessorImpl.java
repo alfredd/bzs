@@ -18,7 +18,13 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     private Bzs.TransactionBatchResponse.Builder batchResponseBuilder;
     private Integer preparedEpoch = -1;
     private static final Logger logger = Logger.getLogger(ClusterDRWTProcessorImpl.class.getName());
+    private boolean commitCompleted = false;
 
+    public void setPhase(Phase phase) {
+        this.phase = phase;
+    }
+
+    private Phase phase = Phase.PREPARE;
 
     public ClusterDRWTProcessorImpl(TxnProcessor processor) {
         this.processor = processor;
@@ -83,6 +89,19 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     }
 
     @Override
+    public void addToFailedList(Bzs.TransactionResponse t) {
+//        TransactionID transactionID = TransactionID.getTransactionID(t.getTransactionID());
+        logger.log(Level.WARNING, "Transaction is not serializable : "+t);
+        Bzs.TransactionResponse tr = Bzs.TransactionResponse.newBuilder()
+                .setTransactionID(t.getTransactionID())
+                .setEpochNumber(t.getEpochNumber())
+                .setStatus(Bzs.TransactionStatus.FAILURE)
+                .build();
+//        txnMap.remove(transactionID);
+        batchResponseBuilder = batchResponseBuilder.addResponses(tr);
+    }
+
+    @Override
     public void setDepVector(Map<Integer, Integer> depVector) {
         batchResponseBuilder = batchResponseBuilder.putAllDepVector(depVector);
     }
@@ -98,7 +117,11 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
         Bzs.TransactionBatchResponse response = batchResponseBuilder.build();
         logger.info("Sending 2PC transaction response: "+ response.getID());
         getResponseObserver().onNext(response);
-        getResponseObserver().onCompleted();
+        if (phase.equals(Phase.PREPARE)) {
+            getResponseObserver().onCompleted();
+        } else {
+            commitCompleted = true;
+        }
     }
 
     @Override
@@ -109,6 +132,11 @@ public class ClusterDRWTProcessorImpl implements ClusterDRWTProcessor {
     @Override
     public int getPreparedEpoch() {
         return preparedEpoch;
+    }
+
+    @Override
+    public boolean commitCompleted() {
+        return commitCompleted;
     }
 
 }

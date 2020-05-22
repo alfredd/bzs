@@ -9,6 +9,8 @@ import edu.ucsc.edgelab.db.bzs.txn.*;
 import io.grpc.stub.StreamObserver;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,18 +37,55 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
 
 
     @Override
-    public void commitAll(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
-//        log.info(String.format("Received batch commit request: %s", request.toString()));
-        ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessorMap.get(request.getID());
-        if (clusterDRWTProcessor == null || (!RemoteTxnCache.isPrepared(clusterDRWTProcessor.getID()))) {
-//            log.info(String.format("Transaction batch with Request ID: %s not found in prepared jobs cache. Reqeust: %s", request.getID(),
-//                    request.toString()));
-            sendBatchAbort(request, responseObserver);
-            return;
+    public void commitAll(Bzs.TransactionBatch batchCommitRequest, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
+//        log.info(String.format("Received batch commit batchCommitRequest: %s", batchCommitRequest.toString()));
+        String[] commitRequests = batchCommitRequest.getID().split(",");
+        List<ClusterDRWTProcessor> clusterDRWTProcessors = new LinkedList<>();
+        int commitSubBatchCounts = commitRequests.length;
+        int endIndex = 0;
+        for (String commitRequest: commitRequests) {
+            String[] ids = commitRequest.split(":");
+            String txnID = String.format("%s:%s", ids[0], ids[1]);
+            Integer txnCount = Integer.decode(ids[2]);
+            ClusterDRWTProcessorImpl clusterDRWTProcessor = remoteJobProcessorMap.get(txnID);
+
+            if (clusterDRWTProcessor == null || (!RemoteTxnCache.isPrepared(clusterDRWTProcessor.getID()))) {
+//            log.info(String.format("Transaction batch with Request ID: %s not found in prepared jobs cache. Reqeust: %s", batchCommitRequest.getID(),
+//                    batchCommitRequest.toString()));
+                sendBatchAbort(batchCommitRequest, responseObserver);
+                return;
+            }
+
+            Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
+            batchBuilder.setID(txnID);
+            int startIndex = endIndex;
+            for (; startIndex < endIndex+txnCount; startIndex++) {
+                batchBuilder.addResponses(batchCommitRequest.getResponses(startIndex));
+            }
+            endIndex = startIndex;
+
+            clusterDRWTProcessor.setPhase(ClusterDRWTProcessor.Phase.COMMIT);
+            clusterDRWTProcessor.setResponseObserver(responseObserver);
+            clusterDRWTProcessor.setRequest(batchBuilder.build());
+            clusterDRWTProcessor.commit();
+            clusterDRWTProcessors.add(clusterDRWTProcessor);
         }
-        clusterDRWTProcessor.setResponseObserver(responseObserver);
-        clusterDRWTProcessor.setRequest(request);
-        clusterDRWTProcessor.commit();
+        boolean notCompleted = true;
+        while(notCompleted) {
+            int completedCount = 0;
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            for (ClusterDRWTProcessor processor : clusterDRWTProcessors) {
+                if (processor.commitCompleted())
+                    completedCount+=1;
+            }
+            if (completedCount == commitSubBatchCounts)
+                break;
+        }
+        responseObserver.onCompleted();
     }
 
     private void sendBatchAbort(Bzs.TransactionBatch request, StreamObserver<Bzs.TransactionBatchResponse> responseObserver) {
@@ -68,6 +107,7 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
         clusterDRWTProcessor.setRequest(request);
         clusterDRWTProcessor.setResponseObserver(responseObserver);
         remoteJobProcessorMap.put(request.getID(), clusterDRWTProcessor);
+        clusterDRWTProcessor.setPhase(ClusterDRWTProcessor.Phase.PREPARE);
         clusterDRWTProcessor.prepare();
     }
 

@@ -17,6 +17,7 @@ elif [ "$1" == "stop" ]; then
 #    fi
 #  done
   for i in $(ps -eaf | grep -i bzs | awk '{ print $2 }'); do
+    sleep 1
     ps -eaf | grep "$i"
     if [[ "$?" == "0" ]]; then
       kill -9 $i

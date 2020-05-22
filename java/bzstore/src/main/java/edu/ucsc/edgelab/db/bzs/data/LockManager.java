@@ -42,6 +42,18 @@ public class LockManager {
         }
     }
 
+    public static void releaseLocks(Bzs.TransactionResponse t) {
+        if (t != null) {
+            for (int i = 0; i < t.getWriteResponsesCount(); i++) {
+                Bzs.WriteResponse wr = t.getWriteResponses(i);
+                    unlock(wr.getWriteOperation().getKey());
+            }
+            for (int i = 0; i < t.getReadHistoryCount(); i++) {
+                unlock(t.getReadHistory(i).getReadOperation().getKey());
+            }
+        }
+    }
+
 
     public static void acquireLocks(Bzs.Transaction t) {
         if (t != null) {

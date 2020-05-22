@@ -104,10 +104,10 @@ public class TransEdgeBFTServer extends DefaultSingleRecoverable {
                         SmrLog.distributedPrepared(epochNumber, transactionsList);
                         break;
                     case DRWT_COMMIT:
-                        SmrLog.committedDRWT(epochNumber, transactionsList);
+//                        SmrLog.committedDRWT(epochNumber, transactionsList);
                         break;
                     case TWO_PC_COMMIT:
-                        SmrLog.twoPCCommitted(epochNumber, transactionsList, txns.getID());
+//                        SmrLog.twoPCCommitted(epochNumber, transactionsList, txns.getID());
                         break;
                     case TWO_PC_PREPARE:
                         SmrLog.twoPCPrepared(epochNumber, transactionsList, txns.getID());

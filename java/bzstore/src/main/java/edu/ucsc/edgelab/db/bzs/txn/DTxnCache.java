@@ -23,9 +23,9 @@ public class DTxnCache {
         epochQueue.addLast(epochNumber);
     }
 
-    public static Collection<Bzs.Transaction> getCommittedTransactions() {
+    public static Set<Bzs.TransactionResponse> getCommittedTransactions() {
 //        logger.info("Returning committed transactions.");
-        Set<Bzs.Transaction> committedTxns = new LinkedHashSet<>();
+        Set<Bzs.TransactionResponse> committedTxns = new LinkedHashSet<>();
         try {
 
             while (completedDRWTxnsExist()) {
@@ -33,23 +33,23 @@ public class DTxnCache {
                 if (head != null) {
                     CacheKeeper cache = txnCache.get(head);
                     boolean allCompleted = cache.allCompleted();
-                    logger.info("Removing the head of the epoch queue: "+ head+", all Txns Completed? "+ allCompleted);
+                    logger.info("Removing the head of the epoch queue: " + head + ", all Txns Completed? " + allCompleted);
                     if (allCompleted) {
                         epochQueue.removeFirst();
                         completedEpochs.remove(head);
-                        committedTxns.addAll(cache.getCompletedTxns());
+                        committedTxns.addAll(cache.getPreparedTxns());
                     }
                 }
             }
-        } catch (Exception e ) {
-            logger.log(Level.WARNING, "DEBUG: "+e.getLocalizedMessage(), e);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "DEBUG: " + e.getLocalizedMessage(), e);
         }
         return committedTxns;
     }
 
     public static boolean completedDRWTxnsExist() {
         boolean status = false;
-        if (epochQueue.size()>0) {
+        if (epochQueue.size() > 0) {
             final Integer first = epochQueue.getFirst();
             status = completedEpochs.size() > 0 && completedEpochs.contains(first);
         }
@@ -57,7 +57,7 @@ public class DTxnCache {
         if (log_debug_flag) {
 //            if (status != statusHistory)
 //                logger.info("Complexted DRWTxns exists? " + status);
-            statusHistory= status;
+            statusHistory = status;
 
 //            logger.info("Epoch Queue: "+epochQueue);
         }
@@ -75,7 +75,8 @@ public class DTxnCache {
         txnCache.put(epochNumber, cache);
     }
 
-    public static void addToCompletedQueue(final Integer epochNumber, final Collection<TransactionID> completed) {
+    public static void addToCompletedQueue(final Integer epochNumber, final Collection<TransactionID> completed, String remoteBatchID,
+                                           List<Bzs.TransactionResponse> preparedResponse) {
         if (!txnCache.containsKey(epochNumber)) {
             logger.log(Level.WARNING, String.format("No transactions available for epoch: %d.", epochNumber.intValue()));
             return;
@@ -83,8 +84,8 @@ public class DTxnCache {
         log_debug_flag = true;
 //        logger.info(String.format("Adding transactions to txnCache for epoch: %d", epochNumber.intValue()/*, completed.toString()*/));
         CacheKeeper cache = txnCache.get(epochNumber);
-        cache.addToCompleted(completed);
-        for (TransactionID tid: completed)
+        cache.addToCompleted(preparedResponse, remoteBatchID);
+        for (TransactionID tid : completed)
             batchMetricsManagerObj.setTxnProcessingCompleted(tid);
 //        logger.info("Remaining TIDs to be committed: "+ cache.getRemaining());
         if (cache.allCompleted()) {
@@ -95,13 +96,13 @@ public class DTxnCache {
 
     }
 
-    public static void addToAbortQueue(Integer epochNumber, Set<TransactionID> abortSet) {
+    public static void addToAbortQueue(Integer epochNumber, Set<TransactionID> abortSet, String remoteBatchID) {
         if (!txnCache.containsKey(epochNumber)) {
             logger.log(Level.WARNING, String.format("No transactions available for epoch: %d.", epochNumber.intValue()));
             return;
         }
         CacheKeeper cache = txnCache.get(epochNumber);
-        cache.addToAborted(abortSet);
+        cache.addToAborted(abortSet, remoteBatchID);
     }
 
     public static void setEpochMetricsManager(BatchMetricsManager batchMetricsManager) {
@@ -111,33 +112,76 @@ public class DTxnCache {
 
 class CacheKeeper {
     private Set<TransactionID> inProgressTxnMap = new LinkedHashSet<>();
+    private Map<TransactionID, Integer> tidWriteOpCountMap = new ConcurrentHashMap<>();
     private Set<Bzs.Transaction> transactions = new LinkedHashSet<>();
+    private Map<TransactionID, Bzs.TransactionResponse> preparedTxns = new ConcurrentHashMap<>();
+//    private Map<String, List<Bzs.TransactionResponse>> preparedTxnResponses = new ConcurrentHashMap<>();
+//    private Map<String, Set<TransactionID>> remoteTxnBatchMap = new ConcurrentHashMap<>();
 
     private static final Logger logger = Logger.getLogger(CacheKeeper.class.getName());
 
-    public void addToCompleted(Collection<TransactionID> completed) {
-        for (TransactionID tid : completed)
-            inProgressTxnMap.remove(tid);
-    }
+    public void addToCompleted(final List<Bzs.TransactionResponse> preparedResponses, final String remoteBatchID) {
+//        if (!remoteTxnBatchMap.containsKey(remoteBatchID)) {
+//            remoteTxnBatchMap.put(remoteBatchID, new HashSet<>());
+//        }
+//        if (!preparedTxnResponses.containsKey(remoteBatchID))
+//            preparedTxnResponses.put(remoteBatchID, new LinkedList<>());
 
-    public Set<TransactionID> getRemaining() {
-        return inProgressTxnMap;
+        for (Bzs.TransactionResponse preparedResponse : preparedResponses) {
+            TransactionID tid = TransactionID.getTransactionID(preparedResponse.getTransactionID());
+            if (!preparedTxns.containsKey(tid)) {
+                preparedTxns.put(tid, preparedResponse);
+            } else {
+                Bzs.TransactionResponse resp = preparedTxns.get(tid);
+                Bzs.TransactionResponse modResp =
+                        Bzs.TransactionResponse.newBuilder(resp).addAllWriteResponses(preparedResponse.getWriteResponsesList()).build();
+                preparedTxns.put(tid, modResp);
+            }
+
+            Integer opCount = tidWriteOpCountMap.get(tid);
+            opCount -= preparedResponse.getWriteResponsesCount();
+            tidWriteOpCountMap.put(tid, opCount);
+            if (opCount == 0) {
+                inProgressTxnMap.remove(tid);
+
+/*                synchronized (remoteBatchID) {
+                    List<Bzs.TransactionResponse> list = preparedTxnResponses.get(remoteBatchID);
+                    list.add(preparedResponse);
+                    preparedTxnResponses.put(remoteBatchID, list);
+                }*/
+            }
+//            remoteTxnBatchMap.get(remoteBatchID).add(tid);
+        }
     }
 
     public void addToInProgress(final Map<TransactionID, Bzs.Transaction> transactions) {
         inProgressTxnMap.addAll(transactions.keySet());
-        this.transactions.addAll(transactions.values());
+        Collection<Bzs.Transaction> txns = transactions.values();
+        for (Bzs.Transaction t : txns) {
+            TransactionID tid = TransactionID.getTransactionID(t.getTransactionID());
+            tidWriteOpCountMap.put(tid, t.getWriteOperationsCount());
+        }
+
+// No Need to store transactions. Only prepared responses need to be stored.
+//        this.transactions.addAll(transactions.values());
     }
 
-    public void addToAborted(Set<TransactionID> abortSet) {
-        addToCompleted(abortSet);
+    public void addToAborted(Set<TransactionID> abortSet, String remoteBatchID) {
+        for (TransactionID tid : abortSet) {
+            if (inProgressTxnMap.contains(tid))
+                inProgressTxnMap.remove(tid);
+            if (tidWriteOpCountMap.containsKey(tid))
+                tidWriteOpCountMap.remove(tid);
+            if (preparedTxns.containsKey(tid))
+                preparedTxns.remove(tid);
+        }
     }
 
     public boolean allCompleted() {
         return inProgressTxnMap.size() == 0;
     }
 
-    public Set<Bzs.Transaction> getCompletedTxns() {
-        return this.transactions;
+    public Collection<Bzs.TransactionResponse> getPreparedTxns() {
+        return this.preparedTxns.values();
     }
 }

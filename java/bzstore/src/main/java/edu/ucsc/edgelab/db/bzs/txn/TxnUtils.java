@@ -34,6 +34,22 @@ public class TxnUtils {
         return cidSet;
     }
 
+    public Set<Integer> getListOfClusterIDsInResponse(final Bzs.TransactionResponse remoteTransaction, final Integer cid) {
+
+        Set<Integer> cidSet = new HashSet<>();
+
+        for (int i = 0; i < remoteTransaction.getReadHistoryCount(); i++) {
+            int clusterID = remoteTransaction.getReadHistory(i).getReadOperation().getClusterID();
+            addToCidSet(cidSet, clusterID, cid);
+        }
+        for (int i = 0; i < remoteTransaction.getWriteResponsesCount(); i++) {
+            int clusterID = remoteTransaction.getWriteResponses(i).getWriteOperation().getClusterID();
+            addToCidSet(cidSet, clusterID, cid);
+        }
+//        logger.info("Set of CIDs to which the request will be sent: " + cidSet);
+        return cidSet;
+    }
+
     private void addToCidSet(Set<Integer> cidSet, final int clusterID, final int myCid) {
         if (clusterID != myCid)
             cidSet.add(clusterID);
@@ -49,6 +65,16 @@ public class TxnUtils {
         Map<Integer, Integer> dvecMap = DependencyVectorManager.getCurrentTimeVectorAsMap();
         return batchBuilder.setID(batchID).setOperation(operation).putAllDepVector(dvecMap).build();
     }
+    public Bzs.TransactionBatch getTransactionResponseBatch(final String batchID, final Collection<Bzs.TransactionResponse> transactions,
+                                                    final Bzs.Operation operation) {
+        Bzs.TransactionBatch.Builder batchBuilder = Bzs.TransactionBatch.newBuilder();
+
+        batchBuilder = batchBuilder.addAllResponses(transactions);
+
+        Map<Integer, Integer> dvecMap = DependencyVectorManager.getCurrentTimeVectorAsMap();
+
+        return batchBuilder.setID(batchID).setOperation(operation).putAllDepVector(dvecMap).build();
+    }
 
     public Map<Integer, Map<TransactionID, Bzs.Transaction>> mapTransactionsToCluster(final Map<TransactionID, Bzs.Transaction> dRWTs,
                                                                                       final int myClusterID) {
@@ -61,6 +87,27 @@ public class TxnUtils {
                         tMap.put(cid, new LinkedHashMap<>());
                     }
                     tMap.get(cid).put(drwt.getKey(), drwt.getValue());
+                }
+            }
+        }
+        return tMap;
+    }
+
+    public Map<Integer, Map<Integer, List<Bzs.TransactionResponse>>> mapTransactionResponsesToCluster(final Set<Bzs.TransactionResponse> dRWTs,
+                                                                                      final int myClusterID) {
+        Map<Integer, Map<Integer, List<Bzs.TransactionResponse>>> tMap = new TreeMap<>();
+        for ( Bzs.TransactionResponse drwtCommitted : dRWTs) {
+            if (drwtCommitted != null) {
+                Integer epochNumber = TransactionID.getTransactionID(drwtCommitted.getTransactionID()).getEpochNumber();
+                Set<Integer> cids = getListOfClusterIDsInResponse(drwtCommitted, myClusterID);
+                for (Integer cid : cids) {
+                    if (!tMap.containsKey(cid)) {
+                        tMap.put(cid, new TreeMap<>());
+                    }
+                    if (!tMap.get(cid).containsKey(epochNumber)) {
+                        tMap.get(cid).put(epochNumber, new LinkedList<>());
+                    }
+                    tMap.get(cid).get(epochNumber).add(drwtCommitted);
                 }
             }
         }

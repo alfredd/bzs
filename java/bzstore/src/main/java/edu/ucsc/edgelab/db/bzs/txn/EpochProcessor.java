@@ -181,8 +181,8 @@ public class EpochProcessor implements Runnable {
                 ClusterPC cpc = cpcEntry.getValue();
                 String id = cpcEntry.getKey();
 //                log.info("2PC Transactions to commit: " + cpc.batch + ", ID: " + id);
-                Set<Transaction> prepared2PCTxns = new LinkedHashSet<>();
-                for (Transaction t : cpc.batch) {
+                Set<TransactionResponse> prepared2PCTxns = new LinkedHashSet<>();
+                for (TransactionResponse t : cpc.callback.getRequest().getResponsesList()) {
                     TransactionID transactionID = TransactionID.getTransactionID(t.getTransactionID());
                     if (RemoteTxnCache.isTIDInPreparedBatch(id, transactionID)) {
 //                        log.info("Found transaction in prepared batch: " + transactionID);
@@ -205,12 +205,21 @@ public class EpochProcessor implements Runnable {
         SmrLog.distributedPrepared(epochNumber, dRWTxns.values());
         SmrLog.setLockLCEForEpoch(epochNumber);
         SmrLog.updateLastCommittedEpoch(epochNumber);
-        final Collection<Transaction> committedTransactions = DTxnCache.getCommittedTransactions();
-        SmrLog.committedDRWT(epochNumber, committedTransactions);
+        Set<Bzs.TransactionResponse> preparedTxnResponses = DTxnCache.getCommittedTransactions();
+        SmrLog.committedDRWT(epochNumber, preparedTxnResponses);
         SmrLog.dependencyVector(epochNumber, DependencyVectorManager.getCurrentTimeVector());
 
         // Generate SMR log entry.
         SmrLogEntry logEntry = SmrLog.generateLogEntry(epochNumber);
+
+        //TODO: Commit Transactions
+        Map<Integer, Map<Integer, List<TransactionResponse>>> clusterDRWTMap = txnUtils.mapTransactionResponsesToCluster(preparedTxnResponses, ID.getClusterID());
+        for (Map.Entry<Integer, Map<Integer, List<TransactionResponse>>> entry : clusterDRWTMap.entrySet()) {
+            log.info("Starting DRWTCommitWorker for cluster: " + entry.getKey() + ", and TIDs: " + entry.getValue().keySet());
+            DRWTCommitWorker drwtCommitWorker = new DRWTCommitWorker(entry.getKey(), entry.getValue());
+            drwtCommitWorker.setPerfMetricManager(perfLogger);
+            threadPoolExecutor.addToConcurrentQueue(drwtCommitWorker);
+        }
 
 
         // Perform BFT Consensus on the SMR Log entry
@@ -259,7 +268,7 @@ public class EpochProcessor implements Runnable {
             }
         }
 
-        for (Transaction ct : committedTransactions) {
+        for (TransactionResponse ct : preparedTxnResponses) {
             TransactionID ctid = TransactionID.getTransactionID(ct.getTransactionID());
             batchMetricsManager.setTxnCommitCompleted(ctid);
             StreamObserver<TransactionResponse> observer = TransactionCache.getObserver(ctid);

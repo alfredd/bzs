@@ -64,6 +64,7 @@ message TransactionBatch {
     repeated ClusterPC remoteCommitTxn = 5;
     repeated ClusterPC txnBatch = 6;
 //    repeated ROTransaction rotransaction = 6;
+    repeated TransactionResponse responses = 11;
     SmrLogEntry smrLogEntry = 7;
     map<int32, int32> depVector = 8;
     int32 epochNumber = 9;
@@ -211,6 +212,7 @@ message Transaction {
 message TransactionResponse {
     TransactionStatus status = 1;
     repeated WriteResponse writeResponses = 2;
+    repeated ReadHistory readHistory = 7;
     string transactionID = 3;
     int32 epochNumber = 4;
     map<int32, int32> depVector = 5;
@@ -255,12 +257,13 @@ message SmrLogEntry {
     repeated TwoPCDRWTxn remotePreparedDRWTs =3;
     repeated TwoPCDRWTxn remoteCommittedDRWTs =4;
     repeated Transaction preparedDRWTxns = 5;
-    repeated Transaction committedDRWTxns = 6;
+    repeated TransactionResponse committedDRWTxns = 6;
     map<int32, int32> depVector = 7;
     int32 lce = 8;
 }
 
 message TwoPCDRWTxn {
     repeated Transaction transactions = 2;
+    repeated TransactionResponse committed = 4;
     string ID = 3;
 }
