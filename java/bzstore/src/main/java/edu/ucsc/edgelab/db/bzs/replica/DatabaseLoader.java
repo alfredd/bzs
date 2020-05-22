@@ -160,8 +160,9 @@ public class DatabaseLoader implements Runnable {
         logBatchMetrics();
 
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator(rwRatio[0], rwRatio[1]);
-        /*log.info("GENERATING L-RWT.");
         benchmarkGenerator.setTotalClusterCount(totalClusters);
+        /*log.info("GENERATING L-RWT.");
+
         LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
         Collections.shuffle(txns);
         totalCount = txns.size();
