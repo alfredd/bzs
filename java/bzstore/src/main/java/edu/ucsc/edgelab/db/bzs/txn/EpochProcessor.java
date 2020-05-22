@@ -212,16 +212,6 @@ public class EpochProcessor implements Runnable {
         // Generate SMR log entry.
         SmrLogEntry logEntry = SmrLog.generateLogEntry(epochNumber);
 
-        //TODO: Commit Transactions
-        Map<Integer, Map<Integer, List<TransactionResponse>>> clusterDRWTMap = txnUtils.mapTransactionResponsesToCluster(preparedTxnResponses, ID.getClusterID());
-        for (Map.Entry<Integer, Map<Integer, List<TransactionResponse>>> entry : clusterDRWTMap.entrySet()) {
-            log.info("Starting DRWTCommitWorker for cluster: " + entry.getKey() + ", and TIDs: " + entry.getValue().keySet());
-            DRWTCommitWorker drwtCommitWorker = new DRWTCommitWorker(entry.getKey(), entry.getValue());
-            drwtCommitWorker.setPerfMetricManager(perfLogger);
-            threadPoolExecutor.addToConcurrentQueue(drwtCommitWorker);
-        }
-
-
         // Perform BFT Consensus on the SMR Log entry
         long smrCommitStartTime = System.currentTimeMillis();
         int status = BFTClient.getInstance().prepareSmrLogEntry(logEntry);
@@ -238,6 +228,14 @@ public class EpochProcessor implements Runnable {
 //            log.info(String.format("SMR log committed #%d: %s", epochNumber.intValue(), logEntry));
         }
 
+        // 2PC Commit
+        Map<Integer, Map<Integer, List<TransactionResponse>>> clusterDRWTMap = txnUtils.mapTransactionResponsesToCluster(preparedTxnResponses, ID.getClusterID());
+        for (Map.Entry<Integer, Map<Integer, List<TransactionResponse>>> entry : clusterDRWTMap.entrySet()) {
+            log.info("Starting DRWTCommitWorker for cluster: " + entry.getKey() + ", and TIDs: " + entry.getValue().keySet());
+            DRWTCommitWorker drwtCommitWorker = new DRWTCommitWorker(entry.getKey(), entry.getValue());
+            drwtCommitWorker.setPerfMetricManager(perfLogger);
+            threadPoolExecutor.addToConcurrentQueue(drwtCommitWorker);
+        }
 
         // Send transactionBatchResponse to clients
         if (transactionBatchResponse != null) {

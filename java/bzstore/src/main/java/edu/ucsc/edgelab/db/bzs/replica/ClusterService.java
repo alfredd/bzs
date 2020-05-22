@@ -82,8 +82,10 @@ public class ClusterService extends ClusterGrpc.ClusterImplBase {
                 if (processor.commitCompleted())
                     completedCount+=1;
             }
-            if (completedCount == commitSubBatchCounts)
+            if (completedCount == commitSubBatchCounts) {
+                log.info("Completed commit of all txns in "+ batchCommitRequest.getID());
                 break;
+            }
         }
         responseObserver.onCompleted();
     }
