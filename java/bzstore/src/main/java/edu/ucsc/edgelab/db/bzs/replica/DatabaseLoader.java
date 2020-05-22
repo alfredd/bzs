@@ -123,12 +123,12 @@ public class DatabaseLoader implements Runnable {
 
     @Override
     public void run() {
-        int delayMs = 20000;
+        int delayMs = 3000;
         try {
             BZStoreProperties properties = new BZStoreProperties();
-            String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
-            delayMs = Integer.decode(delay);
-            log.info("DB Loader will run after " + delay + "milliseconds");
+//            String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
+//            delayMs = Integer.decode(delay);
+            log.info("DB Loader will run after " + delayMs + "milliseconds");
             Thread.sleep(delayMs);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
