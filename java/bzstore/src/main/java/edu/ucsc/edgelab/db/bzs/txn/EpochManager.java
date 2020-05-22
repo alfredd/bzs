@@ -81,10 +81,11 @@ public class EpochManager {
         synchronized (this) {
             long startTime = System.currentTimeMillis();
             Integer seq = sequenceNumber;
+            final int epoch;
             //logger.info("Checking if epoch can be updated.");
             if (seq > 0 || clusterCommitBatch.size() > 0 || clusterPrepareBatch.size() > 0 || DTxnCache.completedDRWTxnsExist()) {
-                final int epoch = epochNumber;
-                logger.info("Updating epoch: " + epoch);
+                epoch = epochNumber;
+//                logger.info("Updating epoch: " + epoch);
 //                logger.info("Processing Epoch: "+epoch);
                 seq = sequenceNumber - 1;
                 sequenceNumber = 0;
@@ -92,8 +93,8 @@ public class EpochManager {
                 serializer.resetEpoch();
                 Epoch.setEpochNumber(epochNumber);
                 processEpoch(epoch, seq + EPOCH_BUFFER);
+                logger.info("UPDATED EPOCH"+epoch+", duration: " + (System.currentTimeMillis()-startTime));
             }
-            logger.info("UPDATED EPOCH, duration: " + (System.currentTimeMillis()-startTime));
             return seq;
         }
     }
