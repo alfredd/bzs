@@ -66,7 +66,7 @@ public class Serializer {
         this.replicaID = replicaID;
     }
 
-    public boolean readConflicts(Bzs.ReadHistory c) {
+    public boolean readConflicts(final Bzs.ReadHistory c) {
         //Needs to be changes where the version is fetched from the datastore and not the first key.
         BZStoreData data;
         Bzs.Read readOperation = c.getReadOperation();
@@ -84,7 +84,7 @@ public class Serializer {
         return false;
     }
 
-    public boolean serialize(Bzs.Transaction t) {
+    public boolean serialize(final Bzs.Transaction t) {
 
         for (Bzs.ReadHistory readHistory : t.getReadHistoryList()) {
             if (readHistory.getReadOperation().getClusterID() == this.clusterID && readConflicts(readHistory))
