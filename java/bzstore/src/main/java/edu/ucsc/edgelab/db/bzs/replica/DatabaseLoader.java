@@ -123,7 +123,7 @@ public class DatabaseLoader implements Runnable {
 
     @Override
     public void run() {
-        int delayMs = 3000;
+        int delayMs = 10000;
         try {
             BZStoreProperties properties = new BZStoreProperties();
 //            String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
