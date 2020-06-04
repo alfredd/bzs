@@ -188,18 +188,19 @@ public class DatabaseLoader implements Runnable {
                 LinkedList<Bzs.Transaction> drwtxns = benchmarkGenerator.generate_DRWTransactions(wordList, remoteClusterKeys);
                 Collections.shuffle(drwtxns);
                 log.info("DATABSE LOADER: Time to generate"+drwtxns.size()+" DRWT Txns: "+(System.currentTimeMillis()-startTime));
-                int size = 20; //drwtxns.size();
+//                int size = 20; //drwtxns.size();
+                int size = drwtxns.size();
                 totalCount = size;
                 currentCompleted = 0;
                 log.info(String.format("Total transactions for DRWT = %d", totalCount));
 //                for (Bzs.Transaction t : drwtxns) {
                 for (int j = 0; j < size; j++) {
-                    try {
+                    transactionProcessor.processTransaction(drwtxns.get(j), getTransactionResponseStreamObserver());
+/*                    try {
                         Thread.sleep(1500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
-                    }
-                    transactionProcessor.processTransaction(drwtxns.get(i), getTransactionResponseStreamObserver());
+                    }*/
                 }
                 waitForTransactionCompletion(delayMs, size, "D-RW");
                 logClientMetrics("DRWTxns");
