@@ -207,7 +207,7 @@ public class DatabaseLoader implements Runnable {
             }
         }
 
-        int counter = 3;
+        int counter = 2;
         try {
             log.info("Waiting for all distributed Txn to complete.");
             while ((transactionsFailed + transactionsCompleted) <= (totalCount - 1) && counter >= 0) {
@@ -264,7 +264,7 @@ public class DatabaseLoader implements Runnable {
     }
 
     private void waitForTransactionCompletion(int delayMs, int txnCount, String transactionType) {
-        int endCounter = 2;
+        int endCounter = 1;
         while (endCounter >= 0 && currentCompleted < totalCount) {
             try {
                 Thread.sleep(delayMs);
