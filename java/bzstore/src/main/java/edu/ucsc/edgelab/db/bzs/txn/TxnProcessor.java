@@ -69,7 +69,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
             Bzs.Transaction transaction = Bzs.Transaction.newBuilder(request).setTransactionID(tid.getTiD()).build();
 //            log.info("Adding transaction to pre-processing cache, TID: "+tid);
             TransactionCache.add(tid, transaction, responseObserver);
-            log.info("TXN Added to queue. Duration: "+ (System.currentTimeMillis()-startTime));
+//            log.info("TXN Added to queue. Duration: "+ (System.currentTimeMillis()-startTime));
         }
     }
 
