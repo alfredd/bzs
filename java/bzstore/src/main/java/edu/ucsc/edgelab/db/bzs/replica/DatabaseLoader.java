@@ -129,7 +129,7 @@ public class DatabaseLoader implements Runnable {
 //            String delay = properties.getProperty(BZStoreProperties.Configuration.delay_start);
 //            delayMs = Integer.decode(delay);
             log.info("DB Loader will run after " + delayMs + "milliseconds");
-            Thread.sleep(delayMs);
+            Thread.sleep(delayMs*3);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
