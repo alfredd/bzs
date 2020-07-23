@@ -7,9 +7,8 @@ import edu.ucsc.edgelab.db.bzs.configuration.BZStoreProperties;
 import edu.ucsc.edgelab.db.bzs.configuration.Configuration;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
-import edu.ucsc.edgelab.db.bzs.exceptions.ValidityException;
 import edu.ucsc.edgelab.db.bzs.txn.TxnUtils;
-import edu.ucsc.edgelab.db.bzs.txnproof.DependencyValidator;
+import edu.ucsc.edgelab.db.bzs.txnproof.SignatureValidator;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +22,7 @@ public class DistributedClient {
     private static final Logger LOGGER = Logger.getLogger(DistributedClient.class.getName());
     private int total_clusters;
     private Transaction transaction;
-    private DependencyValidator validator;
+    private SignatureValidator validator;
 
     DistributedClient() {
         try {
@@ -40,7 +39,7 @@ public class DistributedClient {
                     BZStoreProperties.Configuration.port));
             clientHashMap.put(i, new BZStoreClient(leader_host, leader_port));
         }
-        validator = new DependencyValidator();
+        validator = new SignatureValidator();
     }
 
     public void createNewTransactions() {
@@ -71,34 +70,23 @@ public class DistributedClient {
         }
     }
 
-    public boolean roTransaction(List<String> keys) {
+    public Map<String, String> roTransaction(List<String> keys) {
         Bzs.ROTransaction.Builder roTBuilder = Bzs.ROTransaction.newBuilder();
         Map<Integer, List<Bzs.Read>> clusterKeyMap = new HashMap<>();
-//        Map<Integer, List<String>> clusterKeys = new HashMap<>();
-        for (String key: keys) {
+
+        /**
+         * Ensure that multiple reads to a single cluster are executed on a single ROTransaction Object.
+         */
+        for (String key : keys) {
             Integer clusterID = TxnUtils.hashmod(key, Configuration.clusterCount());
-//            if (!clusterKeys.containsKey(clusterID)) {
-//                clusterKeys.put(clusterID,new LinkedList<>());
-//            }
-//            clusterKeys.get(clusterID).add(key);
 
             if (!clusterKeyMap.containsKey(clusterID)) {
                 clusterKeyMap.put(clusterID, new LinkedList<>());
             }
             clusterKeyMap.get(clusterID).add(Bzs.Read.newBuilder().setKey(key).build());
-
-//            Bzs.Read readOp = Bzs.Read.newBuilder().setKey(key).build();
-//            roTBuilder = roTBuilder.addReadOperations(readOp);
         }
-        Map<Bzs.ROTransaction, Bzs.ROTransactionResponse> roTransactionResponseMap = new LinkedHashMap<>();
-        List<Bzs.ReadResponse> readResponses = new LinkedList<>();
         Map<String, String> response = transaction.readOnly(clusterKeyMap, clientHashMap);
-        try {
-            int valid = validator.validate(readResponses);
-        } catch (ValidityException e) {
-            e.printStackTrace();
-        }
-        return false;
+        return response;
     }
 
     public static void main(String args[]) throws InterruptedException {
@@ -163,24 +151,24 @@ public class DistributedClient {
 
 
         dclient.createNewTransactions();
-        int rotCount=0;
-        int validResponseCount=0;
-        for (int i = 0; i < words.size();) {
+        int rotCount = 0;
+        int validResponseCount = 0;
+        for (int i = 0; i < words.size(); ) {
             LinkedList<String> keys = new LinkedList<>();
             for (int j = 0; j < 3; j++) {
-                if (i+j<words.size()) {
-                    keys.add(words.get(i+j));
+                if (i + j < words.size()) {
+                    keys.add(words.get(i + j));
                 }
             }
 
-            if (keys.size()>0) {
-                rotCount+=1;
-                boolean validResponse = dclient.roTransaction(keys);
-                if (validResponse) {
-                    validResponseCount+=1;
+            if (keys.size() > 0) {
+                rotCount += 1;
+                Map<String, String> validResponse = dclient.roTransaction(keys);
+                if (validResponse != null) {
+                    validResponseCount += 1;
                 }
             }
-            i+=3;
+            i += 3;
         }
         LOGGER.info(String.format("Total ROT = %d, Success Count = %d", rotCount, validResponseCount));
 /*
@@ -206,7 +194,6 @@ public class DistributedClient {
         System.err.println("Commit processed in "+ duration +"ms");
 
 */
-
 
 
 //        dclient.createNewTransactions();

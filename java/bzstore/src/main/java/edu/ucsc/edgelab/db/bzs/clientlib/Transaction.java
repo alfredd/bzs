@@ -4,6 +4,7 @@ import edu.ucsc.edgelab.db.bzs.BZStoreClient;
 import edu.ucsc.edgelab.db.bzs.Bzs;
 import edu.ucsc.edgelab.db.bzs.data.BZStoreData;
 import edu.ucsc.edgelab.db.bzs.exceptions.CommitAbortedException;
+import edu.ucsc.edgelab.db.bzs.txnproof.SignatureValidator;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -102,19 +103,34 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
     public Map<String, String> readOnly(Map<Integer, List<Bzs.Read>> rotxnRequsts, HashMap<Integer, BZStoreClient> clientHashMap) {
 
         Map<Integer, Bzs.ROTransactionResponse> receivedResponses = new HashMap<>();
+        Map<String, String> responseMap = new HashMap<>();
+        SignatureValidator signatureValidator = new SignatureValidator();
         for (Map.Entry<Integer, List<Bzs.Read>> entry : rotxnRequsts.entrySet()) {
             setClient(clientHashMap.get(entry.getKey()));
             Bzs.ROTransaction roTransaction =
                     Bzs.ROTransaction.newBuilder().addAllReadOperations(entry.getValue()).setClusterID(entry.getKey()).build();
             Bzs.ROTransactionResponse rotResponse = client.readOnly(roTransaction);
-            if (rotResponse != null)
+            signatureValidator.validateResponse(entry.getKey(), rotResponse);
+            if (rotResponse != null) {
                 receivedResponses.put(entry.getKey(), rotResponse);
+//                createROTResponseMap(rotResponse, responseMap);
+            }
+        }
+        List<Bzs.ReadResponse> secondRead = validateAndGenerateSecondROTxns(receivedResponses);
+        if (secondRead.size()>0) {
+            LOGGER.warning("Second ROT required for keys: "+ secondRead);
         }
 
-        List<Bzs.ReadResponse> secondRead = validateAndGenerateSecondROTxns(receivedResponses);
+        return responseMap;
+    }
 
-
-        return null;
+    private void createROTResponseMap(Bzs.ROTransactionResponse rotResponse, Map<String, String> response) {
+        for (int i = 0; i < rotResponse.getReadResponsesCount(); i++) {
+            Bzs.ReadResponse rot = rotResponse.getReadResponses(i);
+            String rotKey = rot.getReadOperation().getKey();
+            String rotValue = rot.getValue();
+            response.put(rotKey,rotValue);
+        }
     }
 
     protected List<Bzs.ReadResponse> validateAndGenerateSecondROTxns(Map<Integer, Bzs.ROTransactionResponse> receivedResponses) {

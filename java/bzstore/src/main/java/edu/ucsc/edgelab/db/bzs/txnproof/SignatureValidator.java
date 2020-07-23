@@ -7,7 +7,7 @@ import edu.ucsc.edgelab.db.bzs.exceptions.ValidityException;
 import java.util.LinkedList;
 import java.util.List;
 
-public class DependencyValidator {
+public class SignatureValidator {
 
 
     public int validate(List<Bzs.ReadResponse> readResponses) throws ValidityException {
@@ -39,5 +39,9 @@ public class DependencyValidator {
         boolean validCount = proofList.size() >= (Configuration.getMaxAllowablefaults() + 1);
 
         return isValid;
+    }
+
+    public void validateResponse(Integer clusterID, Bzs.ROTransactionResponse rotResponse) {
+
     }
 }
