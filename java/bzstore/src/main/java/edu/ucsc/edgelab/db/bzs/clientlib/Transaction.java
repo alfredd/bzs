@@ -110,28 +110,29 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
             if (rotResponse != null)
                 receivedResponses.put(entry.getKey(), rotResponse);
         }
-        List<Bzs.ReadResponse> secondRead = generateSecondROTxns(receivedResponses);
+
+        List<Bzs.ReadResponse> secondRead = validateAndGenerateSecondROTxns(receivedResponses);
 
 
         return null;
     }
 
-    protected List<Bzs.ReadResponse> generateSecondROTxns(Map<Integer, Bzs.ROTransactionResponse> receivedResponses) {
+    protected List<Bzs.ReadResponse> validateAndGenerateSecondROTxns(Map<Integer, Bzs.ROTransactionResponse> receivedResponses) {
         List<Bzs.ReadResponse> secondRead = new LinkedList<>();
-        Map<Integer, V> xMap = new HashMap<>();
+        Map<Integer, ValidityVerifier> xMap = new HashMap<>();
         for (Map.Entry<Integer, Bzs.ROTransactionResponse> entry : receivedResponses.entrySet()) {
             int partition = entry.getKey();
             Bzs.ROTransactionResponse response = entry.getValue();
-            V x = getVerificiationAttributes(response);
+            ValidityVerifier x = getVerificiationAttributes(response);
             LOGGER.info("For partition "+partition+", V: "+x.toString());
             xMap.put(partition, x);
         }
 
         HashSet<String> secondROTKeys = new HashSet<String>();
-        for (Map.Entry<Integer, V> entry : xMap.entrySet()) {
-            V X = entry.getValue();
+        for (Map.Entry<Integer, ValidityVerifier> entry : xMap.entrySet()) {
+            ValidityVerifier verifier = entry.getValue();
             int i = entry.getKey();
-            for (Map.Entry<Integer, Integer> j : X.depVec.entrySet()) {
+            for (Map.Entry<Integer, Integer> j : verifier.depVec.entrySet()) {
                 if (i != j.getKey()) {
                     if (j.getValue() > xMap.get(j.getKey()).lce) {
                         Bzs.ReadResponse resp = xMap.get(j.getKey()).resp;
@@ -146,8 +147,8 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
         return secondRead;
     }
 
-    private V getVerificiationAttributes(Bzs.ROTransactionResponse response) {
-        V v = new V();
+    private ValidityVerifier getVerificiationAttributes(Bzs.ROTransactionResponse response) {
+        ValidityVerifier v = new ValidityVerifier();
         int lce = Integer.MAX_VALUE;
         for (int i = 0; i < response.getReadResponsesCount(); i++) {
             Bzs.ReadResponse resp = response.getReadResponses(i);
@@ -165,7 +166,7 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
     }
 }
 
-class V {
+class ValidityVerifier {
     Map<Integer, Integer> depVec;
     int lce;
     Bzs.ReadResponse resp;

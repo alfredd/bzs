@@ -71,11 +71,17 @@ public class DistributedClient {
         }
     }
 
-    public Bzs.ROTransactionResponse roTransaction(List<String> keys) {
+    public boolean roTransaction(List<String> keys) {
         Bzs.ROTransaction.Builder roTBuilder = Bzs.ROTransaction.newBuilder();
         Map<Integer, List<Bzs.Read>> clusterKeyMap = new HashMap<>();
+//        Map<Integer, List<String>> clusterKeys = new HashMap<>();
         for (String key: keys) {
             Integer clusterID = TxnUtils.hashmod(key, Configuration.clusterCount());
+//            if (!clusterKeys.containsKey(clusterID)) {
+//                clusterKeys.put(clusterID,new LinkedList<>());
+//            }
+//            clusterKeys.get(clusterID).add(key);
+
             if (!clusterKeyMap.containsKey(clusterID)) {
                 clusterKeyMap.put(clusterID, new LinkedList<>());
             }
@@ -92,7 +98,7 @@ public class DistributedClient {
         } catch (ValidityException e) {
             e.printStackTrace();
         }
-        return null;
+        return false;
     }
 
     public static void main(String args[]) throws InterruptedException {
@@ -157,7 +163,27 @@ public class DistributedClient {
 
 
         dclient.createNewTransactions();
+        int rotCount=0;
+        int validResponseCount=0;
+        for (int i = 0; i < words.size();) {
+            LinkedList<String> keys = new LinkedList<>();
+            for (int j = 0; j < 3; j++) {
+                if (i+j<words.size()) {
+                    keys.add(words.get(i+j));
+                }
+            }
 
+            if (keys.size()>0) {
+                rotCount+=1;
+                boolean validResponse = dclient.roTransaction(keys);
+                if (validResponse) {
+                    validResponseCount+=1;
+                }
+            }
+            i+=3;
+        }
+        LOGGER.info(String.format("Total ROT = %d, Success Count = %d", rotCount, validResponseCount));
+/*
         BZStoreData data = null;
         data = dclient.read(key);
         LOGGER.info("Data from db: " + data);
@@ -179,6 +205,7 @@ public class DistributedClient {
         duration = System.currentTimeMillis() - startTime;
         System.err.println("Commit processed in "+ duration +"ms");
 
+*/
 
 
 
