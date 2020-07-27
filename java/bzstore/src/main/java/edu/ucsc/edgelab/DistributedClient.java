@@ -153,10 +153,12 @@ public class DistributedClient {
         dclient.createNewTransactions();
         int rotCount = 0;
         int validResponseCount = 0;
-        for (int i = 0; i < words.size(); ) {
+        startTime = System.currentTimeMillis();
+        int size = 1;//words.size();
+        for (int i = 0; i < size; ) {
             LinkedList<String> keys = new LinkedList<>();
             for (int j = 0; j < 3; j++) {
-                if (i + j < words.size()) {
+                if (i + j < size) {
                     keys.add(words.get(i + j));
                 }
             }
@@ -171,6 +173,7 @@ public class DistributedClient {
             i += 3;
         }
         LOGGER.info(String.format("Total ROT = %d, Success Count = %d", rotCount, validResponseCount));
+        LOGGER.info(String.format("Commit processed in %f ms", (System.currentTimeMillis()-startTime)));
 /*
         BZStoreData data = null;
         data = dclient.read(key);
