@@ -180,7 +180,7 @@ public class DistributedClient {
             i += 3;
         }
         LOGGER.info(String.format("Total ROT = %d, Success Count = %d", rotCount, validResponseCount));
-        LOGGER.info(String.format("Commit processed in %f ms", (System.currentTimeMillis()-startTime)));
+        LOGGER.info(String.format("Commit processed in %d ms", (System.currentTimeMillis()-startTime)));
 /*
         BZStoreData data = null;
         data = dclient.read(key);
