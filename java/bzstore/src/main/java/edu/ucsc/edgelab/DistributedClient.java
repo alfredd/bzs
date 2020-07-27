@@ -165,7 +165,7 @@ public class DistributedClient {
                     keys.add(words.get(i + j));
                 }
             }
-
+            LOGGER.info("Reading keys: "+keys);
             if (keys.size() > 0) {
                 rotCount += 1;
                 Map<String, String> validResponse = dclient.roTransaction(keys);
