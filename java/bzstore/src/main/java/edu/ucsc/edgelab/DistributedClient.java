@@ -96,10 +96,6 @@ public class DistributedClient {
         String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/" + dataFile;
         System.out.println("Starting ROT Benchmark. Reading data from: "+ fileName);
-        for (int i = 0; i < 5; i++) {
-            Thread.sleep(1000);
-            System.out.println("Testing "+i);
-        }
         File file = new File(fileName);
         ArrayList<String> words = new ArrayList();
         try {
