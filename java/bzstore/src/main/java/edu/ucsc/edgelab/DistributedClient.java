@@ -112,7 +112,7 @@ public class DistributedClient {
                     }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.INFO, e.getMessage());
+            LOGGER.log(Level.INFO, e.getMessage(),e);
         }
 //        String key2 = "Ohio";
 //        String key = "Indonesia";
