@@ -107,8 +107,8 @@ public class DistributedClient {
         } catch (Exception e) {
             LOGGER.log(Level.INFO, e.getMessage());
         }
-        String key2 = "Ohio";
-        String key = "Indonesia";
+//        String key2 = "Ohio";
+//        String key = "Indonesia";
         long startTime;
         long duration;
 
@@ -149,7 +149,7 @@ public class DistributedClient {
 
 */
 
-
+        LOGGER.info("Starting ROT Benchmark");
         dclient.createNewTransactions();
         int rotCount = 0;
         int validResponseCount = 0;
