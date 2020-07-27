@@ -221,8 +221,8 @@ public class DatabaseLoader implements Runnable {
         logClientMetrics("DRWTxns");
         logBatchMetrics();
 //        resetVariables();
-
-        log.info("END OF BENCHMARK RUN.");
+        // TODO: UNDO This later. Commented for ROT Benchmark tests.
+        //log.info("END OF BENCHMARK RUN.");
     }
 
     private void logBatchMetrics() {
