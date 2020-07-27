@@ -25,6 +25,7 @@ public class DistributedClient {
     private SignatureValidator validator;
 
     DistributedClient() {
+        LOGGER.info("Creating Dclient.");
         try {
             properties = new BZStoreProperties();
         } catch (IOException e) {
@@ -40,6 +41,7 @@ public class DistributedClient {
             clientHashMap.put(i, new BZStoreClient(leader_host, leader_port));
         }
         validator = new SignatureValidator();
+        LOGGER.info("Created Dclient.");
     }
 
     public void createNewTransactions() {
@@ -93,6 +95,7 @@ public class DistributedClient {
         DistributedClient dclient = new DistributedClient();
         String dataFile = "data.txt";
         String fileName = System.getProperty("user.dir") + "/" + dataFile;
+        System.out.println("Starting ROT Benchmark. Reading data from: "+ fileName);
         File file = new File(fileName);
         ArrayList<String> words = new ArrayList();
         try {
