@@ -151,6 +151,16 @@ public class DistributedClient {
         Thread.sleep(1000);
 
 */
+        int clusterCount = 3;
+        if (args.length==1) {
+            clusterCount = Integer.decode(args[0]) - 1 ;
+        } else if (args.length==0) {
+            clusterCount = 2;
+        }
+        else {
+            LOGGER.log(Level.SEVERE, "Invalid input arguments. Enter Cluster Count.");
+            System.exit(1);
+        }
 
         LOGGER.info("Starting ROT Benchmark");
         dclient.createNewTransactions();
@@ -160,7 +170,8 @@ public class DistributedClient {
         int size = words.size();
         for (int i = 0; i < size; ) {
             LinkedList<String> keys = new LinkedList<>();
-            for (int j = 0; j < 3; j++) {
+
+            for (int j = 0; j < clusterCount; j++) {
                 if (i + j < size) {
                     keys.add(words.get(i + j));
                 }
@@ -175,7 +186,7 @@ public class DistributedClient {
                 }
             }
             LOGGER.info(String.format("ROT %d processed in %d ms", rotCount, (System.currentTimeMillis()-localStartTime)));
-            i += 3;
+            i += clusterCount+1;
         }
         LOGGER.info(String.format("Total ROT = %d, Success Count = %d", rotCount, validResponseCount));
         LOGGER.info(String.format("Commit processed in %d ms", (System.currentTimeMillis()-startTime)));
