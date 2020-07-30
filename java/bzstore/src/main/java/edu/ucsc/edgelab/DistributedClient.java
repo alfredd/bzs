@@ -171,7 +171,7 @@ public class DistributedClient {
         for (int i = 0; i < size; ) {
             LinkedList<String> keys = new LinkedList<>();
 
-            for (int j = 0; j < clusterCount; j++) {
+            for (int j = 0; j <= clusterCount; j++) {
                 if (i + j < size) {
                     keys.add(words.get(i + j));
                 }
