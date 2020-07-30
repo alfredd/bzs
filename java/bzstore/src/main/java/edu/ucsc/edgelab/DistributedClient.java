@@ -157,7 +157,7 @@ public class DistributedClient {
         int rotCount = 0;
         int validResponseCount = 0;
         startTime = System.currentTimeMillis();
-        int size = 1;//words.size();
+        int size = 5;//words.size();
         for (int i = 0; i < size; ) {
             LinkedList<String> keys = new LinkedList<>();
             for (int j = 0; j < 3; j++) {
@@ -166,6 +166,7 @@ public class DistributedClient {
                 }
             }
             LOGGER.info("Reading keys: "+keys);
+            long localStartTime=System.currentTimeMillis();
             if (keys.size() > 0) {
                 rotCount += 1;
                 Map<String, String> validResponse = dclient.roTransaction(keys);
@@ -173,6 +174,7 @@ public class DistributedClient {
                     validResponseCount += 1;
                 }
             }
+            LOGGER.info(String.format("ROT %d processed in %d ms", rotCount, (System.currentTimeMillis()-localStartTime)));
             i += 3;
         }
         LOGGER.info(String.format("Total ROT = %d, Success Count = %d", rotCount, validResponseCount));
