@@ -157,7 +157,7 @@ public class DistributedClient {
         int rotCount = 0;
         int validResponseCount = 0;
         startTime = System.currentTimeMillis();
-        int size = 5;//words.size();
+        int size = words.size();
         for (int i = 0; i < size; ) {
             LinkedList<String> keys = new LinkedList<>();
             for (int j = 0; j < 3; j++) {
