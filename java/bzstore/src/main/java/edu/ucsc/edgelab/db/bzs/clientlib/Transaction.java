@@ -116,10 +116,10 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
 //                createROTResponseMap(rotResponse, responseMap);
             }
         }
-        LOGGER.warning("Received response: "+ receivedResponses);
+        LOGGER.warning("Received response: " + receivedResponses);
         List<Bzs.ReadResponse> secondRead = validateAndGenerateSecondROTxns(receivedResponses);
-        if (secondRead.size()>0) {
-            LOGGER.warning("Second ROT required for keys: "+ secondRead);
+        if (secondRead.size() > 0) {
+            LOGGER.warning("Second ROT required for keys: " + secondRead);
         }
 
         return responseMap;
@@ -130,7 +130,7 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
             Bzs.ReadResponse rot = rotResponse.getReadResponses(i);
             String rotKey = rot.getReadOperation().getKey();
             String rotValue = rot.getValue();
-            response.put(rotKey,rotValue);
+            response.put(rotKey, rotValue);
         }
     }
 
@@ -141,7 +141,7 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
             int partition = entry.getKey();
             Bzs.ROTransactionResponse response = entry.getValue();
             ValidityVerifier x = getVerificiationAttributes(response);
-            LOGGER.info("For partition "+partition+", V: "+x.toString());
+            LOGGER.info("For partition " + partition + ", V: " + x.toString());
             xMap.put(partition, x);
         }
 
@@ -150,13 +150,19 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
             ValidityVerifier verifier = entry.getValue();
             int i = entry.getKey();
             for (Map.Entry<Integer, Integer> j : verifier.depVec.entrySet()) {
-                if (i != j.getKey()) {
-                    if (j.getValue() > xMap.get(j.getKey()).lce) {
-                        Bzs.ReadResponse resp = xMap.get(j.getKey()).resp;
-                        if (!secondROTKeys.contains(resp.getReadOperation().getKey())) {
-                            secondRead.add(Bzs.ReadResponse.newBuilder(resp).setVersion(j.getValue()).build());
-                            secondROTKeys.add(resp.getReadOperation().getKey());
+                Integer jKey = j.getKey();
+                if (i != jKey) {
+                    ValidityVerifier jKeyVerifier = xMap.get(jKey);
+                    if (jKeyVerifier != null) {
+                        if (j.getValue() > jKeyVerifier.lce) {
+                            Bzs.ReadResponse resp = jKeyVerifier.resp;
+                            if (!secondROTKeys.contains(resp.getReadOperation().getKey())) {
+                                secondRead.add(Bzs.ReadResponse.newBuilder(resp).setVersion(j.getValue()).build());
+                                secondROTKeys.add(resp.getReadOperation().getKey());
+                            }
                         }
+                    } else {
+                        LOGGER.warning("No Valid response found for "+jKey+"");
                     }
                 }
             }
@@ -190,6 +196,6 @@ class ValidityVerifier {
 
     @Override
     public String toString() {
-        return String.format("Dependency Vector = %s, LCE = %d",depVec.toString(), lce);
+        return String.format("Dependency Vector = %s, LCE = %d", depVec.toString(), lce);
     }
 }
