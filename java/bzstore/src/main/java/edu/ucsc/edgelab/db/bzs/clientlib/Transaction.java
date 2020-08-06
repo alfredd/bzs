@@ -116,6 +116,7 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
 //                createROTResponseMap(rotResponse, responseMap);
             }
         }
+        LOGGER.warning("Received response: "+ receivedResponses);
         List<Bzs.ReadResponse> secondRead = validateAndGenerateSecondROTxns(receivedResponses);
         if (secondRead.size()>0) {
             LOGGER.warning("Second ROT required for keys: "+ secondRead);
