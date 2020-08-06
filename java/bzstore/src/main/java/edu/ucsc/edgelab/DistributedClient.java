@@ -81,7 +81,7 @@ public class DistributedClient {
          */
         for (String key : keys) {
             Integer clusterID = TxnUtils.hashmod(key, Configuration.clusterCount());
-
+            LOGGER.info("Reading key from cluster: "+clusterID);
             if (!clusterKeyMap.containsKey(clusterID)) {
                 clusterKeyMap.put(clusterID, new LinkedList<>());
             }
