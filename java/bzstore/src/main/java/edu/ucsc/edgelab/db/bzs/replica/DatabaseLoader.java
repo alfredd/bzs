@@ -178,7 +178,7 @@ public class DatabaseLoader implements Runnable {
 
         logBatchMetrics();
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
-        if (!ID.canRunBenchMarkTests()) {
+        if (ID.canRunBenchMarkTests()) {
             int repeat = 4;
             for (int i = 1; i < repeat; i++) {
                 log.info("GENERATING D-RWT ( Set Number " + i + "of "+repeat+"). ");
