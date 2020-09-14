@@ -205,23 +205,23 @@ public class DatabaseLoader implements Runnable {
                 logClientMetrics("DRWTxns");
                 logBatchMetrics();
             }
+            int counter = 2;
+            try {
+                log.info("Waiting for all distributed Txn to complete.");
+                while ((transactionsFailed + transactionsCompleted) <= (totalCount - 1) && counter >= 0) {
+                    Thread.sleep(60 * 1000);
+                    counter--;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            logClientMetrics("DRWTxns");
+            logBatchMetrics();
         }
 
-        int counter = 2;
-        try {
-            log.info("Waiting for all distributed Txn to complete.");
-            while ((transactionsFailed + transactionsCompleted) <= (totalCount - 1) && counter >= 0) {
-                Thread.sleep(60 * 1000);
-                counter--;
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        logClientMetrics("DRWTxns");
-        logBatchMetrics();
-//        resetVariables();
+        resetVariables();
         // TODO: UNDO This later. Commented for ROT Benchmark tests.
-        //log.info("END OF BENCHMARK RUN.");
+        log.info("END OF BENCHMARK RUN.");
     }
 
     private void logBatchMetrics() {
