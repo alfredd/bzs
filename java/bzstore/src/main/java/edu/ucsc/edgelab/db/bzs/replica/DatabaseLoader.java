@@ -161,7 +161,7 @@ public class DatabaseLoader implements Runnable {
 
         BenchmarkGenerator benchmarkGenerator = new BenchmarkGenerator(rwRatio[0], rwRatio[1]);
         benchmarkGenerator.setTotalClusterCount(totalClusters);
-        /*log.info("GENERATING L-RWT.");
+        log.info("GENERATING L-RWT.");
 
         LinkedList<Bzs.Transaction> txns = benchmarkGenerator.generateAndPush_LRWTransactions(wordList);
         Collections.shuffle(txns);
@@ -177,9 +177,8 @@ public class DatabaseLoader implements Runnable {
         resetVariables();
 
         logBatchMetrics();
-*/
         log.info("DRWT-Can be run? " + ID.canRunBenchMarkTests());
-        if (ID.canRunBenchMarkTests()) {
+        if (!ID.canRunBenchMarkTests()) {
             int repeat = 4;
             for (int i = 1; i < repeat; i++) {
                 log.info("GENERATING D-RWT ( Set Number " + i + "of "+repeat+"). ");
