@@ -49,7 +49,7 @@ public class BenchmarkGenerator {
         loadKeysFromDB(clusterKeys);
 
         Iterator<String> keys = storedData.keySet().iterator();
-        int ops = (readOpCountPerTxn + writeOpCountPerTxn)/2;
+        int ops = (readOpCountPerTxn + writeOpCountPerTxn) / 2;
         for (int k = 0; k < storedData.size(); k++) {
             ConnectionLessTransaction t = new ConnectionLessTransaction();
 
@@ -138,13 +138,19 @@ public class BenchmarkGenerator {
                 break;
             }
             Transaction drwt = new Transaction();
-
+            int readOpCounter = 0;
             try {
                 for (int i = 0; i < readOpCountPerTxn; i++) {
-                    String readKey = getKey(remoteClusterKeys, localClusterKeys, rnd);
-                    Integer clusterID = hashmod(readKey, totalClusterCount);
-                    drwt.setClient(clientList.get(clusterID));
-                    drwt.read(readKey);
+                    if (remoteClusterKeys.size() > 0 && localClusterKeys.size() > 0) {
+
+                        String readKey = getKey(remoteClusterKeys, localClusterKeys, rnd);
+                        Integer clusterID = hashmod(readKey, totalClusterCount);
+                        drwt.setClient(clientList.get(clusterID));
+                        drwt.read(readKey);
+                        readOpCounter += 1;
+                    } else {
+                        break;
+                    }
                 }
 
 /*                FOR ROTxns experiment.
@@ -156,7 +162,8 @@ public class BenchmarkGenerator {
                 log.log(Level.WARNING, "Exception occurred while creating DRWT batch: " + e.getLocalizedMessage(), e);
                 break;
             }
-            transactions.addLast(drwt.getTransaction());
+            if (readOpCounter > 0)
+                transactions.addLast(drwt.getTransaction());
         }
         log.info("Total DRWT transactions: " + transactions.size());
         return transactions;
@@ -164,13 +171,13 @@ public class BenchmarkGenerator {
 
     private String getKey(LinkedList<String> remoteClusterKeys, LinkedList<String> localClusterKeys, Random rnd) {
         String readKey = "";
-        int remoteSize = remoteClusterKeys.size();
-        int localSize = localClusterKeys.size();
+        Collections.shuffle(remoteClusterKeys);
+        Collections.shuffle(localClusterKeys);
         if (rnd.nextDouble() < 0.5) {
-            readKey = remoteClusterKeys.remove(rnd.nextInt(remoteSize));
+            readKey = remoteClusterKeys.removeFirst();
 
         } else {
-            readKey = localClusterKeys.remove(rnd.nextInt(localSize));
+            readKey = localClusterKeys.removeFirst();
         }
         return readKey;
     }
