@@ -47,7 +47,7 @@ public class EpochProcessor implements Runnable {
         // Perf trace
 //        perfTracer.setBatchStartTime(epochNumber, startTime);
 
-//        log.info("Processing Epoch #"+epochNumber);
+        log.info("Processing Epoch #"+epochNumber);
         SmrLog.createLogEntry(epochNumber);
 
         Epoch.setEpochUnderExecution(epochNumber);
@@ -115,7 +115,7 @@ public class EpochProcessor implements Runnable {
         if (actualTxnPrepareCount <= 0) {
             log.log(Level.WARNING, "No transactions found in this Epoch: " + epochNumber);
         } else {
-//            log.info("Preparing transactions for epoch: "+epochNumber);
+            log.info("Preparing transactions for epoch: "+epochNumber);
             transactionBatchResponse = BFTClient.getInstance().performCommitPrepare(allRWTxnLocalBatch);
             if (transactionBatchResponse != null) {
 //                log.info(String.format("BFT Prepare transactionBatchResponse: %s", transactionBatchResponse.toString()));
@@ -151,17 +151,17 @@ public class EpochProcessor implements Runnable {
                         }
                         SmrLog.twoPCPrepared(epochNumber, cpc.batch, cpc.callback.getID());
                         String id = responseClusterPC.getID();
-//                        log.info("Adding prepared 2PC transactions to RemoteTxnCache: " + id + ", list of preparedTIDs: " + preparedTIDs);
+                        log.info("Adding prepared 2PC transactions to RemoteTxnCache: " + id + ", list of preparedTIDs: " + preparedTIDs);
                         RemoteTxnCache.addTIDsToPreparedBatch(id, preparedTIDs);
                         cpc.callback.setPreparedEpoch(epochNumber);
                         cpc.callback.setDepVector(DependencyVectorManager.getCurrentTimeVectorAsMap());
                         cpc.callback.sendResponseToClient();
                     }
                 }
-            } /*else {
+            } else {
                 log.log(Level.WARNING, "Transaction batch response was null. Epoch: " + epochNumber);
                 // Send abort to all clients requests part of this batch. Send abort to all clusters involved in dRWT.
-            }*/
+            }
 
             Map<Integer, Map<TransactionID, Transaction>> clusterDRWTMap = txnUtils.mapTransactionsToCluster(dRWTxns, ID.getClusterID());
             for (Map.Entry<Integer, Map<TransactionID, Transaction>> entry : clusterDRWTMap.entrySet()) {
@@ -176,7 +176,7 @@ public class EpochProcessor implements Runnable {
         long prepareTimeMS = System.currentTimeMillis() - startTime;
         int epochLCE = -1;
         if (clusterCommitMap.size() > 0) {
-//            log.info("Creating BFT 2PC commit request in SMR log.");
+            log.info("Creating BFT 2PC commit request in SMR log.");
             for (Map.Entry<String, ClusterPC> cpcEntry : clusterCommitMap.entrySet()) {
                 ClusterPC cpc = cpcEntry.getValue();
                 String id = cpcEntry.getKey();
@@ -225,7 +225,7 @@ public class EpochProcessor implements Runnable {
         } else {
             // Commit SMR log entry
             BFTClient.getInstance().commitSMR(epochNumber);
-//            log.info(String.format("SMR log committed #%d: %s", epochNumber.intValue(), logEntry));
+            log.info(String.format("SMR log committed #%d: %s", epochNumber.intValue(), logEntry));
         }
 
         // 2PC Commit
@@ -256,13 +256,13 @@ public class EpochProcessor implements Runnable {
                         batchMetricsManager.setTxnProcessingCompleted(transactionID);
 
                     } else {
-//                        log.log(Level.WARNING,
-//                                "Could not find appropriate transactionBatchResponse observer for transaction request: " +
-// transactionBatchResponse);
+                        log.log(Level.WARNING,
+                                "Could not find appropriate transactionBatchResponse observer for transaction request: " +
+ transactionBatchResponse);
                     }
                 } else {
-//                    log.info("Response to clients for transaction with ID " + id + " WILL NOT BE SENT as it is a DRWTxn. : " +
-// transactionBatchResponse);
+                    log.info("Response to clients for transaction with ID " + id + " WILL NOT BE SENT as it is a DRWTxn. : " +
+ transactionBatchResponse);
                 }
             }
         }
