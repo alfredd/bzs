@@ -50,6 +50,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
             long startTime = System.currentTimeMillis();
             MetaInfo meta = localDataVerifier.getMetaInfo(request);
 
+/*             ****FOR ROT Experiments****
             if (!(meta.remoteWrite || meta.localWrite)) {
                 log.log(Level.WARNING, "Transaction does not contain any write operations. Will be aborted: " + request.toString());
                 abortTransaction(request, responseObserver);
@@ -59,7 +60,7 @@ public class TxnProcessor implements TransactionProcessorINTF {
                 log.info("Transaction cannot be serialized. Will abort. Request: " + request);
                 abortTransaction(request, responseObserver);
                 return;
-            }
+            }*/
 
             if (meta.remoteWrite) {
                 LockManager.acquireLocks(request);
