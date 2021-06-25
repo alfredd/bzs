@@ -12,6 +12,7 @@ import edu.ucsc.edgelab.db.bzs.replica.TransactionID;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
@@ -34,6 +35,7 @@ public class EpochManager {
     private Semaphore semaphore;
 
     private BatchMetricsManager batchMetricsManager = new BatchMetricsManager();
+    private ConcurrentHashMap<Integer,Long> epochStartTimeMap = new ConcurrentHashMap<>();
 
 
     public EpochManager() {
@@ -58,6 +60,7 @@ public class EpochManager {
             try {
 //                if (sequenceNumber >= maxEpochBatchSize)
                 updateEpoch();
+
             } finally {
                 semaphore.release();
             }
@@ -72,6 +75,9 @@ public class EpochManager {
             if (sequenceNumber >= maxEpochBatchSize) {
                 // Probable race condition.
                 executeUpdateEpoch();
+            }
+            if (sequenceNumber==1) {
+                epochStartTimeMap.put(epochNumber, System.currentTimeMillis());
             }
             return new TransactionID(epochNumber, sequenceNumber);
         }
@@ -94,6 +100,8 @@ public class EpochManager {
                 Epoch.setEpochNumber(epochNumber);
                 processEpoch(epoch, seq + EPOCH_BUFFER);
                 logger.info("UPDATED EPOCH"+epoch+", duration: " + (System.currentTimeMillis()-startTime));
+                long epochProcessingDuration = System.currentTimeMillis()- epochStartTimeMap.get(epoch);
+                logger.info("EPOCH Processing time "+epoch+", duration: " + (epochProcessingDuration));
             }
             return seq;
         }

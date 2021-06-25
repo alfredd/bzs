@@ -25,7 +25,7 @@ public class SerializerTest {
 //            obj1.digest = "hello";
 
             Bzs.ReadHistory h1 =
-                    Bzs.ReadHistory.newBuilder().setReadOperation(Bzs.Read.newBuilder().setKey(testKey).build()).setVersion(obj1.version).setValue(obj1.value).build();
+                    Bzs.ReadHistory.newBuilder().setReadOperation(Bzs.Read.newBuilder().setKey(testKey).build()).setVersion((int)obj1.version).setValue(obj1.value).build();
             Bzs.Write w1 = Bzs.Write.newBuilder().setKey(testKey).setValue("newval").build();
             Bzs.Transaction t1 = Bzs.Transaction.newBuilder().addReadHistory(h1).addWriteOperations(w1).build();
 

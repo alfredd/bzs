@@ -4,7 +4,7 @@ public class BZStoreData {
 
     public String value;
 
-    public int version;
+    public long version;
 
 //    public String digest;
 

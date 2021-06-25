@@ -131,7 +131,7 @@ class BZStoreService extends BZStoreGrpc.BZStoreImplBase {
         return responseBuilder
                 .setReadOperation(request)
                 .setValue(data.value)
-                .setVersion(data.version)
+                .setVersion((int)data.version)
                 .setStatus(status)
                 .build();
     }

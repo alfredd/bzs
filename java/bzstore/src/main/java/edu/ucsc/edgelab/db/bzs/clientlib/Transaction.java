@@ -108,7 +108,7 @@ public class Transaction extends ConnectionLessTransaction implements Transactio
         for (Map.Entry<Integer, List<Bzs.Read>> entry : rotxnRequsts.entrySet()) {
             setClient(clientHashMap.get(entry.getKey()));
             Bzs.ROTransaction roTransaction =
-                    Bzs.ROTransaction.newBuilder().addAllReadOperations(entry.getValue()).setClusterID(entry.getKey()).build();
+                    Bzs.ROTransaction.newBuilder().addAllReadOperations(entry.getValue()).setClusterID((int)entry.getKey()).build();
             Bzs.ROTransactionResponse rotResponse = client.readOnly(roTransaction);
             signatureValidator.validateResponse(entry.getKey(), rotResponse);
             if (rotResponse != null) {

@@ -13,12 +13,12 @@ public class ConnectionLessTransaction {
 
 
 
-    public void setReadHistory(String responseKey, String responseValue, int responseVersion,
+    public void setReadHistory(String responseKey, String responseValue, long responseVersion,
                                Integer clusterId) {
         Bzs.ReadHistory history = Bzs.ReadHistory.newBuilder()
                 .setReadOperation(Bzs.Read.newBuilder().setClusterID(clusterId).setKey(responseKey).build())
                 .setValue(responseValue)
-                .setVersion(responseVersion)
+                .setVersion((int)responseVersion)
 //                .setResponseDigest(digest)
                 .build();
         transaction = builder.addReadHistory(history).build();

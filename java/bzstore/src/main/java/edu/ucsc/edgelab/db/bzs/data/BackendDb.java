@@ -45,7 +45,7 @@ class BackendDb {
     void commit(String key, BZStoreData dataList) throws InvalidCommitException {
         Bzs.DBData dbData = Bzs.DBData.newBuilder()
                 .setValue(dataList.value)
-                .setVersion(dataList.version)
+                .setVersion((int)dataList.version)
                 .build();
         commitDBData(key, dbData);
     }

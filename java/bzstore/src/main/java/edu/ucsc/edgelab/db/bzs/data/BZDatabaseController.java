@@ -93,14 +93,14 @@ public final class BZDatabaseController {
         BZ_DATABASE_CONTROLLER.db.commit(getSMRLogKey(epochNumber), logEntry);
     }
 
-    public static Bzs.SmrLogEntry getSmrBlock(Integer epochNumber) {
+    public static Bzs.SmrLogEntry getSmrBlock(long epochNumber) {
         return BZ_DATABASE_CONTROLLER.db.getSmrBlock(getSMRLogKey(epochNumber));
     }
 
 //    public static Bzs.SmrLogEntry getLatestSmrBlock
 
-    private static String getSMRLogKey(Integer epochNumber) {
-        return String.format("S.%d", epochNumber.intValue());
+    private static String getSMRLogKey(long epochNumber) {
+        return String.format("S.%d", epochNumber);
     }
 
     public static void commitDepVector(Map<Integer, Integer> depVec) {

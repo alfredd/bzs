@@ -23,7 +23,7 @@ public class Serializer {
 
     private List<Bzs.Transaction> epochList = new LinkedList<>();
     // Keeping track of current object changes to the epochList.
-    private ConcurrentHashMap<String, Integer> readMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Long> readMap = new ConcurrentHashMap<>();
 
     private Integer clusterID;
     private Integer replicaID;
@@ -111,7 +111,7 @@ public class Serializer {
             // Possible fix.
             synchronized (readMap) {
                 if (readMap!=null ) {
-                    int version = 0;
+                    long version = 0;
                     if (readMap.containsKey(key)) {
                         version = readMap.get(key);
                     }
